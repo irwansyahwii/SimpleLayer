@@ -1,9 +1,9 @@
 Layer = require("./Layer")
 
-# layerA = new Layer
-#     width: 60
-#     height: 60
-#     backgroundColor: "#2DD7AA"
+layerA = new Layer
+    width: 260
+    height: 260
+    backgroundColor: "green"
 
 
 # layerA.borderRadius = 5
@@ -18,9 +18,13 @@ layerB = new Layer
     borderRadius: 3
 
 
-# layerB.rotation = 45
-layerB.centerY()
+layerB.superlayer = layerA
 
-layerB.y = 10
+# layerB.rotation = 45
+layerB.centerX()
+
+# layerB.y = 10
 layerB.x = 10
+
+
 # layerB.opacity = 0.8

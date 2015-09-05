@@ -69,12 +69,7 @@ class Layer
 
         @_layerNode.setOrigin(0.5, 0.5)
 
-        
-        Logger.log @_layerNode._sizeID
-        Logger.log @_layerNode.getParent().getSizeMode()
-
-        window.parent_ = @_layerNode.getParent()
-        
+            
 
     applyBorderRadius:() =>
         
@@ -101,16 +96,30 @@ class Layer
             @_name = newVal
 
     applyPosition: =>
-        @_layerNode.setPosition(@_x, @_y)
+        @_layerNode.setPosition(@_x, @_y)            
 
     @property 'x',
         get: ->
             @_x
 
         set: (newVal) ->
-            if @_x isnt newVal
-                @_x = newVal
-                @applyPosition()
+            if @_x isnt newVal                
+                poolContext = =>                        
+                    context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+
+                    if context?
+                        @_x = newVal
+                        @applyPosition()
+                        
+                    else
+                        setTimeout =>
+                                poolContext()
+                            , 1
+
+                        
+
+                poolContext()        
+
 
     @property 'y',
         get: ->
@@ -118,8 +127,21 @@ class Layer
 
         set: (newVal) ->
             if @_y isnt newVal
-                @_y = newVal
-                @applyPosition()
+                poolContext = =>                        
+                    context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+
+                    if context?
+                        @_y = newVal
+                        @applyPosition()
+                        
+                    else
+                        setTimeout =>
+                                poolContext()
+                            , 1
+
+                        
+
+                poolContext()        
 
     applyScale: =>
         @_layerNode.setScale(@_scale, @_scale, @_scale)
@@ -159,79 +181,51 @@ class Layer
                 @applyRotation()
 
 
+    centerAxis: (isX, isY) =>
+        poolSize = =>                        
+            context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+            if context?
+                if @_superlayer isnt null
+                    parentSize = @_superlayer.getSize()
+                    
+
+                    if isX
+                        @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
+
+                    if isY
+                        @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
+
+                else
+                    contextSize = context._size
+
+                    if isX
+                        @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
+
+                    if isY
+                        @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
+
+            else
+                setTimeout =>
+                        poolSize()
+                    , 1
+
+                
+
+        poolSize()
+
+
     centerX: () =>        
 
-        
-        if @_superlayer isnt null
-            parentSize = @_superlayer.getAbsoluteSize()
+        @centerAxis(true, false)
 
-            @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
-        else
-            poolSize = =>            
-                setTimeout =>
-                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-                        if context?
-                            contextSize = context._size
-                            Logger.log "contextSize:"
-                            Logger.log contextSize
-
-                            @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
-                        else
-                            poolSize()
-                    , 5
-
-            poolSize()
-
-    centerY: () =>        
-
-        
-        if @_superlayer isnt null
-            parentSize = @_superlayer.getAbsoluteSize()
-
-            @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
-        else
-            poolSize = =>            
-                setTimeout =>
-                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-                        if context?
-                            contextSize = context._size
-                            Logger.log "contextSize:"
-                            Logger.log contextSize
-
-                            @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
-                        else
-                            poolSize()
-                    , 5
-
-            poolSize()
+    centerY: () =>                
+        @centerAxis(false, true)
 
     center: () =>        
+        @centerAxis(true, true)        
 
-        
-        if @_superlayer isnt null
-            parentSize = @_superlayer.getAbsoluteSize()
-
-            @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
-            @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
-        else
-            poolSize = =>            
-                setTimeout =>
-                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-                        if context?
-                            contextSize = context._size
-                            Logger.log "contextSize:"
-                            Logger.log contextSize
-
-                            @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
-                            @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
-                        else
-                            poolSize()
-                    , 5
-
-            poolSize()
-            
-            # contextSize = @_layerNode.getParent().getUpdater().compositor.getContext('body')._size
-
+    getSize: () =>
+        @_layerNode.getAbsoluteSize()
 
     applySuperlayer: () =>
 
@@ -241,6 +235,7 @@ class Layer
             @_superlayer
         set: (newVal) ->
             if @_superlayer isnt newVal
+                @_superlayer = newVal
                 @applySuperlayer()
 
 
