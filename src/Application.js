@@ -35,6 +35,8 @@
 
     Application.hasInitialized = false;
 
+    Application.isReady = false;
+
     Application.init = function() {
       if (!Application.hasInitialized) {
         Logger.log("Initializing application...");

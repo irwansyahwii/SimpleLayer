@@ -8,12 +8,14 @@
     width: 60,
     height: 60,
     backgroundColor: "#2DD7AA",
-    x: 440,
-    y: 300,
     scale: 1,
     borderRadius: 3
   });
 
-  layerB.rotation = 45;
+  layerB.centerY();
+
+  layerB.y = 10;
+
+  layerB.x = 10;
 
 }).call(this);

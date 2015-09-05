@@ -17,6 +17,10 @@
 
   Layer = (function() {
     function Layer(options) {
+      this.applySuperlayer = bind(this.applySuperlayer, this);
+      this.center = bind(this.center, this);
+      this.centerY = bind(this.centerY, this);
+      this.centerX = bind(this.centerX, this);
       this.applyRotation = bind(this.applyRotation, this);
       this.applyOpacity = bind(this.applyOpacity, this);
       this.applyScale = bind(this.applyScale, this);
@@ -53,6 +57,7 @@
       this._scale = options.scale || 1;
       this._opacity = options.opacity || 1.0;
       this._rotation = options.rotation || 0;
+      this._superlayer = options.superlayer || null;
       Application.init();
       this._layerNode.setScale(this._scale, this._scale);
       if (this._x !== 0 || this._y !== 0) {
@@ -70,6 +75,9 @@
       this._layerNode.setSizeMode(this._xAxisSizeMode, this._yAxisSizeMode, this._zAxisSizeMode);
       this._layerNode.setAbsoluteSize(this._width, this._height);
       this._layerNode.setOrigin(0.5, 0.5);
+      Logger.log(this._layerNode._sizeID);
+      Logger.log(this._layerNode.getParent().getSizeMode());
+      window.parent_ = this._layerNode.getParent();
     }
 
     Layer.prototype.applyBorderRadius = function() {
@@ -178,6 +186,99 @@
         if (this._rotation !== newVal) {
           this._rotation = newVal;
           return this.applyRotation();
+        }
+      }
+    });
+
+    Layer.prototype.centerX = function() {
+      var parentSize, poolSize;
+      if (this._superlayer !== null) {
+        parentSize = this._superlayer.getAbsoluteSize();
+        return this.x = (parentSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
+      } else {
+        poolSize = (function(_this) {
+          return function() {
+            return setTimeout(function() {
+              var context, contextSize;
+              context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
+              if (context != null) {
+                contextSize = context._size;
+                Logger.log("contextSize:");
+                Logger.log(contextSize);
+                return _this.x = (contextSize[0] / 2) - (_this._layerNode.getAbsoluteSize()[0] / 2);
+              } else {
+                return poolSize();
+              }
+            }, 5);
+          };
+        })(this);
+        return poolSize();
+      }
+    };
+
+    Layer.prototype.centerY = function() {
+      var parentSize, poolSize;
+      if (this._superlayer !== null) {
+        parentSize = this._superlayer.getAbsoluteSize();
+        return this.y = (parentSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
+      } else {
+        poolSize = (function(_this) {
+          return function() {
+            return setTimeout(function() {
+              var context, contextSize;
+              context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
+              if (context != null) {
+                contextSize = context._size;
+                Logger.log("contextSize:");
+                Logger.log(contextSize);
+                return _this.y = (contextSize[1] / 2) - (_this._layerNode.getAbsoluteSize()[1] / 2);
+              } else {
+                return poolSize();
+              }
+            }, 5);
+          };
+        })(this);
+        return poolSize();
+      }
+    };
+
+    Layer.prototype.center = function() {
+      var parentSize, poolSize;
+      if (this._superlayer !== null) {
+        parentSize = this._superlayer.getAbsoluteSize();
+        this.x = (parentSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
+        return this.y = (parentSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
+      } else {
+        poolSize = (function(_this) {
+          return function() {
+            return setTimeout(function() {
+              var context, contextSize;
+              context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
+              if (context != null) {
+                contextSize = context._size;
+                Logger.log("contextSize:");
+                Logger.log(contextSize);
+                _this.x = (contextSize[0] / 2) - (_this._layerNode.getAbsoluteSize()[0] / 2);
+                return _this.y = (contextSize[1] / 2) - (_this._layerNode.getAbsoluteSize()[1] / 2);
+              } else {
+                return poolSize();
+              }
+            }, 5);
+          };
+        })(this);
+        return poolSize();
+      }
+    };
+
+    Layer.prototype.applySuperlayer = function() {};
+
+    Layer.property('superlayer', {
+      get: function() {
+        return this._superlayer;
+      },
+      set: function(newVal) {
+        if (this._superlayer !== newVal) {
+          return this.applySuperlayer();
         }
       }
     });

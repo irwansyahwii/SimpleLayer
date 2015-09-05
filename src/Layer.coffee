@@ -46,6 +46,7 @@ class Layer
         @_scale = options.scale || 1
         @_opacity = options.opacity || 1.0
         @_rotation = options.rotation || 0
+        @_superlayer = options.superlayer || null
 
 
         Application.init()
@@ -68,6 +69,12 @@ class Layer
 
         @_layerNode.setOrigin(0.5, 0.5)
 
+        
+        Logger.log @_layerNode._sizeID
+        Logger.log @_layerNode.getParent().getSizeMode()
+
+        window.parent_ = @_layerNode.getParent()
+        
 
     applyBorderRadius:() =>
         
@@ -150,6 +157,91 @@ class Layer
             if @_rotation isnt newVal
                 @_rotation = newVal
                 @applyRotation()
+
+
+    centerX: () =>        
+
+        
+        if @_superlayer isnt null
+            parentSize = @_superlayer.getAbsoluteSize()
+
+            @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
+        else
+            poolSize = =>            
+                setTimeout =>
+                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+                        if context?
+                            contextSize = context._size
+                            Logger.log "contextSize:"
+                            Logger.log contextSize
+
+                            @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
+                        else
+                            poolSize()
+                    , 5
+
+            poolSize()
+
+    centerY: () =>        
+
+        
+        if @_superlayer isnt null
+            parentSize = @_superlayer.getAbsoluteSize()
+
+            @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
+        else
+            poolSize = =>            
+                setTimeout =>
+                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+                        if context?
+                            contextSize = context._size
+                            Logger.log "contextSize:"
+                            Logger.log contextSize
+
+                            @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
+                        else
+                            poolSize()
+                    , 5
+
+            poolSize()
+
+    center: () =>        
+
+        
+        if @_superlayer isnt null
+            parentSize = @_superlayer.getAbsoluteSize()
+
+            @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
+            @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
+        else
+            poolSize = =>            
+                setTimeout =>
+                        context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
+                        if context?
+                            contextSize = context._size
+                            Logger.log "contextSize:"
+                            Logger.log contextSize
+
+                            @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
+                            @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
+                        else
+                            poolSize()
+                    , 5
+
+            poolSize()
+            
+            # contextSize = @_layerNode.getParent().getUpdater().compositor.getContext('body')._size
+
+
+    applySuperlayer: () =>
+
+
+    @property 'superlayer',
+        get: ->
+            @_superlayer
+        set: (newVal) ->
+            if @_superlayer isnt newVal
+                @applySuperlayer()
 
 
 module.exports = Layer

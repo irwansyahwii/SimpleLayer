@@ -10,11 +10,13 @@
   Logger = require('./Logger');
 
   FamousWindow = (function() {
-    function FamousWindow() {
+    function FamousWindow(options) {
       this.createNode = bind(this.createNode, this);
+      options = options || {};
       Logger.log('FamousWindow constructor called');
       Logger.log('Creating scene...');
       this.scene = Engine.createScene();
+      this.isRootWindow = options.isRootWindow || false;
     }
 
     FamousWindow.prototype.createNode = function() {
