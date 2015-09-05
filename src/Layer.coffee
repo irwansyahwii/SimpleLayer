@@ -39,26 +39,40 @@ class Layer
                     backgroundColor: @_backgroundColor
             )
 
-        @_borderRadius = 0
-        borderRadius = options.borderRadius || 0
-        if borderRadius > 0
-            @applyBorderRadius(borderRadius)
+        @_borderRadius = options.borderRadius || 0        
+        if @_borderRadius > 0
+            @applyBorderRadius()
+
+        @_scale = options.scale || 1
+        @_opacity = options.opacity || 1.0
+        @_rotation = options.rotation || 0
 
 
         Application.init()
 
         @_layerNode.setScale(@_scale, @_scale)
 
-        @applyPosition()
+        if @_x isnt 0 or @_y isnt 0
+            @applyPosition()
+
+        if @_scale isnt 1
+            @applyScale()
+        if @_opacity isnt 1.0
+            @applyOpacity()
+
+        if @_rotation isnt 0
+            @applyRotation()
 
         @_layerNode.setSizeMode(@_xAxisSizeMode, @_yAxisSizeMode, @_zAxisSizeMode)
         @_layerNode.setAbsoluteSize(@_width, @_height)
 
+        @_layerNode.setOrigin(0.5, 0.5)
 
-    applyBorderRadius:(newVal) =>
+
+    applyBorderRadius:() =>
         
         @_layerElement.setProperty('border-radius', "#{@_borderRadius}px")
-        @_layerElement.setProperty('border', "2px solid #{@_backgroundColor}")        
+        @_layerElement.setProperty('border', "#{@_borderRadius}px solid #{@_backgroundColor}")        
 
     @property 'borderRadius',
         get: ->
@@ -67,7 +81,7 @@ class Layer
         set: (newVal) ->
             if @_borderRadius isnt newVal   
                 @_borderRadius = newVal             
-                @applyBorderRadius(newVal)
+                @applyBorderRadius()
 
     @property 'id',
         get: ->
@@ -99,6 +113,43 @@ class Layer
             if @_y isnt newVal
                 @_y = newVal
                 @applyPosition()
+
+    applyScale: =>
+        @_layerNode.setScale(@_scale, @_scale, @_scale)
+
+    @property 'scale',
+        get: ->
+            @_scale
+
+        set: (newVal) ->
+            if @_scale isnt newVal
+                @_scale = newVal
+                @applyScale()
+
+    applyOpacity: () =>
+        @_layerNode.setOpacity(@_opacity)
+
+    @property 'opacity', 
+        get: ->
+            @_opacity
+
+        set: (newVal)->
+            if @_opacity isnt newVal
+                @_opacity = newVal
+                @applyOpacity()
+
+
+    applyRotation: () =>
+        thetaRadian = 2 * Math.PI / (360)
+        @_layerNode.setRotation(0, 0, @_rotation * thetaRadian)
+
+    @property 'rotation',
+        get: ->
+            @_rotation
+        set: (newVal)->
+            if @_rotation isnt newVal
+                @_rotation = newVal
+                @applyRotation()
 
 
 module.exports = Layer

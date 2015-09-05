@@ -17,9 +17,11 @@
 
   Layer = (function() {
     function Layer(options) {
+      this.applyRotation = bind(this.applyRotation, this);
+      this.applyOpacity = bind(this.applyOpacity, this);
+      this.applyScale = bind(this.applyScale, this);
       this.applyPosition = bind(this.applyPosition, this);
       this.applyBorderRadius = bind(this.applyBorderRadius, this);
-      var borderRadius;
       Logger.log("Layer constructor called...");
       this._id = LayerId.generateNewId();
       this._name = "";
@@ -44,21 +46,35 @@
           backgroundColor: this._backgroundColor
         }
       });
-      this._borderRadius = 0;
-      borderRadius = options.borderRadius || 0;
-      if (borderRadius > 0) {
-        this.applyBorderRadius(borderRadius);
+      this._borderRadius = options.borderRadius || 0;
+      if (this._borderRadius > 0) {
+        this.applyBorderRadius();
       }
+      this._scale = options.scale || 1;
+      this._opacity = options.opacity || 1.0;
+      this._rotation = options.rotation || 0;
       Application.init();
       this._layerNode.setScale(this._scale, this._scale);
-      this.applyPosition();
+      if (this._x !== 0 || this._y !== 0) {
+        this.applyPosition();
+      }
+      if (this._scale !== 1) {
+        this.applyScale();
+      }
+      if (this._opacity !== 1.0) {
+        this.applyOpacity();
+      }
+      if (this._rotation !== 0) {
+        this.applyRotation();
+      }
       this._layerNode.setSizeMode(this._xAxisSizeMode, this._yAxisSizeMode, this._zAxisSizeMode);
       this._layerNode.setAbsoluteSize(this._width, this._height);
+      this._layerNode.setOrigin(0.5, 0.5);
     }
 
-    Layer.prototype.applyBorderRadius = function(newVal) {
+    Layer.prototype.applyBorderRadius = function() {
       this._layerElement.setProperty('border-radius', this._borderRadius + "px");
-      return this._layerElement.setProperty('border', "2px solid " + this._backgroundColor);
+      return this._layerElement.setProperty('border', this._borderRadius + "px solid " + this._backgroundColor);
     };
 
     Layer.property('borderRadius', {
@@ -68,7 +84,7 @@
       set: function(newVal) {
         if (this._borderRadius !== newVal) {
           this._borderRadius = newVal;
-          return this.applyBorderRadius(newVal);
+          return this.applyBorderRadius();
         }
       }
     });
@@ -112,6 +128,56 @@
         if (this._y !== newVal) {
           this._y = newVal;
           return this.applyPosition();
+        }
+      }
+    });
+
+    Layer.prototype.applyScale = function() {
+      return this._layerNode.setScale(this._scale, this._scale, this._scale);
+    };
+
+    Layer.property('scale', {
+      get: function() {
+        return this._scale;
+      },
+      set: function(newVal) {
+        if (this._scale !== newVal) {
+          this._scale = newVal;
+          return this.applyScale();
+        }
+      }
+    });
+
+    Layer.prototype.applyOpacity = function() {
+      return this._layerNode.setOpacity(this._opacity);
+    };
+
+    Layer.property('opacity', {
+      get: function() {
+        return this._opacity;
+      },
+      set: function(newVal) {
+        if (this._opacity !== newVal) {
+          this._opacity = newVal;
+          return this.applyOpacity();
+        }
+      }
+    });
+
+    Layer.prototype.applyRotation = function() {
+      var thetaRadian;
+      thetaRadian = 2 * Math.PI / 360.;
+      return this._layerNode.setRotation(0, 0, this._rotation * thetaRadian);
+    };
+
+    Layer.property('rotation', {
+      get: function() {
+        return this._rotation;
+      },
+      set: function(newVal) {
+        if (this._rotation !== newVal) {
+          this._rotation = newVal;
+          return this.applyRotation();
         }
       }
     });
