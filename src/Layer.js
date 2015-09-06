@@ -53,7 +53,7 @@
       this.applyBackgroundColor = bind(this.applyBackgroundColor, this);
       this.applyWidth = bind(this.applyWidth, this);
       this.applyHeight = bind(this.applyHeight, this);
-      var backgroundColor, borderRadius, height, width, x, y;
+      var attributes, backgroundColor, borderRadius, height, image, width, x, y;
       this._id = LayerId.generateNewId();
       this._name = "";
       this._window = options.window;
@@ -62,9 +62,18 @@
       }
       this._layerNode = this._window.createNode();
       this._layerNode.setOrigin(0.5, 0.5);
+      this._tagName = "div";
+      image = options.image || null;
+      attributes = null;
+      if (image !== null) {
+        this._tagName = "img";
+      }
       this._layerElement = new DOMElement(this._layerNode, {
         tagName: this._tagName
       });
+      if (image !== null) {
+        this._layerElement.setAttribute("src", image);
+      }
       backgroundColor = options.backgroundColor || '#FFFFFF';
       this.applyBackgroundColor(backgroundColor);
       borderRadius = options.borderRadius || 0;

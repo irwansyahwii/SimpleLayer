@@ -37,11 +37,23 @@ class Layer
 
         @_layerNode = @_window.createNode()        
         @_layerNode.setOrigin(0.5, 0.5)
+
+        @_tagName = "div"
+
+        image = options.image || null
+
+        attributes = null
+
+        if image isnt null
+            @_tagName = "img"
         
 
         @_layerElement = new DOMElement(@_layerNode,
                 tagName: @_tagName
             )
+
+        if image isnt null
+            @_layerElement.setAttribute("src", image)
         
 
         backgroundColor = options.backgroundColor || '#FFFFFF'

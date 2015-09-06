@@ -6,13 +6,11 @@ Events = require('./Events')
 
 Application.run ->    
 
-
-
-    # Create layer
+    # Create layer, define image
     layerA = new Layer
-        x: 100
-        y: 100
-        width: 200
-        height: 200
-        borderRadius: 8
-        backgroundColor: "#28affa"
+        width: 400
+        height: 400
+        image: "http://cl.ly/arBO/bg.jpg"
+        borderRadius: 4
+        
+    layerA.center()

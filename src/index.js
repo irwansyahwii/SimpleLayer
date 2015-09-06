@@ -14,14 +14,13 @@
 
   Application.run(function() {
     var layerA;
-    return layerA = new Layer({
-      x: 100,
-      y: 100,
-      width: 200,
-      height: 200,
-      borderRadius: 8,
-      backgroundColor: "#28affa"
+    layerA = new Layer({
+      width: 400,
+      height: 400,
+      image: "http://cl.ly/arBO/bg.jpg",
+      borderRadius: 4
     });
+    return layerA.center();
   });
 
 }).call(this);
