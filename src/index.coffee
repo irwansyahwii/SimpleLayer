@@ -1,51 +1,27 @@
 Logger  = require('./Logger')
 Layer = require("./Layer")
+BackgroundLayer = require("./BackgroundLayer")
 Application = require('./Application')
 
 Application.run ->    
+
+    bg = new BackgroundLayer
+        backgroundColor: "#877DD7"
+
     layerA = new Layer
-        width: 80
-        height: 80
-        backgroundColor: "green"
-
-    layerA.borderRadius = 5
-
-    layerA.x = 10
-    layerA.y = 10
-
-    
-
-    # layerA.scale = 0.5
-    layerA.opacity = 0.3
-
-    # layerA.rotation = 45
-
-    layerA.centerY()
-
-    Logger.log "layerA.x: #{layerA.x}, layerA.y: #{layerA.y}, layerA.minX: #{layerA.minX}, layerA.maxX: #{layerA.maxX}, midX: #{layerA.midX}, midY: #{layerA.midY}"
-
+        width: 150
+        height: 150
+        backgroundColor: "#fff"
+        borderRadius: 6
+        
     layerB = new Layer
-        width: 60
-        height: 60
-        backgroundColor: "#2DD7AA"
-        scale: 1
-        borderRadius: 5
+        width: 150
+        height: 150
+        backgroundColor: "#fff"
+        borderRadius: 150
+        
+    layerA.center()
+    layerB.center()
+    layerA.x -= 90
+    layerB.x += 90
 
-
-    layerB.borderRadius = layerA.borderRadius
-    layerB.x = 300
-
-    layerB.superlayer = layerA
-
-    layerB.x = 0
-    layerB.y = 0    
-
-    # layerB.rotation = 45
-    # layerB.centerX()
-
-    # layerB.y = 10
-    # layerB.x = 10
-    Logger.log "layerB.x: #{layerB.x}"
-
-
-    # layerB.opacity = 0.8

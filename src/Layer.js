@@ -45,7 +45,6 @@
         this._window = Application.getRootWindow();
       }
       this._layerNode = this._window.createNode();
-      this._layerNode.setSizeMode("absolute", "absolute", "absolute");
       this._layerNode.setOrigin(0.5, 0.5);
       this._layerElement = new DOMElement(this._layerNode, {
         tagName: this._tagName
@@ -56,8 +55,14 @@
       this.applyBorderRadius(borderRadius);
       width = options.width || 0;
       height = options.height || 0;
-      this.applyWidth(width);
-      this.applyHeight(height);
+      if (width >= 0) {
+        this._layerNode.setSizeMode("absolute", "absolute", "absolute");
+        this.applyWidth(width);
+      }
+      if (height >= 0) {
+        this._layerNode.setSizeMode("absolute", "absolute", "absolute");
+        this.applyHeight(height);
+      }
       x = options.x || 0;
       y = options.y || 0;
       this.applyX(x);

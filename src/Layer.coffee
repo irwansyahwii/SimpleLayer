@@ -21,10 +21,9 @@ class Layer
         if not @_window?
             @_window = Application.getRootWindow()
 
-        @_layerNode = @_window.createNode()
-        @_layerNode.setSizeMode("absolute", "absolute", "absolute")
-        # @_layerNode.setMountPoint(0.5, 0.5)
+        @_layerNode = @_window.createNode()        
         @_layerNode.setOrigin(0.5, 0.5)
+        
 
         @_layerElement = new DOMElement(@_layerNode,
                 tagName: @_tagName
@@ -34,14 +33,20 @@ class Layer
         backgroundColor = options.backgroundColor || '#FFFFFF'
         @applyBackgroundColor(backgroundColor)
 
+        
         borderRadius = options.borderRadius || 0
         @applyBorderRadius(borderRadius)
 
         width = options.width || 0
         height = options.height || 0
 
-        @applyWidth(width)
-        @applyHeight(height)
+        if width >= 0
+            @_layerNode.setSizeMode("absolute", "absolute", "absolute")
+            @applyWidth(width)
+
+        if height >= 0
+            @_layerNode.setSizeMode("absolute", "absolute", "absolute")
+            @applyHeight(height)
 
 
         x = options.x || 0
