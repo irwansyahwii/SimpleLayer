@@ -2,38 +2,17 @@ Logger  = require('./Logger')
 Layer = require("./Layer")
 BackgroundLayer = require("./BackgroundLayer")
 Application = require('./Application')
+Events = require('./Events')
 
 Application.run ->    
 
-    bg = new BackgroundLayer
-        backgroundColor: "#877DD7"
 
+
+    # Create layer
     layerA = new Layer
-        width: 150
-        height: 150
-        backgroundColor: "#fff"
-        borderRadius: 6
-
-    layerB = new Layer
-        width: 150
-        height: 150
-        backgroundColor: "#fff"
-        borderRadius: 150
-        
-    layerA.center()
-    layerB.center()
-    layerA.x -= 90
-    layerB.x += 90
-
-    layerA.animate 
-        properties:
-            rotation: 90
-        curve: "ease"
-
-
-    layerB.animate 
-        properties:
-            rotation: 90
-            borderRadius: 6
-        curve: "spring(200,30,0)"
-        delay: 1
+        x: 100
+        y: 100
+        width: 200
+        height: 200
+        borderRadius: 8
+        backgroundColor: "#28affa"

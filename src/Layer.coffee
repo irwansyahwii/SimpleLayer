@@ -17,6 +17,10 @@ Position = famous.components.Position
 
 Transitionable = famous.transitions.Transitionable
 
+Events = require("./Events")
+
+Quaternion = famous.math.Quaternion
+
 
 _ = require('./Underscore')
 
@@ -28,7 +32,6 @@ class Layer
         @_id = LayerId.generateNewId()
         @_name = ""
         @_window = options.window
-        @_superlayer = null
         if not @_window?
             @_window = Application.getRootWindow()
 
@@ -65,6 +68,21 @@ class Layer
 
         @applyX(x)
         @applyY(y)
+
+        @_superlayer = options.superLayer || null
+        Logger.log "@_superlayer:"
+        Logger.log @_superlayer
+        @applySuperlayer(@_superlayer)
+
+        @eventsHandlers = []
+
+        @_layerNode.addUIEvent(Events.Click)
+
+        @_layerNode.onReceive = (event, payload) =>
+            handler = @eventsHandlers[event] || null;
+
+            if handler isnt null
+                handler()
 
 
     applyHeight: (val) =>
@@ -238,17 +256,31 @@ class Layer
     angleToFamousRotation: (angle) =>
         thetaRadian = 2 * Math.PI / (360)
 
-        angle * thetaRadian
+        result = angle * thetaRadian
+
+        Logger.log "angle: #{angle}, angleToFamousRotation: #{result}"
+
+        result
 
     applyRotation: (newVal) =>        
         @_layerNode.setRotation(0, 0, @angleToFamousRotation(newVal))
 
+
+
     @property 'rotation',
         get: ->
-            currentRotation = @_layerNode.getRotation()
+            currentRotation = @_layerNode.getRotation()            
+
+            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
+
+            eulerResult = {}
+
+            q.toEuler(eulerResult)
 
             thetaRadian = 2 * Math.PI / (360)
-            currentRotation[2]/thetaRadian
+
+            eulerResult.z / thetaRadian
+
         set: (newVal)->
             if @rotation isnt newVal
                 @applyRotation(newVal)
@@ -293,9 +325,11 @@ class Layer
 
     applySuperlayer: (newVal) =>
 
-        @_layerNode.getParent().removeChild(@_layerNode)
+        if newVal isnt null
 
-        newVal._layerNode.addChild(@_layerNode)
+            @_layerNode.getParent().removeChild(@_layerNode)
+
+            newVal._layerNode.addChild(@_layerNode)
 
 
     @property 'superlayer',
@@ -343,9 +377,11 @@ class Layer
         if rotationValue isnt null
             rotationComponent = new Rotation(@_layerNode)            
 
-            rotationComponent.set(0, 0, @angleToFamousRotation(rotationValue),
-                    duration: 1000
-                    curve: curveValue
+            rotationComponent.setZ( @angleToFamousRotation(rotationValue),
+                    {
+                        duration: 1000
+                        curve: curveValue
+                    }
                 )
 
             @_layerNode.addComponent(rotationComponent)
@@ -366,6 +402,7 @@ class Layer
                         @borderRadius = borderRadiusTransition.get()
                         if borderRadiusTransition.isActive()
                             @_layerNode.requestUpdate(componentId)
+
                 )
             @_layerNode.requestUpdate(componentId)
 
@@ -381,6 +418,8 @@ class Layer
             , delayValue
 
 
+    on: (eventType, eventHandler) =>
+        @eventsHandlers[eventType] = eventHandler
 
 
 

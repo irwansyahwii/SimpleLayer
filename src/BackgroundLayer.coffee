@@ -11,5 +11,7 @@ class BackgroundLayer extends Layer
 
         super(options)
 
+    bringToFront: () =>
+
 
 module.exports = BackgroundLayer
