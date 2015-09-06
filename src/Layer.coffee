@@ -16,70 +16,110 @@ class Layer
     constructor:(options) ->
         @_id = LayerId.generateNewId()
         @_name = ""
-        @_x = options.x || 0
-        @_y = options.y || 0
-        @_width = options.width || 0
-        @_height = options.height || 0
         @_window = options.window
         if not @_window?
             @_window = Application.getRootWindow()
-        @_tagName = "div"        
-        @_xAxisSizeMode = "absolute"
-        @_yAxisSizeMode = "absolute"
-        @_zAxisSizeMode = "absolute"
-        @_scale = options.scale || 1
-        # @_borderRadius = options.borderRadius || 0
-        @_backgroundColor = options.backgroundColor || '#FFFFFF'
 
         @_layerNode = @_window.createNode()
-        @_layerElement = new DOMElement(@_layerNode,
-                tagName: @_tagName
-                properties:
-                    backgroundColor: @_backgroundColor
-            )
-
-        @_borderRadius = options.borderRadius || 0        
-        if @_borderRadius > 0
-            @applyBorderRadius()
-
-        @_scale = options.scale || 1
-        @_opacity = options.opacity || 1.0
-        @_rotation = options.rotation || 0
-        @_superlayer = options.superlayer || null
-
-        @_layerNode.setScale(@_scale, @_scale)
-
-        if @_x isnt 0 or @_y isnt 0
-            @applyPosition()
-
-        if @_scale isnt 1
-            @applyScale()
-        if @_opacity isnt 1.0
-            @applyOpacity()
-
-        if @_rotation isnt 0
-            @applyRotation()
-
-        @_layerNode.setSizeMode(@_xAxisSizeMode, @_yAxisSizeMode, @_zAxisSizeMode)
-        @_layerNode.setAbsoluteSize(@_width, @_height)
-
+        @_layerNode.setSizeMode("absolute", "absolute", "absolute")
+        # @_layerNode.setMountPoint(0.5, 0.5)
         @_layerNode.setOrigin(0.5, 0.5)
 
-            
-
-    applyBorderRadius:() =>
+        @_layerElement = new DOMElement(@_layerNode,
+                tagName: @_tagName
+            )
         
-        @_layerElement.setProperty('border-radius', "#{@_borderRadius}px")
-        @_layerElement.setProperty('border', "#{@_borderRadius}px solid #{@_backgroundColor}")        
+
+        backgroundColor = options.backgroundColor || '#FFFFFF'
+        @applyBackgroundColor(backgroundColor)
+
+        borderRadius = options.borderRadius || 0
+        @applyBorderRadius(borderRadius)
+
+        width = options.width || 0
+        height = options.height || 0
+
+        @applyWidth(width)
+        @applyHeight(height)
+
+
+        x = options.x || 0
+        y = options.y || 0
+
+        @applyX(x)
+        @applyY(y)
+
+
+    applyHeight: (val) =>
+        currentSize = @_layerNode.getAbsoluteSize()
+
+
+        @_layerNode.setAbsoluteSize(currentSize[0], val, currentSize[2])
+
+    @property 'height',
+        get: ->
+            currentSize = @_layerNode.getAbsoluteSize()
+            currentSize[1]
+
+        set: (newVal) ->
+            if @height isnt newVal
+                @applyHeight(newVal)
+
+    applyWidth: (val) =>
+        currentSize = @_layerNode.getAbsoluteSize()
+
+        @_layerNode.setAbsoluteSize(val, currentSize[1], currentSize[2])
+
+    @property 'width',
+        get: ->            
+            Logger.log "width property inside"
+            currentSize = @_layerNode.getAbsoluteSize()
+
+            Logger.log "width property, currentSize: #{currentSize}"
+
+            currentSize[0]
+
+        set: (newVal) ->
+            if @width isnt newVal
+                @applyWidth(newVal)
+
+    applyBackgroundColor:(bgColor) =>
+        @_layerElement.setProperty("background-color", bgColor)           
+
+    @property 'backgroundColor',
+        get: ->
+            elementValue = @_layerElement.getValue()
+            return elementValue.styles['background-color'] 
+
+        set: (newVal) ->
+            if @backgroundColor isnt newVal
+                @applyBackgroundColor(newVal)
+
+    applyBorderRadius:(borderRadius) =>
+        
+        @_layerElement.setProperty('border-radius', "#{borderRadius}px")
+        @_layerElement.setProperty('border', "#{borderRadius}px solid #{@backgroundColor}")   
+
+
+    addSubLayer: (subLayer) =>
+
 
     @property 'borderRadius',
         get: ->
-            @_borderRadius
+            elementValue = @_layerElement.getValue()
+            strValue = elementValue.styles['borderRadius'] || ''
+            if strValue.length > 0
+                strValue = strValue.replace("px", "")
+
+                parseInt(strValue, 10)
+
+            else
+                0
+
 
         set: (newVal) ->
-            if @_borderRadius isnt newVal   
-                @_borderRadius = newVal             
-                @applyBorderRadius()
+            if @borderRadius isnt newVal
+                @applyBorderRadius(newVal)    
 
     @property 'id',
         get: ->
@@ -91,101 +131,97 @@ class Layer
         set: (newVal) ->
             @_name = newVal
 
-    applyPosition: =>
-        @_layerNode.setPosition(@_x, @_y)            
+    applyX: (newVal) =>
+        currentPos = @_layerNode.getPosition()
+        @_layerNode.setPosition(newVal, currentPos[1], currentPos[2])
 
     @property 'x',
         get: ->
-            @_x
+            currentPos = @_layerNode.getPosition()
+            currentPos[0]
 
         set: (newVal) ->
-            if @_x isnt newVal                                
-                @_x = newVal
-                @applyPosition()
+            if @x isnt newVal                                                
+                @applyX(newVal)
 
+    applyY: (newVal) =>
+        currentPos = @_layerNode.getPosition()
+        @_layerNode.setPosition(currentPos[0], newVal, currentPos[2])
 
     @property 'y',
         get: ->
-            @_y
+            currentPos = @_layerNode.getPosition()
+            currentPos[1]
 
         set: (newVal) ->
-            if @_y isnt newVal
-                @_y = newVal
-                @applyPosition()
+            if @y isnt newVal                                                
+                @applyY(newVal)
 
-    applyScale: =>
-        @_layerNode.setScale(@_scale, @_scale, @_scale)
+    applyScaleX:(newVal) =>
+        currentScale = @_layerNode.getScale()
+        @_layerNode.setScale(newVal, currentScale[1], currentScale[2])
+
+    applyScaleY:(newVal) =>
+        currentScale = @_layerNode.getScale()
+        @_layerNode.setScale(currentScale[0], newVal, currentScale[2])
+
+    applyScaleZ:(newVal) =>
+        currentScale = @_layerNode.getScale()
+        @_layerNode.setScale(currentScale[0], currentScale[1], newVal)
 
     @property 'scale',
         get: ->
-            @_scale
+            currentScale = @_layerNode.getScale()
+
+            currentScale[0]
 
         set: (newVal) ->
-            if @_scale isnt newVal
-                @_scale = newVal
-                @applyScale()
+            Logger.log "newVal scale: #{newVal}"
+            if @scale isnt newVal
+                @applyScaleX(newVal)
+                @applyScaleY(newVal)
 
-    applyOpacity: () =>
-        @_layerNode.setOpacity(@_opacity)
+    applyOpacity: (newVal) =>
+        @_layerNode.setOpacity(newVal)
 
     @property 'opacity', 
         get: ->
-            @_opacity
+            @_layerNode.getOpacity()
 
         set: (newVal)->
-            if @_opacity isnt newVal
-                @_opacity = newVal
-                @applyOpacity()
+            if @opacity isnt newVal
+                @applyOpacity(newVal)
 
 
-    applyRotation: () =>
+    applyRotation: (newVal) =>
         thetaRadian = 2 * Math.PI / (360)
-        @_layerNode.setRotation(0, 0, @_rotation * thetaRadian)
+        @_layerNode.setRotation(0, 0, newVal * thetaRadian)
 
     @property 'rotation',
         get: ->
-            @_rotation
+            currentRotation = @_layerNode.getRotation()
+
+            thetaRadian = 2 * Math.PI / (360)
+            currentRotation[2]/thetaRadian
         set: (newVal)->
-            if @_rotation isnt newVal
-                @_rotation = newVal
-                @applyRotation()
+            if @rotation isnt newVal
+                @applyRotation(newVal)
 
+    # centerX: () =>        
 
-    centerAxis: (isX, isY) =>
-        if @_superlayer isnt null
-            parentSize = @_superlayer.getSize()
-            
+    #     @centerAxis(true, false)
 
-            if isX
-                @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
+    # centerY: () =>                
+    #     @centerAxis(false, true)
 
-            if isY
-                @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
-
-        else
-            contextSize = context._size
-
-            if isX
-                @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
-
-            if isY
-                @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
-
-
-    centerX: () =>        
-
-        @centerAxis(true, false)
-
-    centerY: () =>                
-        @centerAxis(false, true)
-
-    center: () =>        
-        @centerAxis(true, true)        
+    # center: () =>        
+    #     @centerAxis(true, true)        
 
     getSize: () =>
         @_layerNode.getAbsoluteSize()
 
     applySuperlayer: () =>
+        
 
 
     @property 'superlayer',

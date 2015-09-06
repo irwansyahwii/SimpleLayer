@@ -19,77 +19,124 @@
     function Layer(options) {
       this.applySuperlayer = bind(this.applySuperlayer, this);
       this.getSize = bind(this.getSize, this);
-      this.center = bind(this.center, this);
-      this.centerY = bind(this.centerY, this);
-      this.centerX = bind(this.centerX, this);
-      this.centerAxis = bind(this.centerAxis, this);
       this.applyRotation = bind(this.applyRotation, this);
       this.applyOpacity = bind(this.applyOpacity, this);
-      this.applyScale = bind(this.applyScale, this);
-      this.applyPosition = bind(this.applyPosition, this);
+      this.applyScaleZ = bind(this.applyScaleZ, this);
+      this.applyScaleY = bind(this.applyScaleY, this);
+      this.applyScaleX = bind(this.applyScaleX, this);
+      this.applyY = bind(this.applyY, this);
+      this.applyX = bind(this.applyX, this);
+      this.addSubLayer = bind(this.addSubLayer, this);
       this.applyBorderRadius = bind(this.applyBorderRadius, this);
+      this.applyBackgroundColor = bind(this.applyBackgroundColor, this);
+      this.applyWidth = bind(this.applyWidth, this);
+      this.applyHeight = bind(this.applyHeight, this);
+      var backgroundColor, borderRadius, height, width, x, y;
       this._id = LayerId.generateNewId();
       this._name = "";
-      this._x = options.x || 0;
-      this._y = options.y || 0;
-      this._width = options.width || 0;
-      this._height = options.height || 0;
       this._window = options.window;
       if (this._window == null) {
         this._window = Application.getRootWindow();
       }
-      this._tagName = "div";
-      this._xAxisSizeMode = "absolute";
-      this._yAxisSizeMode = "absolute";
-      this._zAxisSizeMode = "absolute";
-      this._scale = options.scale || 1;
-      this._backgroundColor = options.backgroundColor || '#FFFFFF';
       this._layerNode = this._window.createNode();
-      this._layerElement = new DOMElement(this._layerNode, {
-        tagName: this._tagName,
-        properties: {
-          backgroundColor: this._backgroundColor
-        }
-      });
-      this._borderRadius = options.borderRadius || 0;
-      if (this._borderRadius > 0) {
-        this.applyBorderRadius();
-      }
-      this._scale = options.scale || 1;
-      this._opacity = options.opacity || 1.0;
-      this._rotation = options.rotation || 0;
-      this._superlayer = options.superlayer || null;
-      this._layerNode.setScale(this._scale, this._scale);
-      if (this._x !== 0 || this._y !== 0) {
-        this.applyPosition();
-      }
-      if (this._scale !== 1) {
-        this.applyScale();
-      }
-      if (this._opacity !== 1.0) {
-        this.applyOpacity();
-      }
-      if (this._rotation !== 0) {
-        this.applyRotation();
-      }
-      this._layerNode.setSizeMode(this._xAxisSizeMode, this._yAxisSizeMode, this._zAxisSizeMode);
-      this._layerNode.setAbsoluteSize(this._width, this._height);
+      this._layerNode.setSizeMode("absolute", "absolute", "absolute");
       this._layerNode.setOrigin(0.5, 0.5);
+      this._layerElement = new DOMElement(this._layerNode, {
+        tagName: this._tagName
+      });
+      backgroundColor = options.backgroundColor || '#FFFFFF';
+      this.applyBackgroundColor(backgroundColor);
+      borderRadius = options.borderRadius || 0;
+      this.applyBorderRadius(borderRadius);
+      width = options.width || 0;
+      height = options.height || 0;
+      this.applyWidth(width);
+      this.applyHeight(height);
+      x = options.x || 0;
+      y = options.y || 0;
+      this.applyX(x);
+      this.applyY(y);
     }
 
-    Layer.prototype.applyBorderRadius = function() {
-      this._layerElement.setProperty('border-radius', this._borderRadius + "px");
-      return this._layerElement.setProperty('border', this._borderRadius + "px solid " + this._backgroundColor);
+    Layer.prototype.applyHeight = function(val) {
+      var currentSize;
+      currentSize = this._layerNode.getAbsoluteSize();
+      return this._layerNode.setAbsoluteSize(currentSize[0], val, currentSize[2]);
     };
+
+    Layer.property('height', {
+      get: function() {
+        var currentSize;
+        currentSize = this._layerNode.getAbsoluteSize();
+        return currentSize[1];
+      },
+      set: function(newVal) {
+        if (this.height !== newVal) {
+          return this.applyHeight(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyWidth = function(val) {
+      var currentSize;
+      currentSize = this._layerNode.getAbsoluteSize();
+      return this._layerNode.setAbsoluteSize(val, currentSize[1], currentSize[2]);
+    };
+
+    Layer.property('width', {
+      get: function() {
+        var currentSize;
+        Logger.log("width property inside");
+        currentSize = this._layerNode.getAbsoluteSize();
+        Logger.log("width property, currentSize: " + currentSize);
+        return currentSize[0];
+      },
+      set: function(newVal) {
+        if (this.width !== newVal) {
+          return this.applyWidth(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyBackgroundColor = function(bgColor) {
+      return this._layerElement.setProperty("background-color", bgColor);
+    };
+
+    Layer.property('backgroundColor', {
+      get: function() {
+        var elementValue;
+        elementValue = this._layerElement.getValue();
+        return elementValue.styles['background-color'];
+      },
+      set: function(newVal) {
+        if (this.backgroundColor !== newVal) {
+          return this.applyBackgroundColor(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyBorderRadius = function(borderRadius) {
+      this._layerElement.setProperty('border-radius', borderRadius + "px");
+      return this._layerElement.setProperty('border', borderRadius + "px solid " + this.backgroundColor);
+    };
+
+    Layer.prototype.addSubLayer = function(subLayer) {};
 
     Layer.property('borderRadius', {
       get: function() {
-        return this._borderRadius;
+        var elementValue, strValue;
+        elementValue = this._layerElement.getValue();
+        strValue = elementValue.styles['borderRadius'] || '';
+        if (strValue.length > 0) {
+          strValue = strValue.replace("px", "");
+          return parseInt(strValue, 10);
+        } else {
+          return 0;
+        }
       },
       set: function(newVal) {
-        if (this._borderRadius !== newVal) {
-          this._borderRadius = newVal;
-          return this.applyBorderRadius();
+        if (this.borderRadius !== newVal) {
+          return this.applyBorderRadius(newVal);
         }
       }
     });
@@ -109,116 +156,111 @@
       }
     });
 
-    Layer.prototype.applyPosition = function() {
-      return this._layerNode.setPosition(this._x, this._y);
+    Layer.prototype.applyX = function(newVal) {
+      var currentPos;
+      currentPos = this._layerNode.getPosition();
+      return this._layerNode.setPosition(newVal, currentPos[1], currentPos[2]);
     };
 
     Layer.property('x', {
       get: function() {
-        return this._x;
+        var currentPos;
+        currentPos = this._layerNode.getPosition();
+        return currentPos[0];
       },
       set: function(newVal) {
-        if (this._x !== newVal) {
-          this._x = newVal;
-          return this.applyPosition();
+        if (this.x !== newVal) {
+          return this.applyX(newVal);
         }
       }
     });
+
+    Layer.prototype.applyY = function(newVal) {
+      var currentPos;
+      currentPos = this._layerNode.getPosition();
+      return this._layerNode.setPosition(currentPos[0], newVal, currentPos[2]);
+    };
 
     Layer.property('y', {
       get: function() {
-        return this._y;
+        var currentPos;
+        currentPos = this._layerNode.getPosition();
+        return currentPos[1];
       },
       set: function(newVal) {
-        if (this._y !== newVal) {
-          this._y = newVal;
-          return this.applyPosition();
+        if (this.y !== newVal) {
+          return this.applyY(newVal);
         }
       }
     });
 
-    Layer.prototype.applyScale = function() {
-      return this._layerNode.setScale(this._scale, this._scale, this._scale);
+    Layer.prototype.applyScaleX = function(newVal) {
+      var currentScale;
+      currentScale = this._layerNode.getScale();
+      return this._layerNode.setScale(newVal, currentScale[1], currentScale[2]);
+    };
+
+    Layer.prototype.applyScaleY = function(newVal) {
+      var currentScale;
+      currentScale = this._layerNode.getScale();
+      return this._layerNode.setScale(currentScale[0], newVal, currentScale[2]);
+    };
+
+    Layer.prototype.applyScaleZ = function(newVal) {
+      var currentScale;
+      currentScale = this._layerNode.getScale();
+      return this._layerNode.setScale(currentScale[0], currentScale[1], newVal);
     };
 
     Layer.property('scale', {
       get: function() {
-        return this._scale;
+        var currentScale;
+        currentScale = this._layerNode.getScale();
+        return currentScale[0];
       },
       set: function(newVal) {
-        if (this._scale !== newVal) {
-          this._scale = newVal;
-          return this.applyScale();
+        Logger.log("newVal scale: " + newVal);
+        if (this.scale !== newVal) {
+          this.applyScaleX(newVal);
+          return this.applyScaleY(newVal);
         }
       }
     });
 
-    Layer.prototype.applyOpacity = function() {
-      return this._layerNode.setOpacity(this._opacity);
+    Layer.prototype.applyOpacity = function(newVal) {
+      return this._layerNode.setOpacity(newVal);
     };
 
     Layer.property('opacity', {
       get: function() {
-        return this._opacity;
+        return this._layerNode.getOpacity();
       },
       set: function(newVal) {
-        if (this._opacity !== newVal) {
-          this._opacity = newVal;
-          return this.applyOpacity();
+        if (this.opacity !== newVal) {
+          return this.applyOpacity(newVal);
         }
       }
     });
 
-    Layer.prototype.applyRotation = function() {
+    Layer.prototype.applyRotation = function(newVal) {
       var thetaRadian;
       thetaRadian = 2 * Math.PI / 360.;
-      return this._layerNode.setRotation(0, 0, this._rotation * thetaRadian);
+      return this._layerNode.setRotation(0, 0, newVal * thetaRadian);
     };
 
     Layer.property('rotation', {
       get: function() {
-        return this._rotation;
+        var currentRotation, thetaRadian;
+        currentRotation = this._layerNode.getRotation();
+        thetaRadian = 2 * Math.PI / 360.;
+        return currentRotation[2] / thetaRadian;
       },
       set: function(newVal) {
-        if (this._rotation !== newVal) {
-          this._rotation = newVal;
-          return this.applyRotation();
+        if (this.rotation !== newVal) {
+          return this.applyRotation(newVal);
         }
       }
     });
-
-    Layer.prototype.centerAxis = function(isX, isY) {
-      var contextSize, parentSize;
-      if (this._superlayer !== null) {
-        parentSize = this._superlayer.getSize();
-        if (isX) {
-          this.x = (parentSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
-        }
-        if (isY) {
-          return this.y = (parentSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
-        }
-      } else {
-        contextSize = context._size;
-        if (isX) {
-          this.x = (contextSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
-        }
-        if (isY) {
-          return this.y = (contextSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
-        }
-      }
-    };
-
-    Layer.prototype.centerX = function() {
-      return this.centerAxis(true, false);
-    };
-
-    Layer.prototype.centerY = function() {
-      return this.centerAxis(false, true);
-    };
-
-    Layer.prototype.center = function() {
-      return this.centerAxis(true, true);
-    };
 
     Layer.prototype.getSize = function() {
       return this._layerNode.getAbsoluteSize();

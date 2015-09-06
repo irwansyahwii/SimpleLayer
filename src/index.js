@@ -11,10 +11,15 @@
   Application.run(function() {
     var layerA, layerB;
     layerA = new Layer({
-      width: 260,
-      height: 260,
+      width: 80,
+      height: 80,
       backgroundColor: "green"
     });
+    layerA.borderRadius = 5;
+    layerA.x = 10;
+    layerA.y = 10;
+    layerA.opacity = 0.3;
+    layerA.rotation = 45;
     layerB = new Layer({
       width: 60,
       height: 60,
@@ -23,7 +28,6 @@
       borderRadius: 3
     });
     layerB.superlayer = layerA;
-    layerB.centerX();
     return Logger.log("layerB.x: " + layerB.x);
   });
 

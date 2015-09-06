@@ -4,14 +4,20 @@ Application = require('./Application')
 
 Application.run ->    
     layerA = new Layer
-        width: 260
-        height: 260
+        width: 80
+        height: 80
         backgroundColor: "green"
 
+    layerA.borderRadius = 5
 
-    # layerA.borderRadius = 5
-    # layerA.x = 300
-    # layerA.y = 200
+    layerA.x = 10
+    layerA.y = 10
+
+    # layerA.scale = 0.5
+    layerA.opacity = 0.3
+
+    layerA.rotation = 45
+
 
     layerB = new Layer
         width: 60
@@ -25,7 +31,7 @@ Application.run ->
     layerB.superlayer = layerA
 
     # layerB.rotation = 45
-    layerB.centerX()
+    # layerB.centerX()
 
     # layerB.y = 10
     # layerB.x = 10
