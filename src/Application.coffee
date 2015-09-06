@@ -26,7 +26,9 @@ class Application
         poolContext = ->            
             rootWin = Application.getRootWindow()
 
-            ctx = rootWin.scene.getUpdater().getContext('body')
+            # ctx = rootWin.scene.getUpdater().getContext('body')
+            ctx = rootWin.scene.getUpdater().compositor.getContext('body')
+            Logger.log "ctx: #{ctx}"
             if ctx?
                 if mainFn isnt null
                     mainFn()

@@ -19,6 +19,11 @@
     function Layer(options) {
       this.applySuperlayer = bind(this.applySuperlayer, this);
       this.getSize = bind(this.getSize, this);
+      this._centerUsingAlign = bind(this._centerUsingAlign, this);
+      this.center = bind(this.center, this);
+      this.centerY = bind(this.centerY, this);
+      this.centerX = bind(this.centerX, this);
+      this.centerAxis = bind(this.centerAxis, this);
       this.applyRotation = bind(this.applyRotation, this);
       this.applyOpacity = bind(this.applyOpacity, this);
       this.applyScaleZ = bind(this.applyScaleZ, this);
@@ -194,6 +199,42 @@
       }
     });
 
+    Layer.property('minX', {
+      get: function() {
+        return this.x;
+      }
+    });
+
+    Layer.property('maxX', {
+      get: function() {
+        return this.x + this.width;
+      }
+    });
+
+    Layer.property('minY', {
+      get: function() {
+        return this.y;
+      }
+    });
+
+    Layer.property('maxY', {
+      get: function() {
+        return this.y + this.height;
+      }
+    });
+
+    Layer.property('midX', {
+      get: function() {
+        return (this.minX + this.maxX) / 2;
+      }
+    });
+
+    Layer.property('midY', {
+      get: function() {
+        return (this.minY + this.maxY) / 2;
+      }
+    });
+
     Layer.prototype.applyScaleX = function(newVal) {
       var currentScale;
       currentScale = this._layerNode.getScale();
@@ -261,6 +302,42 @@
         }
       }
     });
+
+    Layer.prototype.centerAxis = function(isX, isY) {
+      var nodeParent, parentClassName, parentSize;
+      nodeParent = this._layerNode.getParent();
+      parentSize = nodeParent.getAbsoluteSize();
+      parentClassName = nodeParent.constructor.name;
+      if (parentClassName === 'Scene') {
+        parentSize = nodeParent.getUpdater().compositor.getContext('body')._size;
+      }
+      if (isX) {
+        this.x = (parentSize[0] / 2) - (this.width / 2);
+      }
+      if (isY) {
+        return this.y = (parentSize[1] / 2) - (this.height / 2);
+      }
+    };
+
+    Layer.prototype.centerX = function() {
+      return this.centerAxis(true, false);
+    };
+
+    Layer.prototype.centerY = function() {
+      return this.centerAxis(false, true);
+    };
+
+    Layer.prototype.center = function() {
+      return this.centerAxis(true, true);
+    };
+
+    Layer.prototype._centerUsingAlign = function() {
+      var originalMountPoint;
+      originalMountPoint = this._layerNode.getMountPoint();
+      this._layerNode.setMountPoint(0.5, 0.5, originalMountPoint[2]);
+      this._layerNode.setAlign(0.5, 0.5);
+      return this._layerNode.setMountPoint(originalMountPoint[0], originalMountPoint[1], originalMountPoint[2]);
+    };
 
     Layer.prototype.getSize = function() {
       return this._layerNode.getAbsoluteSize();

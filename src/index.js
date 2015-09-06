@@ -19,7 +19,8 @@
     layerA.x = 10;
     layerA.y = 10;
     layerA.opacity = 0.3;
-    layerA.rotation = 45;
+    layerA.centerY();
+    Logger.log("layerA.x: " + layerA.x + ", layerA.y: " + layerA.y + ", layerA.minX: " + layerA.minX + ", layerA.maxX: " + layerA.maxX + ", midX: " + layerA.midX + ", midY: " + layerA.midY);
     layerB = new Layer({
       width: 60,
       height: 60,
@@ -27,6 +28,7 @@
       scale: 1,
       borderRadius: 3
     });
+    layerB.x = 300;
     layerB.superlayer = layerA;
     return Logger.log("layerB.x: " + layerB.x);
   });

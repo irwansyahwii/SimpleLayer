@@ -157,6 +157,31 @@ class Layer
             if @y isnt newVal                                                
                 @applyY(newVal)
 
+
+    @property 'minX',
+        get: ->
+            @x
+
+    @property 'maxX',
+        get: ->
+            @x + @width
+
+    @property 'minY',
+        get: ->
+            @y
+
+    @property 'maxY',
+        get: ->
+            @y + @height
+
+    @property 'midX',
+        get: ->
+            (@minX + @maxX)/2
+
+    @property 'midY',
+        get: ->
+            (@minY + @maxY)/2
+
     applyScaleX:(newVal) =>
         currentScale = @_layerNode.getScale()
         @_layerNode.setScale(newVal, currentScale[1], currentScale[2])
@@ -207,15 +232,40 @@ class Layer
             if @rotation isnt newVal
                 @applyRotation(newVal)
 
-    # centerX: () =>        
+    centerAxis: (isX, isY) =>
 
-    #     @centerAxis(true, false)
+        nodeParent = @_layerNode.getParent()
 
-    # centerY: () =>                
-    #     @centerAxis(false, true)
+        parentSize = nodeParent.getAbsoluteSize()
 
-    # center: () =>        
-    #     @centerAxis(true, true)        
+        parentClassName = nodeParent.constructor.name
+
+        if parentClassName is 'Scene'
+            parentSize = nodeParent.getUpdater().compositor.getContext('body')._size        
+
+        if isX
+            @x = (parentSize[0] / 2) - (@width/2)
+
+        if isY
+            @y = (parentSize[1] / 2) - (@height/2)
+
+    centerX: () =>        
+
+        @centerAxis(true, false)
+
+    centerY: () =>                
+        @centerAxis(false, true)
+
+    center: () =>
+        @centerAxis(true, true)
+
+    _centerUsingAlign: () =>        
+        originalMountPoint = @_layerNode.getMountPoint()
+
+        @_layerNode.setMountPoint(0.5, 0.5, originalMountPoint[2])
+        @_layerNode.setAlign(0.5, 0.5)
+
+        @_layerNode.setMountPoint(originalMountPoint[0], originalMountPoint[1], originalMountPoint[2])
 
     getSize: () =>
         @_layerNode.getAbsoluteSize()
