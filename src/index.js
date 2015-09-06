@@ -42,7 +42,7 @@
         rotation: 90,
         borderRadius: 6
       },
-      curve: "ease",
+      curve: "spring(200,30,0)",
       delay: 1
     });
   });

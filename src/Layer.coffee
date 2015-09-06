@@ -1,3 +1,5 @@
+
+
 famous = require("famous")
 
 FamousWindow = require("./FamousWindow")
@@ -14,6 +16,9 @@ Rotation = famous.components.Rotation
 Position = famous.components.Position
 
 Transitionable = famous.transitions.Transitionable
+
+
+_ = require('./Underscore')
 
 
 class Layer
@@ -301,6 +306,21 @@ class Layer
                 @_superlayer = newVal
                 @applySuperlayer(newVal)
 
+    retrieveCurveValue: (str) =>
+
+        result = 
+            name: ""
+            args: []
+
+
+        if _.endsWith str, ")"
+            result.name = str.split("(")[0]
+            result.args = str.split("(")[1].split(",").map (a) -> _.trim(_.trimRight(a, ")"))
+        else
+            result.name = str
+
+        return result
+
 
     startAnimation: (animOptions) =>
         rotationValue = animOptions.properties.rotation || null
@@ -310,7 +330,12 @@ class Layer
         curveMaps =
             "ease": "easeInOut"
 
-        curveValue = animOptions.curve || null
+        curveValue = animOptions.curve || ''
+
+        curveObject = @retrieveCurveValue(curveValue)
+
+        curveValue = curveObject.name
+        Logger.log "curveValue: #{curveValue}"
 
         if curveValue is "ease"
             curveValue = "easeInOut"

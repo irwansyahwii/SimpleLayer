@@ -37,6 +37,8 @@
   "license": "MIT",
   "dependencies": {
     "babelify": "^6.0.1",
-    "famous": "^0.6.1"
+    "famous": "^0.6.1",
+    "lodash": "^3.10.1",
+    "underscore": "^1.8.3"
   }
 }
