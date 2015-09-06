@@ -1,7 +1,7 @@
 # SimpleLayer
 An animation framework based on Framer API but being built on top of Famous
 
-# How to use
+## How to use
 
 ``` javascript
 Layer = require("./Layer")
@@ -47,3 +47,13 @@ Application.run ->
         curve: "spring(200,30,0)"
         delay: 1
 ```
+
+## Example Code
+The repo already included an example code that you can try and run, just follow the steps below:
+
+```javascript
+npm install
+npm run dev
+```
+
+It will run the code taken from Framer Studio default code.
