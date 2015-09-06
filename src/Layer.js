@@ -40,6 +40,7 @@
       this._id = LayerId.generateNewId();
       this._name = "";
       this._window = options.window;
+      this._superlayer = null;
       if (this._window == null) {
         this._window = Application.getRootWindow();
       }
@@ -122,7 +123,7 @@
 
     Layer.prototype.applyBorderRadius = function(borderRadius) {
       this._layerElement.setProperty('border-radius', borderRadius + "px");
-      return this._layerElement.setProperty('border', borderRadius + "px solid " + this.backgroundColor);
+      return this._layerElement.setProperty('border', "1px solid " + this.backgroundColor);
     };
 
     Layer.prototype.addSubLayer = function(subLayer) {};
@@ -343,7 +344,10 @@
       return this._layerNode.getAbsoluteSize();
     };
 
-    Layer.prototype.applySuperlayer = function() {};
+    Layer.prototype.applySuperlayer = function(newVal) {
+      this._layerNode.getParent().removeChild(this._layerNode);
+      return newVal._layerNode.addChild(this._layerNode);
+    };
 
     Layer.property('superlayer', {
       get: function() {
@@ -352,7 +356,7 @@
       set: function(newVal) {
         if (this._superlayer !== newVal) {
           this._superlayer = newVal;
-          return this.applySuperlayer();
+          return this.applySuperlayer(newVal);
         }
       }
     });

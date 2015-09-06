@@ -17,6 +17,7 @@ class Layer
         @_id = LayerId.generateNewId()
         @_name = ""
         @_window = options.window
+        @_superlayer = null
         if not @_window?
             @_window = Application.getRootWindow()
 
@@ -98,7 +99,7 @@ class Layer
     applyBorderRadius:(borderRadius) =>
         
         @_layerElement.setProperty('border-radius', "#{borderRadius}px")
-        @_layerElement.setProperty('border', "#{borderRadius}px solid #{@backgroundColor}")   
+        @_layerElement.setProperty('border', "1px solid #{@backgroundColor}")   
 
 
     addSubLayer: (subLayer) =>
@@ -270,8 +271,11 @@ class Layer
     getSize: () =>
         @_layerNode.getAbsoluteSize()
 
-    applySuperlayer: () =>
-        
+    applySuperlayer: (newVal) =>
+
+        @_layerNode.getParent().removeChild(@_layerNode)
+
+        newVal._layerNode.addChild(@_layerNode)
 
 
     @property 'superlayer',
@@ -280,7 +284,7 @@ class Layer
         set: (newVal) ->
             if @_superlayer isnt newVal
                 @_superlayer = newVal
-                @applySuperlayer()
+                @applySuperlayer(newVal)
 
 
 module.exports = Layer

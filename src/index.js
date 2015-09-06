@@ -26,10 +26,13 @@
       height: 60,
       backgroundColor: "#2DD7AA",
       scale: 1,
-      borderRadius: 3
+      borderRadius: 5
     });
+    layerB.borderRadius = layerA.borderRadius;
     layerB.x = 300;
     layerB.superlayer = layerA;
+    layerB.x = 0;
+    layerB.y = 0;
     return Logger.log("layerB.x: " + layerB.x);
   });
 
