@@ -3,7 +3,7 @@ An animation framework based on Framer API but being built on top of Famous
 
 ## How to use
 
-``` javascript
+``` coffeescript
 Layer = require("./Layer")
 BackgroundLayer = require("./BackgroundLayer")
 Application = require('./Application')
