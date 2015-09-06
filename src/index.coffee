@@ -13,7 +13,7 @@ Application.run ->
         height: 150
         backgroundColor: "#fff"
         borderRadius: 6
-        
+
     layerB = new Layer
         width: 150
         height: 150
@@ -25,3 +25,15 @@ Application.run ->
     layerA.x -= 90
     layerB.x += 90
 
+    layerA.animate 
+        properties:
+            rotation: 90
+        curve: "ease"
+
+
+    layerB.animate 
+        properties:
+            rotation: 90
+            borderRadius: 6
+        curve: "ease"
+        delay: 1

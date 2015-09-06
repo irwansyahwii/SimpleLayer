@@ -30,7 +30,21 @@
     layerA.center();
     layerB.center();
     layerA.x -= 90;
-    return layerB.x += 90;
+    layerB.x += 90;
+    layerA.animate({
+      properties: {
+        rotation: 90
+      },
+      curve: "ease"
+    });
+    return layerB.animate({
+      properties: {
+        rotation: 90,
+        borderRadius: 6
+      },
+      curve: "ease",
+      delay: 1
+    });
   });
 
 }).call(this);

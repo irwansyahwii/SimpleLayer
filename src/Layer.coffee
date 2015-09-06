@@ -9,6 +9,12 @@ Logger = require('./Logger')
 
 DOMElement = famous.domRenderables.DOMElement
 
+Rotation = famous.components.Rotation
+
+Position = famous.components.Position
+
+Transitionable = famous.transitions.Transitionable
+
 
 class Layer
 
@@ -224,9 +230,13 @@ class Layer
                 @applyOpacity(newVal)
 
 
-    applyRotation: (newVal) =>
+    angleToFamousRotation: (angle) =>
         thetaRadian = 2 * Math.PI / (360)
-        @_layerNode.setRotation(0, 0, newVal * thetaRadian)
+
+        angle * thetaRadian
+
+    applyRotation: (newVal) =>        
+        @_layerNode.setRotation(0, 0, @angleToFamousRotation(newVal))
 
     @property 'rotation',
         get: ->
@@ -290,6 +300,63 @@ class Layer
             if @_superlayer isnt newVal
                 @_superlayer = newVal
                 @applySuperlayer(newVal)
+
+
+    startAnimation: (animOptions) =>
+        rotationValue = animOptions.properties.rotation || null
+        borderRadiusValue = animOptions.properties.borderRadius || null
+        
+
+        curveMaps =
+            "ease": "easeInOut"
+
+        curveValue = animOptions.curve || null
+
+        if curveValue is "ease"
+            curveValue = "easeInOut"
+
+        if rotationValue isnt null
+            rotationComponent = new Rotation(@_layerNode)            
+
+            rotationComponent.set(0, 0, @angleToFamousRotation(rotationValue),
+                    duration: 1000
+                    curve: curveValue
+                )
+
+            @_layerNode.addComponent(rotationComponent)
+
+
+        if borderRadiusValue isnt null
+
+            Logger.log "borderRadius: #{@borderRadius}, borderRadiusValue: #{borderRadiusValue}"
+
+            borderRadiusTransition = new Transitionable(@borderRadius)
+            # borderRadiusTransition.from(@borderRadius).to(borderRadiusValue).delay(delayValue)
+            borderRadiusTransition.set(borderRadiusValue, 
+                    duration: 1000
+                )
+
+            componentId =  @_layerNode.addComponent(
+                    onUpdate: (time) =>
+                        @borderRadius = borderRadiusTransition.get()
+                        if borderRadiusTransition.isActive()
+                            @_layerNode.requestUpdate(componentId)
+                )
+            @_layerNode.requestUpdate(componentId)
+
+    animate: (options) =>
+        animOptions = options || {}
+        animOptions.properties = animOptions.properties || {}
+
+        delayValue = animOptions.delay || 0
+        delayValue = delayValue * 1000
+
+        setTimeout =>
+                @startAnimation(animOptions)
+            , delayValue
+
+
+
 
 
 module.exports = Layer
