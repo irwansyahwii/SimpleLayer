@@ -11,10 +11,9 @@ DOMElement = famous.domRenderables.DOMElement
 
 
 class Layer
+
+
     constructor:(options) ->
-
-        Logger.log "Layer constructor called..."
-
         @_id = LayerId.generateNewId()
         @_name = ""
         @_x = options.x || 0
@@ -47,9 +46,6 @@ class Layer
         @_opacity = options.opacity || 1.0
         @_rotation = options.rotation || 0
         @_superlayer = options.superlayer || null
-
-
-        Application.init()
 
         @_layerNode.setScale(@_scale, @_scale)
 
@@ -103,22 +99,9 @@ class Layer
             @_x
 
         set: (newVal) ->
-            if @_x isnt newVal                
-                poolContext = =>                        
-                    context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-
-                    if context?
-                        @_x = newVal
-                        @applyPosition()
-                        
-                    else
-                        setTimeout =>
-                                poolContext()
-                            , 1
-
-                        
-
-                poolContext()        
+            if @_x isnt newVal                                
+                @_x = newVal
+                @applyPosition()
 
 
     @property 'y',
@@ -127,21 +110,8 @@ class Layer
 
         set: (newVal) ->
             if @_y isnt newVal
-                poolContext = =>                        
-                    context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-
-                    if context?
-                        @_y = newVal
-                        @applyPosition()
-                        
-                    else
-                        setTimeout =>
-                                poolContext()
-                            , 1
-
-                        
-
-                poolContext()        
+                @_y = newVal
+                @applyPosition()
 
     applyScale: =>
         @_layerNode.setScale(@_scale, @_scale, @_scale)
@@ -182,36 +152,24 @@ class Layer
 
 
     centerAxis: (isX, isY) =>
-        poolSize = =>                        
-            context = @_layerNode.getParent().getUpdater().compositor.getContext('body')
-            if context?
-                if @_superlayer isnt null
-                    parentSize = @_superlayer.getSize()
-                    
+        if @_superlayer isnt null
+            parentSize = @_superlayer.getSize()
+            
 
-                    if isX
-                        @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
+            if isX
+                @x = (parentSize[0]/2) - (@_layerNode.getAbsoluteSize()[0]/2)
 
-                    if isY
-                        @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
+            if isY
+                @y = (parentSize[1]/2) - (@_layerNode.getAbsoluteSize()[1]/2)
 
-                else
-                    contextSize = context._size
+        else
+            contextSize = context._size
 
-                    if isX
-                        @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
+            if isX
+                @x = (contextSize[0] / 2) - (@_layerNode.getAbsoluteSize()[0]/2)
 
-                    if isY
-                        @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
-
-            else
-                setTimeout =>
-                        poolSize()
-                    , 1
-
-                
-
-        poolSize()
+            if isY
+                @y = (contextSize[1] / 2) - (@_layerNode.getAbsoluteSize()[1]/2)
 
 
     centerX: () =>        

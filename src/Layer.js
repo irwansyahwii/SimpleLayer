@@ -28,7 +28,6 @@
       this.applyScale = bind(this.applyScale, this);
       this.applyPosition = bind(this.applyPosition, this);
       this.applyBorderRadius = bind(this.applyBorderRadius, this);
-      Logger.log("Layer constructor called...");
       this._id = LayerId.generateNewId();
       this._name = "";
       this._x = options.x || 0;
@@ -60,7 +59,6 @@
       this._opacity = options.opacity || 1.0;
       this._rotation = options.rotation || 0;
       this._superlayer = options.superlayer || null;
-      Application.init();
       this._layerNode.setScale(this._scale, this._scale);
       if (this._x !== 0 || this._y !== 0) {
         this.applyPosition();
@@ -120,23 +118,9 @@
         return this._x;
       },
       set: function(newVal) {
-        var poolContext;
         if (this._x !== newVal) {
-          poolContext = (function(_this) {
-            return function() {
-              var context;
-              context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
-              if (context != null) {
-                _this._x = newVal;
-                return _this.applyPosition();
-              } else {
-                return setTimeout(function() {
-                  return poolContext();
-                }, 1);
-              }
-            };
-          })(this);
-          return poolContext();
+          this._x = newVal;
+          return this.applyPosition();
         }
       }
     });
@@ -146,23 +130,9 @@
         return this._y;
       },
       set: function(newVal) {
-        var poolContext;
         if (this._y !== newVal) {
-          poolContext = (function(_this) {
-            return function() {
-              var context;
-              context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
-              if (context != null) {
-                _this._y = newVal;
-                return _this.applyPosition();
-              } else {
-                return setTimeout(function() {
-                  return poolContext();
-                }, 1);
-              }
-            };
-          })(this);
-          return poolContext();
+          this._y = newVal;
+          return this.applyPosition();
         }
       }
     });
@@ -218,37 +188,24 @@
     });
 
     Layer.prototype.centerAxis = function(isX, isY) {
-      var poolSize;
-      poolSize = (function(_this) {
-        return function() {
-          var context, contextSize, parentSize;
-          context = _this._layerNode.getParent().getUpdater().compositor.getContext('body');
-          if (context != null) {
-            if (_this._superlayer !== null) {
-              parentSize = _this._superlayer.getSize();
-              if (isX) {
-                _this.x = (parentSize[0] / 2) - (_this._layerNode.getAbsoluteSize()[0] / 2);
-              }
-              if (isY) {
-                return _this.y = (parentSize[1] / 2) - (_this._layerNode.getAbsoluteSize()[1] / 2);
-              }
-            } else {
-              contextSize = context._size;
-              if (isX) {
-                _this.x = (contextSize[0] / 2) - (_this._layerNode.getAbsoluteSize()[0] / 2);
-              }
-              if (isY) {
-                return _this.y = (contextSize[1] / 2) - (_this._layerNode.getAbsoluteSize()[1] / 2);
-              }
-            }
-          } else {
-            return setTimeout(function() {
-              return poolSize();
-            }, 1);
-          }
-        };
-      })(this);
-      return poolSize();
+      var contextSize, parentSize;
+      if (this._superlayer !== null) {
+        parentSize = this._superlayer.getSize();
+        if (isX) {
+          this.x = (parentSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
+        }
+        if (isY) {
+          return this.y = (parentSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
+        }
+      } else {
+        contextSize = context._size;
+        if (isX) {
+          this.x = (contextSize[0] / 2) - (this._layerNode.getAbsoluteSize()[0] / 2);
+        }
+        if (isY) {
+          return this.y = (contextSize[1] / 2) - (this._layerNode.getAbsoluteSize()[1] / 2);
+        }
+      }
     };
 
     Layer.prototype.centerX = function() {

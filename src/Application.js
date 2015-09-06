@@ -37,11 +37,31 @@
 
     Application.isReady = false;
 
+    Application.run = function(mainFn) {
+      var poolContext;
+      poolContext = function() {
+        var ctx, rootWin;
+        rootWin = Application.getRootWindow();
+        ctx = rootWin.scene.getUpdater().getContext('body');
+        if (ctx != null) {
+          if (mainFn !== null) {
+            return mainFn();
+          }
+        } else {
+          return setTimeout(function() {
+            return poolContext();
+          }, 1);
+        }
+      };
+      return poolContext();
+    };
+
     Application.init = function() {
+      var rootWin;
       if (!Application.hasInitialized) {
         Logger.log("Initializing application...");
         Application.hasInitialized = true;
-        Application.getRootWindow();
+        rootWin = Application.getRootWindow();
         Logger.log("Initializing famous engine...");
         return Engine.init();
       }
@@ -50,7 +70,9 @@
     Application.getRootWindow = function() {
       if (Application.rootWindow === null) {
         Logger.log("Creating a new window for root window...");
-        Application.rootWindow = new FamousWindow();
+        Application.rootWindow = new FamousWindow({
+          isRootWindow: true
+        });
         Application.init();
       }
       Logger.log('Application.rootWindow:');
