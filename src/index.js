@@ -13,14 +13,26 @@
   Events = require('./Events');
 
   Application.run(function() {
-    var layerA;
-    layerA = new Layer({
-      width: 400,
-      height: 400,
-      image: "http://cl.ly/arBO/bg.jpg",
-      borderRadius: 4
+    var bg, layerA;
+    bg = new BackgroundLayer({
+      backgroundColor: "#28affa"
     });
-    return layerA.center();
+    bg.bringToFront();
+    layerA = new Layer({
+      width: 250,
+      height: 250,
+      backgroundColor: "#fff",
+      borderRadius: 8
+    });
+    layerA.center();
+    return layerA.on(Events.Click, function() {
+      return layerA.animate({
+        properties: {
+          rotation: layerA.rotation + 90
+        },
+        curve: "ease"
+      });
+    });
   });
 
 }).call(this);

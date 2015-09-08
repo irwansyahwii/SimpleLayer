@@ -36,9 +36,11 @@ class Layer
             @_window = Application.getRootWindow()
 
         @_layerNode = @_window.createNode()        
-        @_layerNode.setOrigin(0.5, 0.5)
+        @_layerNode.setOrigin(0.5, 0.5, 0.5)
 
         @_tagName = "div"
+
+        @_ignoreEvents = false
 
         image = options.image || null
 
@@ -82,8 +84,6 @@ class Layer
         @applyY(y)
 
         @_superlayer = options.superLayer || null
-        Logger.log "@_superlayer:"
-        Logger.log @_superlayer
         @applySuperlayer(@_superlayer)
 
         @eventsHandlers = []
@@ -91,10 +91,14 @@ class Layer
         @_layerNode.addUIEvent(Events.Click)
 
         @_layerNode.onReceive = (event, payload) =>
-            handler = @eventsHandlers[event] || null;
+            if not @_ignoreEvents            
+                handler = @eventsHandlers[event] || null;
 
-            if handler isnt null
-                handler()
+                if handler isnt null
+                    handler()
+
+        @_layerNode.layer = @
+        @_layerElement.layer = @
 
 
     applyHeight: (val) =>
@@ -204,6 +208,65 @@ class Layer
             if @y isnt newVal                                                
                 @applyY(newVal)
 
+    applyZ: (newVal) =>
+        currentPos = @_layerNode.getPosition()
+        @_layerNode.setPosition(currentPos[0], currentPos[1], newVal)
+
+    @property 'z',
+        get: ->
+            currentPos = @_layerNode.getPosition()
+            currentPos[2]
+
+        set: (newVal) ->
+            if @y isnt newVal                                                
+                @applyZ(newVal)
+
+    @property 'point',
+        get: ->
+            point = 
+                x : @x
+                y : @y
+
+            point
+
+        set: (newVal) ->
+            if @point isnt newVal
+                if newVal?
+                    if @point.x isnt newVal.x or @point.y isnt newVal.y
+                        @x = newVal.x
+                        @y = newVal.y
+
+
+    @property 'size',
+        get: ->
+            size = 
+                width: @width
+                height: @height
+
+            size
+
+        set: (newVal) ->
+            if @size isnt newVal
+                if newVal?
+                    if @size.width isnt newVal.width or @size.height isnt newVal.height
+                        @width = newVal.width
+                        @height = newVal.height
+
+    @property 'frame',
+        get: ->
+            frame =
+                x: @x
+                y: @y 
+                width: @width
+                height: @height
+
+            frame
+
+        set: (newVal) ->
+            if @frame isnt newVal
+                if newVal?                    
+                    @point = newVal
+                    @size = newVal
 
     @property 'minX',
         get: ->
@@ -241,6 +304,10 @@ class Layer
         currentScale = @_layerNode.getScale()
         @_layerNode.setScale(currentScale[0], currentScale[1], newVal)
 
+    applyScale:(newVal) =>
+        @applyScaleX(newVal)
+        @applyScaleY(newVal)
+
     @property 'scale',
         get: ->
             currentScale = @_layerNode.getScale()
@@ -248,10 +315,8 @@ class Layer
             currentScale[0]
 
         set: (newVal) ->
-            Logger.log "newVal scale: #{newVal}"
             if @scale isnt newVal
-                @applyScaleX(newVal)
-                @applyScaleY(newVal)
+                @applyScale(newVal)
 
     applyOpacity: (newVal) =>
         @_layerNode.setOpacity(newVal)
@@ -275,7 +340,8 @@ class Layer
         result
 
     applyRotation: (newVal) =>        
-        @_layerNode.setRotation(0, 0, @angleToFamousRotation(newVal))
+        currentRotation = @_layerNode.getRotation()            
+        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal), currentRotation[3])
 
 
 
@@ -296,6 +362,128 @@ class Layer
         set: (newVal)->
             if @rotation isnt newVal
                 @applyRotation(newVal)
+
+    applyRotationX: (newVal) =>        
+        currentRotation = @_layerNode.getRotation()            
+        @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2], currentRotation[3])
+
+    @property 'rotationX',
+        get: ->
+            currentRotation = @_layerNode.getRotation()            
+
+            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
+
+            eulerResult = {}
+
+            q.toEuler(eulerResult)
+
+            thetaRadian = 2 * Math.PI / (360)
+
+            eulerResult.x / thetaRadian
+
+        set: (newVal)->
+            if @rotation isnt newVal
+                @applyRotationX(newVal)
+
+    applyRotationY: (newVal) =>        
+        currentRotation = @_layerNode.getRotation()            
+        @_layerNode.setRotation(currentRotation[0], @angleToFamousRotation(newVal), currentRotation[2], currentRotation[3])
+
+    @property 'rotationY',
+        get: ->
+            currentRotation = @_layerNode.getRotation()            
+
+            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
+
+            eulerResult = {}
+
+            q.toEuler(eulerResult)
+
+            thetaRadian = 2 * Math.PI / (360)
+
+            eulerResult.y / thetaRadian
+
+        set: (newVal)->
+            if @rotation isnt newVal
+                @applyRotationY(newVal)
+
+    applyRotationZ: (newVal) =>        
+        currentRotation = @_layerNode.getRotation()            
+        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal), currentRotation[3])
+
+    @property 'rotationZ',
+        get: ->
+            currentRotation = @_layerNode.getRotation()            
+
+            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
+
+            eulerResult = {}
+
+            q.toEuler(eulerResult)
+
+            thetaRadian = 2 * Math.PI / (360)
+
+            eulerResult.z / thetaRadian
+
+        set: (newVal)->
+            if @rotation isnt newVal
+                @applyRotationZ(newVal)
+
+    @property 'subLayers',
+        get: ->
+            subLayers = []
+
+            children = @_layerNode.getChildren() || []
+
+            for child in children
+                if child.layer?
+                    subLayers.push(child.layer)
+
+            subLayers
+
+    applyHtml: (newVal) =>
+        @_layerElement.setContent(newVal)
+        
+    @property 'html',
+        get: ->
+            values = @_layerElement.getValue()
+
+            values.content
+
+        set: (newVal) ->
+            if @html isnt newVal
+                @applyHtml(newVal)
+
+    subLayersByName: (name) =>
+        subLayers = @subLayers
+
+        result = []
+
+        for subLayer in subLayers
+            if subLayer.name?
+                if subLayer.name is name
+                    result.push(subLayer)
+
+        result
+
+    addSubLayer: (layer) =>
+        if layer?
+            @_layerNode.addChild(layer._layerNode)
+
+    removeSubLayer: (layer) =>
+        if layer? and layer._layerNode?
+            @_layerNode.removeChild(layer._layerNode)
+
+    siblingLayers: () =>
+        result = []
+
+        parentChildren = @_layerNode.getParent().getChildren()
+
+        for child in parentChildren
+            if child.layer?
+                result.push(child.layer)
+
+        result
 
     centerAxis: (isX, isY) =>
 
@@ -351,6 +539,89 @@ class Layer
             if @_superlayer isnt newVal
                 @_superlayer = newVal
                 @applySuperlayer(newVal)
+
+
+    applyImage: (imageUrl) =>
+        @_layerElement.setProperty('background-image', "url('#{newVal}')")
+
+    @property 'image',
+        get: ->
+            elementValue = @_layerElement.getValue()
+            return elementValue.styles['background-image'] 
+
+        set: (newVal)->
+            if @image isnt newVal
+                @applyImage(newVal)
+
+
+    applyVisible: (newVal) =>
+        if newVal
+            @_layerNode.show()
+        else
+            @_layerNode.hide()
+
+    @property 'visible',
+        get: ->
+            @_layerNode.isShown()
+
+        set: (newVal) ->
+            if @visible isnt newVal
+                @applyVisible(newVal)
+
+
+    applyClip: (newVal) =>
+
+        @_layerElement.setProperty('overflow', newVal)
+
+    @property 'clip',
+        get: ->
+            elementValue = @_layerElement.getValue()
+            return elementValue.styles['overflow'] 
+
+        set: (newVal) ->
+            if @clip isnt newVal
+                @applyClip(newVal)
+
+    applyIgnoreEvents: (newVal) =>
+        @_ignoreEvents = newVal
+
+    @property 'ignoreEvents',
+        get: ->
+            @_ignoreEvents
+
+        set: (newVal)->
+            if @ignoreEvents isnt newVal
+                @applyIgnoreEvents(newVal)
+
+    applyOriginX: (newVal) =>
+        currentValues = @_layerNode.getOrigin()
+
+        @_layerNode.setOrigin(newVal, currentValues[1], currentValues[2])
+
+    @property 'originX',
+        get: ->
+            currentValues = @_layerNode.getOrigin()
+
+            currentValues[0]
+
+        set: (newVal) ->
+            if @originX isnt newVal
+                @applyOriginX(newVal)
+
+    applyOriginY: (newVal) =>
+        currentValues = @_layerNode.getOrigin()
+
+        @_layerNode.setOrigin(currentValues[0], newVal, currentValues[2])
+
+    @property 'originY',
+        get: ->
+            currentValues = @_layerNode.getOrigin()
+
+            currentValues[1]
+
+        set: (newVal) ->
+            if @originY isnt newVal
+                @applyOriginY(newVal)
 
     retrieveCurveValue: (str) =>
 
@@ -427,7 +698,7 @@ class Layer
 
         setTimeout =>
                 @startAnimation(animOptions)
-            , delayValue
+            , delayValue    
 
 
     on: (eventType, eventHandler) =>

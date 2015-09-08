@@ -6,11 +6,22 @@ Events = require('./Events')
 
 Application.run ->    
 
-    # Create layer, define image
+    # Set background
+    bg = new BackgroundLayer backgroundColor: "#28affa"
+    bg.bringToFront()
+
+    # Create layer
     layerA = new Layer
-        width: 400
-        height: 400
-        image: "http://cl.ly/arBO/bg.jpg"
-        borderRadius: 4
+        width: 250
+        height: 250
+        backgroundColor: "#fff"
+        borderRadius: 8
         
     layerA.center()
+        
+    # Rotate on click
+    layerA.on Events.Click, ->
+        layerA.animate
+            properties:
+                rotation: layerA.rotation + 90
+            curve: "ease"

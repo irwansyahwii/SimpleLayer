@@ -4,6 +4,286 @@
 		"selected_items":
 		[
 			[
+				"seto",
+				"setOrigin"
+			],
+			[
+				"applyo",
+				"applyOriginX"
+			],
+			[
+				"or",
+				"originX"
+			],
+			[
+				"applyi",
+				"applyIgnoreEvents"
+			],
+			[
+				"_is",
+				"_ignoreEvents"
+			],
+			[
+				"_i",
+				"_ignoreEvents"
+			],
+			[
+				"_layer",
+				"_layerElement"
+			],
+			[
+				"_la",
+				"_layerNode"
+			],
+			[
+				"is",
+				"isnt"
+			],
+			[
+				"pro",
+				"property"
+			],
+			[
+				"prop",
+				"properties"
+			],
+			[
+				"re",
+				"require"
+			],
+			[
+				"rot",
+				"rotation"
+			],
+			[
+				"an",
+				"angle"
+			],
+			[
+				"ang",
+				"angle"
+			],
+			[
+				"ro",
+				"rotation"
+			],
+			[
+				"rota",
+				"rotationValue"
+			],
+			[
+				"lay",
+				"layerA"
+			],
+			[
+				"L",
+				"Layer"
+			],
+			[
+				"eve",
+				"eventHandler"
+			],
+			[
+				"even",
+				"eventType"
+			],
+			[
+				"ev",
+				"eventType"
+			],
+			[
+				"curve",
+				"curveValue"
+			],
+			[
+				"cur",
+				"curveObject"
+			],
+			[
+				"cu",
+				"curveObject"
+			],
+			[
+				"req",
+				"require"
+			],
+			[
+				"pa",
+				"parseFunction"
+			],
+			[
+				"anim",
+				"animOptions"
+			],
+			[
+				"boder",
+				"borderRadius"
+			],
+			[
+				"del",
+				"delayValue"
+			],
+			[
+				"de",
+				"delayValue"
+			],
+			[
+				"bor",
+				"borderRadiusValue"
+			],
+			[
+				"bo",
+				"borderRadiusTransition"
+			],
+			[
+				"com",
+				"componentId"
+			],
+			[
+				"eas",
+				"easeInOut"
+			],
+			[
+				"ani",
+				"animOptions"
+			],
+			[
+				"bac",
+				"BackgroundLayer"
+			],
+			[
+				"la",
+				"layerA"
+			],
+			[
+				"no",
+				"nodeParent"
+			],
+			[
+				"o",
+				"originalMountPoint"
+			],
+			[
+				"apply",
+				"applyX"
+			],
+			[
+				"app",
+				"applyX"
+			],
+			[
+				"st",
+				"strValue"
+			],
+			[
+				"get",
+				"getSize"
+			],
+			[
+				"el",
+				"elementValue"
+			],
+			[
+				"applyb",
+				"applyBackgroundColor"
+			],
+			[
+				"laye",
+				"_layerNode"
+			],
+			[
+				"log",
+				"log	log"
+			],
+			[
+				"lo",
+				"Logger"
+			],
+			[
+				"fn",
+				"fnB"
+			],
+			[
+				"ini",
+				"Initializer"
+			],
+			[
+				"ap",
+				"applyPosition"
+			],
+			[
+				"cen",
+				"centerAxis"
+			],
+			[
+				"par",
+				"parentSize"
+			],
+			[
+				"con",
+				"contextSize"
+			],
+			[
+				"_s",
+				"_superlayer"
+			],
+			[
+				"roo",
+				"rootWin"
+			],
+			[
+				"l",
+				"log	log"
+			],
+			[
+				"te",
+				"temp"
+			],
+			[
+				"op",
+				"options"
+			],
+			[
+				"a",
+				"applyOpacity"
+			],
+			[
+				"_",
+				"_scale"
+			],
+			[
+				"_y",
+				"_y"
+			],
+			[
+				"_x",
+				"_x"
+			],
+			[
+				"_b",
+				"_borderRadius"
+			],
+			[
+				"se",
+				"setBorderRadius"
+			],
+			[
+				"set",
+				"setProperty"
+			],
+			[
+				"border",
+				"borderRadius"
+			],
+			[
+				"_wi",
+				"_width"
+			],
+			[
+				"La",
+				"Layer"
+			],
+			[
 				"new",
 				"newVal"
 			],
@@ -14,10 +294,6 @@
 			[
 				"fam",
 				"famousNode"
-			],
-			[
-				"la",
-				"Layer"
 			],
 			[
 				"App",
@@ -34,10 +310,6 @@
 			[
 				"me",
 				"message"
-			],
-			[
-				"a",
-				"Age"
 			],
 			[
 				"Fron",
@@ -124,10 +396,6 @@
 				"animateOutGalleryButton"
 			],
 			[
-				"ani",
-				"animateOutAboutButton"
-			],
-			[
 				"show",
 				"showLocationScreen"
 			],
@@ -164,14 +432,6 @@
 				"current_image_view"
 			],
 			[
-				"cur",
-				"current_image_index"
-			],
-			[
-				"te",
-				"text1Image"
-			],
-			[
 				"order",
 				"order_type"
 			],
@@ -186,10 +446,6 @@
 			[
 				"hide",
 				"audiclubna_hide_group_profile_fields"
-			],
-			[
-				"pro",
-				"product_selected"
 			],
 			[
 				"for",
@@ -228,10 +484,6 @@
 				"TRUE"
 			],
 			[
-				"is",
-				"is_allow_registration"
-			],
-			[
 				"fir",
 				"first_item_key"
 			],
@@ -262,268 +514,64 @@
 			[
 				"respo",
 				"responder_id"
-			],
-			[
-				"responder_de",
-				"responder_delete_result"
-			],
-			[
-				"ke",
-				"key"
-			],
-			[
-				"arr",
-				"array	$… = array (…)"
-			],
-			[
-				"sub",
-				"subject"
-			],
-			[
-				"Lan",
-				"LANGUAGE_NONE"
-			],
-			[
-				"key",
-				"array_key_exists"
-			],
-			[
-				"gi",
-				"giftor_mail_address"
-			],
-			[
-				"ms_products_ms",
-				"ms_products_ms_order_payment"
-			],
-			[
-				"array_ke",
-				"array_key_exists"
-			],
-			[
-				"pr",
-				"product"
-			],
-			[
-				"ms_core_ch",
-				"ms_core_checkout_form_submit"
-			],
-			[
-				"or",
-				"order"
-			],
-			[
-				"add_to_ca",
-				"ms_products_add_product_to_cart"
-			],
-			[
-				"ms",
-				"ms_products"
-			],
-			[
-				"up",
-				"upcoming"
-			],
-			[
-				"bill",
-				"billing_error"
-			],
-			[
-				"res",
-				"responder_id"
-			],
-			[
-				"BenchmarkEmail_auto",
-				"BenchmarkEmail_autoresponderDelete"
-			],
-			[
-				"respon",
-				"responder_detail"
-			],
-			[
-				"emailsending_log",
-				"EmailSending_logCronFailureWithMessage"
-			],
-			[
-				"EmailSending_send",
-				"EmailSending_sendCronFailureEmailWithMessage"
-			],
-			[
-				"sent",
-				"sent_count"
-			],
-			[
-				"ERROR",
-				"ERROR_EMAIL"
-			],
-			[
-				"Ema",
-				"EmailSending_sendErrorEmailTo"
-			],
-			[
-				"re",
-				"require"
-			],
-			[
-				"dateut",
-				"DateUtils_getCurrentDateTime"
-			],
-			[
-				"ren",
-				"renewal_reminders"
-			],
-			[
-				"STA",
-				"STATE_PROVINCE"
-			],
-			[
-				"sor",
-				"sort_order"
-			],
-			[
-				"item",
-				"item_text"
-			],
-			[
-				"as",
-				"ascending_sort"
-			],
-			[
-				"ite",
-				"item_text"
-			],
-			[
-				"CATE",
-				"CATEGORY"
-			],
-			[
-				"i",
-				"index"
-			],
-			[
-				"query",
-				"querystring"
-			],
-			[
-				"from",
-				"fromEmail"
-			],
-			[
-				"is_re",
-				"is_responder_created"
-			],
-			[
-				"getlist",
-				"BenchmarkEmail_getStageListNameWithBatchId"
-			],
-			[
-				"list",
-				"list_name"
-			],
-			[
-				"bench",
-				"BenchmarkEmail_listDelete"
-			],
-			[
-				"listi",
-				"listid"
-			],
-			[
-				"batchid",
-				"batchid_number"
-			],
-			[
-				"benchmarkemail",
-				"BenchmarkEmail_listGet"
-			],
-			[
-				"autor",
-				"BenchmarkEmail_autoresponderDelete"
-			],
-			[
-				"mont",
-				"months_back_batch_id"
-			],
-			[
-				"getsta",
-				"BenchmarkEmail_getStageResponderNameWithBatchId"
-			],
-			[
-				"mon",
-				"months_back_batch_id"
-			],
-			[
-				"clea",
-				"cleanUpPreviousResponders"
-			],
-			[
-				"fun",
-				"function"
-			],
-			[
-				"EmailSending_get",
-				"EmailSending_getStageListId"
-			],
-			[
-				"EmailSending_sto",
-				"EmailSending_storeStageListId"
-			],
-			[
-				"Email",
-				"EmailSending_storeLogId"
-			],
-			[
-				"variab",
-				"variable_set	variable_set"
-			],
-			[
-				"update_in",
-				"update_info"
-			],
-			[
-				"detailcrea",
-				"BenchmarkEmail_autoresponderDetailCreate"
-			],
-			[
-				"day",
-				"days"
-			],
-			[
-				"templat",
-				"templateText"
-			],
-			[
-				"responder",
-				"responder_detail"
-			],
-			[
-				"xml",
-				"xmlrpc_error_msg"
-			],
-			[
-				"mus",
-				"must_create_detail"
-			],
-			[
-				"ben",
-				"BenchmarkEmail_clearToken"
-			],
-			[
-				"seed_re",
-				"seed_responder_name"
-			],
-			[
-				"seed",
-				"seed_responder_email_detail"
 			]
 		]
 	},
 	"buffers":
 	[
 		{
-			"file": "src/FamousWindow.coffee",
+			"file": "src/Layer.coffee",
 			"settings":
 			{
-				"buffer_size": 233,
+				"buffer_size": 14536,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "node_modules/famous/transitions/Transitionable.js",
+			"settings":
+			{
+				"buffer_size": 15813,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/index.coffee",
+			"settings":
+			{
+				"buffer_size": 644,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "node_modules/famous/dom-renderables/DOMElement.js",
+			"settings":
+			{
+				"buffer_size": 20892,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "node_modules/famous/core/Node.js",
+			"settings":
+			{
+				"buffer_size": 38703,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/Utils.coffee",
+			"settings":
+			{
+				"buffer_size": 21030,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/BackgroundLayer.coffee",
+			"settings":
+			{
+				"buffer_size": 330,
 				"line_ending": "Unix"
 			}
 		}
@@ -639,16 +687,35 @@
 	"expanded_folders":
 	[
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/math",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/transitions",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src"
 	],
 	"file_history":
 	[
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousWindow.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Events.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Utils.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Underscore.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/README.md",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BackgroundLayer.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Application.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousWindow.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/runtime.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Context.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Scene.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/FamousEngine.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Compositor.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/bundle.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerId.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Logger.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/FamousWindow.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/Layer.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/Application.coffee",
@@ -757,30 +824,19 @@
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/reminder_list.js",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/renewal_reminders_date_filter.sql",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/reminder_list.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/renewal_reminders_email_filter.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/chapter_list.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/acna_members_by_source.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_source_and_products.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_source.sql",
-		"/Users/irwansyah/Desktop/BenchmarkXML-RPC.xml",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/acna_imis_import/install_scripts/additional_indexes.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/audiclubna/XML/RPC2/Backend.php",
-		"/Users/irwansyah/Desktop/BenchmarkXML-RPC.txt",
-		"/Users/irwansyah/Downloads/XML_RPC2-1.1.2/XML_RPC2-1.1.2/tests/XML_RPC2/phpBackend/client/phpxmlrpcValidator1ArrayOfStructsTest.phpt",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/audiclubna/BMEAPI.class.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/audiclubna/config.php",
-		"/Users/irwansyah/Downloads/bme-apiphp/bmeapi_emailQuickSend.php",
-		"/Users/irwansyah/Downloads/bme-apiphp/bmeapi_listAddContacts.php"
+		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/renewal_reminders_email_filter.sql"
 	],
 	"find":
 	{
-		"height": 23.0
+		"height": 35.0
 	},
 	"find_in_files":
 	{
 		"height": 93.0,
 		"where_history":
 		[
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/",
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
 			"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/",
 			"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core",
 			"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/",
@@ -808,6 +864,59 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"perspective",
+			"shown",
+			"hide",
+			"show",
+			"hide",
+			"_styles",
+			"setproperty",
+			"setprope",
+			"setPro",
+			"back",
+			"Y",
+			"isDisableInteraction",
+			"Quarternion",
+			"event",
+			"Screen",
+			"_",
+			"easing",
+			"boderRadiusValue",
+			"rotation",
+			"width",
+			"applyPosition",
+			"position",
+			"_node",
+			"_callbacks",
+			"_styles",
+			"_tag",
+			"tag",
+			"poolSize",
+			"Context",
+			"_initDOM",
+			"_commandCallbacks",
+			"READY",
+			"onReceive",
+			"CONTEXT_RESIZE",
+			"onreceive",
+			"ready",
+			"_initDOM",
+			"ready",
+			"Commands.READY",
+			"READY",
+			"ready",
+			"famous.core.FamousEngine.getContext('body')",
+			"_updater",
+			"updateSize",
+			"send",
+			"CONTEXT_RESIZE",
+			"size",
+			"@layerElement",
+			"background",
+			"tagName",
+			"@layerNode",
+			"width",
+			"@window",
 			"ComponentFactory",
 			"friendService",
 			"FriendService",
@@ -882,60 +991,7 @@
 			"form_get_errors",
 			"ms_paypal_wpp_direct_payment_checkout_form_validate",
 			"ms_core_get_cc_form",
-			"card number",
-			"ms_paypal_wpp_dp",
-			"Card Number field is required",
-			"ms-user-purchases-table",
-			"sub_row",
-			"ms_products_get_purchase_status_text",
-			"Expired / Inactive",
-			"how did you hear about",
-			"Apply to order",
-			"ms_products_get_purchase_status_text",
-			"notes",
-			"field_member_id_suggestion",
-			"notes",
-			"audiclubna_data_revisions",
-			"revisions",
-			"previous_sku",
-			"acna_renewal_current",
-			"db_quer",
-			"ms_core_get_orders",
-			"ms_core_history",
-			"order-history",
-			"$build[$profile_index]['view']['profile2'][$profile]",
-			"audiclubna_user_view_alter",
-			"$form[$profile_index]",
-			"field_count",
-			"field_member_county",
-			"field_member_admin_notes",
-			"ms_core_view_order_details",
-			"/order-history/view/",
-			"order-history",
-			"function ms_core_get_order_products",
-			"ms_core_get_order_products",
-			"class MsOrder",
-			"MsOrder",
-			"ms_order_load",
-			"function ms_core_order_load",
-			"ms_core_order_load",
-			"order-history",
-			"transaction",
-			"insert",
-			"db_insert",
-			"INSERT",
-			"order-history",
-			"field_donation",
-			"field_member_chapter",
-			"field_membership_plan",
-			"audiclubna_set_membership_additional_insert",
-			"audiclubna_set_membership_additional_insert\naudiclubna_set_membership_additional_insert",
-			"audiclubna_set_membership_additional_insert",
-			"_save",
-			"ms_core_history",
-			"order-history",
-			"ms_core_get_orders",
-			"ms_core_history"
+			"card number"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -953,24 +1009,204 @@
 	"groups":
 	[
 		{
-			"selected": 0,
+			"selected": 4,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/FamousWindow.coffee",
-					"semi_transient": true,
+					"file": "src/Layer.coffee",
+					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 233,
+						"buffer_size": 14536,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								117,
-								117
+								12118,
+								12118
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 7051.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "node_modules/famous/transitions/Transitionable.js",
+					"semi_transient": true,
+					"settings":
+					{
+						"buffer_size": 15813,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13281,
+								13336
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 5033.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/index.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 644,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								243,
+								243
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "node_modules/famous/dom-renderables/DOMElement.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 20892,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3,
+								3
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "node_modules/famous/core/Node.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 38703,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2215,
+								2215
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 515.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/Utils.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 21030,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								21030,
+								21030
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 10697.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "src/BackgroundLayer.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 330,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								174,
+								174
 							]
 						],
 						"settings":
@@ -981,7 +1217,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 6,
 					"type": "text"
 				}
 			]
@@ -1039,6 +1275,22 @@
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"node",
+				"node_modules/famous/core/Node.js"
+			],
+			[
+				"",
+				"node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"index",
+				"src/index.coffee"
+			],
+			[
+				"inde",
+				"src/index.coffee"
+			],
 			[
 				"floorplanscreenbase",
 				"Resources/ui/common/FloorplanScreenBase.coffee"
@@ -1318,10 +1570,6 @@
 			[
 				"famoue",
 				"test1/node_modules/famous/core/FamousEngine.js"
-			],
-			[
-				"node",
-				"test1/node_modules/famous/core/Node.js"
 			],
 			[
 				"posit",

@@ -46,6 +46,7 @@
       this.applyScaleZ = bind(this.applyScaleZ, this);
       this.applyScaleY = bind(this.applyScaleY, this);
       this.applyScaleX = bind(this.applyScaleX, this);
+      this.applyZ = bind(this.applyZ, this);
       this.applyY = bind(this.applyY, this);
       this.applyX = bind(this.applyX, this);
       this.addSubLayer = bind(this.addSubLayer, this);
@@ -63,6 +64,7 @@
       this._layerNode = this._window.createNode();
       this._layerNode.setOrigin(0.5, 0.5);
       this._tagName = "div";
+      this._ignoreEvents = false;
       image = options.image || null;
       attributes = null;
       if (image !== null) {
@@ -101,9 +103,11 @@
       this._layerNode.onReceive = (function(_this) {
         return function(event, payload) {
           var handler;
-          handler = _this.eventsHandlers[event] || null;
-          if (handler !== null) {
-            return handler();
+          if (!_this._ignoreEvents) {
+            handler = _this.eventsHandlers[event] || null;
+            if (handler !== null) {
+              return handler();
+            }
           }
         };
       })(this);
@@ -241,6 +245,88 @@
       set: function(newVal) {
         if (this.y !== newVal) {
           return this.applyY(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyZ = function(newVal) {
+      var currentPos;
+      currentPos = this._layerNode.getPosition();
+      return this._layerNode.setPosition(currentPos[0], currentPos[1], newVal);
+    };
+
+    Layer.property('z', {
+      get: function() {
+        var currentPos;
+        currentPos = this._layerNode.getPosition();
+        return currentPos[2];
+      },
+      set: function(newVal) {
+        if (this.y !== newVal) {
+          return this.applyZ(newVal);
+        }
+      }
+    });
+
+    Layer.property('point', {
+      get: function() {
+        var point;
+        point = {
+          x: this.x,
+          y: this.y
+        };
+        return point;
+      },
+      set: function(newVal) {
+        if (this.point !== newVal) {
+          if (newVal != null) {
+            if (this.point.x !== newVal.x || this.point.y !== newVal.y) {
+              this.x = newVal.x;
+              return this.y = newVal.y;
+            }
+          }
+        }
+      }
+    });
+
+    Layer.property('size', {
+      get: function() {
+        var size;
+        size = {
+          width: this.width,
+          height: this.height
+        };
+        return size;
+      },
+      set: function(newVal) {
+        if (this.size !== newVal) {
+          if (newVal != null) {
+            if (this.size.width !== newVal.width || this.size.height !== newVal.height) {
+              this.width = newVal.width;
+              return this.height = newVal.height;
+            }
+          }
+        }
+      }
+    });
+
+    Layer.property('frame', {
+      get: function() {
+        var frame;
+        frame = {
+          x: this.x,
+          y: this.y,
+          width: this.width,
+          height: this.height
+        };
+        return frame;
+      },
+      set: function(newVal) {
+        if (this.frame !== newVal) {
+          if (newVal != null) {
+            this.point = newVal;
+            return this.size = newVal;
+          }
         }
       }
     });
@@ -413,6 +499,74 @@
         if (this._superlayer !== newVal) {
           this._superlayer = newVal;
           return this.applySuperlayer(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyImage = function(imageUrl) {
+      return this._layerElement.setProperty('background-image', "url('" + newVal + "')");
+    };
+
+    Layer.property('image', {
+      get: function() {
+        var elementValue;
+        elementValue = this._layerElement.getValue();
+        return elementValue.styles['background-image'];
+      },
+      set: function(newVal) {
+        if (this.image !== newVal) {
+          return this.applyImage(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyVisible = function(newVal) {
+      if (newVal) {
+        return this._layerNode.show();
+      } else {
+        return this._layerNode.hide();
+      }
+    };
+
+    Layer.property('visible', {
+      get: function() {
+        return this._layerNode.isShown();
+      },
+      set: function(newVal) {
+        if (this.visible !== newVal) {
+          return this.applyVisible(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyClip = function(newVal) {
+      return this._layerElement.setProperty('overflow', newVal);
+    };
+
+    Layer.property('clip', {
+      get: function() {
+        var elementValue;
+        elementValue = this._layerElement.getValue();
+        return elementValue.styles['overflow'];
+      },
+      set: function(newVal) {
+        if (this.clip !== newVal) {
+          return this.applyClip(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyIgnoreEvents = function(newVal) {
+      return this._ignoreEvents = newVal;
+    };
+
+    Layer.property('ignoreEvents', {
+      get: function() {
+        return this._ignoreEvents;
+      },
+      set: function(newVal) {
+        if (this.ignoreEvents !== newVal) {
+          return this.applyIgnoreEvents(newVal);
         }
       }
     });
