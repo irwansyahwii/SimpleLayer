@@ -42,8 +42,8 @@
       poolContext = function() {
         var ctx, rootWin;
         rootWin = Application.getRootWindow();
+        Application.init();
         ctx = rootWin.scene.getUpdater().compositor.getContext('body');
-        Logger.log("ctx: " + ctx);
         if (ctx != null) {
           if (mainFn !== null) {
             return mainFn();
@@ -58,11 +58,9 @@
     };
 
     Application.init = function() {
-      var rootWin;
       if (!Application.hasInitialized) {
         Logger.log("Initializing application...");
         Application.hasInitialized = true;
-        rootWin = Application.getRootWindow();
         Logger.log("Initializing famous engine...");
         return Engine.init();
       }
@@ -74,10 +72,7 @@
         Application.rootWindow = new FamousWindow({
           isRootWindow: true
         });
-        Application.init();
       }
-      Logger.log('Application.rootWindow:');
-      Logger.log(Application.rootWindow);
       return Application.rootWindow;
     };
 

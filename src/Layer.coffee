@@ -38,6 +38,8 @@ class Layer
         @_layerNode = @_window.createNode()        
         @_layerNode.setOrigin(0.5, 0.5, 0.5)
 
+        @_rotationY = 0
+
         @_tagName = "div"
 
         @_ignoreEvents = false
@@ -58,12 +60,14 @@ class Layer
             @_layerElement.setAttribute("src", image)
         
 
-        backgroundColor = options.backgroundColor || '#FFFFFF'
-        @applyBackgroundColor(backgroundColor)
+        backgroundColor = options.backgroundColor || null
+        if backgroundColor isnt null
+            @applyBackgroundColor(backgroundColor)
 
         
-        borderRadius = options.borderRadius || 0
-        @applyBorderRadius(borderRadius)
+        borderRadius = options.borderRadius || null
+        if borderRadius isnt null
+            @applyBorderRadius(borderRadius)
 
         width = options.width || 0
         height = options.height || 0
@@ -75,6 +79,8 @@ class Layer
         if height >= 0
             @_layerNode.setSizeMode("absolute", "absolute", "absolute")
             @applyHeight(height)
+
+        # @_layerNode.setMountPoint(0.5, 0.5)
 
 
         x = options.x || 0
@@ -330,18 +336,21 @@ class Layer
                 @applyOpacity(newVal)
 
 
-    angleToFamousRotation: (angle) =>
-        thetaRadian = 2 * Math.PI / (360)
+    degreeToRadian: (degree) =>
 
-        result = angle * thetaRadian
-
-        Logger.log "angle: #{angle}, angleToFamousRotation: #{result}"
+        result = (degree * Math.PI) / 180.0
 
         result
 
+    radianToDegree: (radian) =>
+        result = radian * 180.0 / Math.PI
+
+        result
+
+
     applyRotation: (newVal) =>        
         currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal), currentRotation[3])
+        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal))
 
 
 
@@ -355,7 +364,7 @@ class Layer
 
             q.toEuler(eulerResult)
 
-            thetaRadian = 2 * Math.PI / (360)
+            thetaRadian = Math.PI / (180)
 
             eulerResult.z / thetaRadian
 
@@ -365,7 +374,8 @@ class Layer
 
     applyRotationX: (newVal) =>        
         currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2], currentRotation[3])
+        # @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2])
+        @_layerNode.setRotation(@degreeToRadian(newVal), currentRotation[1], currentRotation[2])
 
     @property 'rotationX',
         get: ->
@@ -377,39 +387,35 @@ class Layer
 
             q.toEuler(eulerResult)
 
-            thetaRadian = 2 * Math.PI / (360)
-
-            eulerResult.x / thetaRadian
+            @radianToDegree(eulerResult.x)
 
         set: (newVal)->
             if @rotation isnt newVal
                 @applyRotationX(newVal)
 
     applyRotationY: (newVal) =>        
+
+        @_rotationY = newVal
+
         currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(currentRotation[0], @angleToFamousRotation(newVal), currentRotation[2], currentRotation[3])
+        # @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2])
+
+        # Logger.log "assigning #{@degreeToRadian(newVal)} to rotationY "
+        @_layerNode.setRotation(currentRotation[0], @degreeToRadian(newVal), currentRotation[2])
 
     @property 'rotationY',
         get: ->
-            currentRotation = @_layerNode.getRotation()            
-
-            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
-
-            eulerResult = {}
-
-            q.toEuler(eulerResult)
-
-            thetaRadian = 2 * Math.PI / (360)
-
-            eulerResult.y / thetaRadian
+            @_rotationY
 
         set: (newVal)->
             if @rotation isnt newVal
                 @applyRotationY(newVal)
 
+
+
     applyRotationZ: (newVal) =>        
         currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal), currentRotation[3])
+        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal))
 
     @property 'rotationZ',
         get: ->
@@ -421,7 +427,7 @@ class Layer
 
             q.toEuler(eulerResult)
 
-            thetaRadian = 2 * Math.PI / (360)
+            thetaRadian = Math.PI / (180)
 
             eulerResult.z / thetaRadian
 
@@ -510,7 +516,10 @@ class Layer
         @centerAxis(false, true)
 
     center: () =>
-        @centerAxis(true, true)
+        # @centerAxis(true, true)
+        @_layerNode.setAlign(0.5, 0.5)
+        @_layerNode.setMountPoint(0.5, 0.5)
+        @_layerNode.setOrigin(0.5, 0.5)
 
     _centerUsingAlign: () =>        
         originalMountPoint = @_layerNode.getMountPoint()
@@ -640,6 +649,9 @@ class Layer
 
 
     startAnimation: (animOptions) =>
+        rotationXValue = animOptions.properties.rotationX || null 
+        rotationYValue = animOptions.properties.rotationY || null 
+        rotationZValue = animOptions.properties.rotationZ || null 
         rotationValue = animOptions.properties.rotation || null
         borderRadiusValue = animOptions.properties.borderRadius || null
         
@@ -652,11 +664,46 @@ class Layer
         curveObject = @retrieveCurveValue(curveValue)
 
         curveValue = curveObject.name
-        Logger.log "curveValue: #{curveValue}"
+    
+
+        # Logger.log "rotationXValue: #{rotationXValue}"
+        # Logger.log "rotationYValue: #{rotationYValue}"
+        # Logger.log "rotationValue: #{rotationValue}"
 
         if curveValue is "ease"
             curveValue = "easeInOut"
 
+        if rotationXValue isnt null
+            rotationComponent = new Rotation(@_layerNode)    
+
+            rotationComponent.setX(@degreeToRadian(rotationXValue), 
+                    duration: 1000
+                )
+
+        if rotationYValue isnt null
+
+            rotationYTransitionable = new Transitionable(@rotationY)
+
+            rotationYTransitionable.set(rotationYValue, 
+                        duration:
+                            1000
+                    )
+
+            spinner = @_layerNode.addComponent
+                onUpdate: (time) =>
+                    @rotationY = rotationYTransitionable.get()
+                    if rotationYTransitionable.isActive()
+                        @_layerNode.requestUpdate(spinner)
+
+            @_layerNode.requestUpdate(spinner)
+
+
+        if rotationZValue isnt null
+            rotationComponent = new Rotation(@_layerNode)    
+
+            rotationComponent.setZ(@degreeToRadian(rotationZValue), 
+                    duration: 1000
+                )
         if rotationValue isnt null
             rotationComponent = new Rotation(@_layerNode)            
 

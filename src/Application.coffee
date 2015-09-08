@@ -27,11 +27,12 @@ class Application
             rootWin = Application.getRootWindow()
 
             # ctx = rootWin.scene.getUpdater().getContext('body')
+            Application.init()
             ctx = rootWin.scene.getUpdater().compositor.getContext('body')
-            Logger.log "ctx: #{ctx}"
+            # Logger.log "ctx: #{ctx}"
             if ctx?
                 if mainFn isnt null
-                    mainFn()
+                    mainFn()                    
             else
                 setTimeout ->
                         poolContext()
@@ -42,7 +43,7 @@ class Application
         if not Application.hasInitialized
             Logger.log "Initializing application..."
             Application.hasInitialized = true
-            rootWin = Application.getRootWindow()
+            # rootWin = Application.getRootWindow()
 
             Logger.log "Initializing famous engine..."
             Engine.init()
@@ -54,10 +55,10 @@ class Application
             Application.rootWindow = new FamousWindow(
                     isRootWindow: true
                 )
-            Application.init()
+            # Application.init()
 
-        Logger.log 'Application.rootWindow:'
-        Logger.log Application.rootWindow
+        # Logger.log 'Application.rootWindow:'
+        # Logger.log Application.rootWindow
 
         Application.rootWindow
 

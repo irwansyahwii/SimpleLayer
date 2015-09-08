@@ -33,6 +33,12 @@
       this.animate = bind(this.animate, this);
       this.startAnimation = bind(this.startAnimation, this);
       this.retrieveCurveValue = bind(this.retrieveCurveValue, this);
+      this.applyOriginY = bind(this.applyOriginY, this);
+      this.applyOriginX = bind(this.applyOriginX, this);
+      this.applyIgnoreEvents = bind(this.applyIgnoreEvents, this);
+      this.applyClip = bind(this.applyClip, this);
+      this.applyVisible = bind(this.applyVisible, this);
+      this.applyImage = bind(this.applyImage, this);
       this.applySuperlayer = bind(this.applySuperlayer, this);
       this.getSize = bind(this.getSize, this);
       this._centerUsingAlign = bind(this._centerUsingAlign, this);
@@ -40,9 +46,19 @@
       this.centerY = bind(this.centerY, this);
       this.centerX = bind(this.centerX, this);
       this.centerAxis = bind(this.centerAxis, this);
+      this.siblingLayers = bind(this.siblingLayers, this);
+      this.removeSubLayer = bind(this.removeSubLayer, this);
+      this.addSubLayer = bind(this.addSubLayer, this);
+      this.subLayersByName = bind(this.subLayersByName, this);
+      this.applyHtml = bind(this.applyHtml, this);
+      this.applyRotationZ = bind(this.applyRotationZ, this);
+      this.applyRotationY = bind(this.applyRotationY, this);
+      this.applyRotationX = bind(this.applyRotationX, this);
       this.applyRotation = bind(this.applyRotation, this);
-      this.angleToFamousRotation = bind(this.angleToFamousRotation, this);
+      this.radianToDegree = bind(this.radianToDegree, this);
+      this.degreeToRadian = bind(this.degreeToRadian, this);
       this.applyOpacity = bind(this.applyOpacity, this);
+      this.applyScale = bind(this.applyScale, this);
       this.applyScaleZ = bind(this.applyScaleZ, this);
       this.applyScaleY = bind(this.applyScaleY, this);
       this.applyScaleX = bind(this.applyScaleX, this);
@@ -62,7 +78,8 @@
         this._window = Application.getRootWindow();
       }
       this._layerNode = this._window.createNode();
-      this._layerNode.setOrigin(0.5, 0.5);
+      this._layerNode.setOrigin(0.5, 0.5, 0.5);
+      this._rotationY = 0;
       this._tagName = "div";
       this._ignoreEvents = false;
       image = options.image || null;
@@ -76,10 +93,14 @@
       if (image !== null) {
         this._layerElement.setAttribute("src", image);
       }
-      backgroundColor = options.backgroundColor || '#FFFFFF';
-      this.applyBackgroundColor(backgroundColor);
-      borderRadius = options.borderRadius || 0;
-      this.applyBorderRadius(borderRadius);
+      backgroundColor = options.backgroundColor || null;
+      if (backgroundColor !== null) {
+        this.applyBackgroundColor(backgroundColor);
+      }
+      borderRadius = options.borderRadius || null;
+      if (borderRadius !== null) {
+        this.applyBorderRadius(borderRadius);
+      }
       width = options.width || 0;
       height = options.height || 0;
       if (width >= 0) {
@@ -95,8 +116,6 @@
       this.applyX(x);
       this.applyY(y);
       this._superlayer = options.superLayer || null;
-      Logger.log("@_superlayer:");
-      Logger.log(this._superlayer);
       this.applySuperlayer(this._superlayer);
       this.eventsHandlers = [];
       this._layerNode.addUIEvent(Events.Click);
@@ -111,6 +130,8 @@
           }
         };
       })(this);
+      this._layerNode.layer = this;
+      this._layerElement.layer = this;
     }
 
     Layer.prototype.applyHeight = function(val) {
@@ -385,6 +406,11 @@
       return this._layerNode.setScale(currentScale[0], currentScale[1], newVal);
     };
 
+    Layer.prototype.applyScale = function(newVal) {
+      this.applyScaleX(newVal);
+      return this.applyScaleY(newVal);
+    };
+
     Layer.property('scale', {
       get: function() {
         var currentScale;
@@ -392,10 +418,8 @@
         return currentScale[0];
       },
       set: function(newVal) {
-        Logger.log("newVal scale: " + newVal);
         if (this.scale !== newVal) {
-          this.applyScaleX(newVal);
-          return this.applyScaleY(newVal);
+          return this.applyScale(newVal);
         }
       }
     });
@@ -415,16 +439,22 @@
       }
     });
 
-    Layer.prototype.angleToFamousRotation = function(angle) {
-      var result, thetaRadian;
-      thetaRadian = 2 * Math.PI / 360.;
-      result = angle * thetaRadian;
-      Logger.log("angle: " + angle + ", angleToFamousRotation: " + result);
+    Layer.prototype.degreeToRadian = function(degree) {
+      var result;
+      result = (degree * Math.PI) / 180.0;
+      return result;
+    };
+
+    Layer.prototype.radianToDegree = function(radian) {
+      var result;
+      result = radian * 180.0 / Math.PI;
       return result;
     };
 
     Layer.prototype.applyRotation = function(newVal) {
-      return this._layerNode.setRotation(0, 0, this.angleToFamousRotation(newVal));
+      var currentRotation;
+      currentRotation = this._layerNode.getRotation();
+      return this._layerNode.setRotation(currentRotation[0], currentRotation[1], this.angleToFamousRotation(newVal));
     };
 
     Layer.property('rotation', {
@@ -434,7 +464,7 @@
         q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
         eulerResult = {};
         q.toEuler(eulerResult);
-        thetaRadian = 2 * Math.PI / 360.;
+        thetaRadian = Math.PI / 180.;
         return eulerResult.z / thetaRadian;
       },
       set: function(newVal) {
@@ -443,6 +473,141 @@
         }
       }
     });
+
+    Layer.prototype.applyRotationX = function(newVal) {
+      var currentRotation;
+      currentRotation = this._layerNode.getRotation();
+      return this._layerNode.setRotation(this.degreeToRadian(newVal), currentRotation[1], currentRotation[2]);
+    };
+
+    Layer.property('rotationX', {
+      get: function() {
+        var currentRotation, eulerResult, q;
+        currentRotation = this._layerNode.getRotation();
+        q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
+        eulerResult = {};
+        q.toEuler(eulerResult);
+        return this.radianToDegree(eulerResult.x);
+      },
+      set: function(newVal) {
+        if (this.rotation !== newVal) {
+          return this.applyRotationX(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyRotationY = function(newVal) {
+      var currentRotation;
+      this._rotationY = newVal;
+      currentRotation = this._layerNode.getRotation();
+      return this._layerNode.setRotation(currentRotation[0], this.degreeToRadian(newVal), currentRotation[2]);
+    };
+
+    Layer.property('rotationY', {
+      get: function() {
+        return this._rotationY;
+      },
+      set: function(newVal) {
+        if (this.rotation !== newVal) {
+          return this.applyRotationY(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyRotationZ = function(newVal) {
+      var currentRotation;
+      currentRotation = this._layerNode.getRotation();
+      return this._layerNode.setRotation(currentRotation[0], currentRotation[1], this.angleToFamousRotation(newVal));
+    };
+
+    Layer.property('rotationZ', {
+      get: function() {
+        var currentRotation, eulerResult, q, thetaRadian;
+        currentRotation = this._layerNode.getRotation();
+        q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
+        eulerResult = {};
+        q.toEuler(eulerResult);
+        thetaRadian = Math.PI / 180.;
+        return eulerResult.z / thetaRadian;
+      },
+      set: function(newVal) {
+        if (this.rotation !== newVal) {
+          return this.applyRotationZ(newVal);
+        }
+      }
+    });
+
+    Layer.property('subLayers', {
+      get: function() {
+        var child, children, i, len, subLayers;
+        subLayers = [];
+        children = this._layerNode.getChildren() || [];
+        for (i = 0, len = children.length; i < len; i++) {
+          child = children[i];
+          if (child.layer != null) {
+            subLayers.push(child.layer);
+          }
+        }
+        return subLayers;
+      }
+    });
+
+    Layer.prototype.applyHtml = function(newVal) {
+      return this._layerElement.setContent(newVal);
+    };
+
+    Layer.property('html', {
+      get: function() {
+        var values;
+        values = this._layerElement.getValue();
+        return values.content;
+      },
+      set: function(newVal) {
+        if (this.html !== newVal) {
+          return this.applyHtml(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.subLayersByName = function(name) {
+      var i, len, result, subLayer, subLayers;
+      subLayers = this.subLayers;
+      result = [];
+      for (i = 0, len = subLayers.length; i < len; i++) {
+        subLayer = subLayers[i];
+        if (subLayer.name != null) {
+          if (subLayer.name === name) {
+            result.push(subLayer);
+          }
+        }
+      }
+      return result;
+    };
+
+    Layer.prototype.addSubLayer = function(layer) {
+      if (layer != null) {
+        return this._layerNode.addChild(layer._layerNode);
+      }
+    };
+
+    Layer.prototype.removeSubLayer = function(layer) {
+      if ((layer != null) && (layer._layerNode != null)) {
+        return this._layerNode.removeChild(layer._layerNode);
+      }
+    };
+
+    Layer.prototype.siblingLayers = function() {
+      var child, i, len, parentChildren, result;
+      result = [];
+      parentChildren = this._layerNode.getParent().getChildren();
+      for (i = 0, len = parentChildren.length; i < len; i++) {
+        child = parentChildren[i];
+        if (child.layer != null) {
+          result.push(child.layer);
+        }
+      }
+      return result;
+    };
 
     Layer.prototype.centerAxis = function(isX, isY) {
       var nodeParent, parentClassName, parentSize;
@@ -469,7 +634,9 @@
     };
 
     Layer.prototype.center = function() {
-      return this.centerAxis(true, true);
+      this._layerNode.setAlign(0.5, 0.5);
+      this._layerNode.setMountPoint(0.5, 0.5);
+      return this._layerNode.setOrigin(0.5, 0.5);
     };
 
     Layer.prototype._centerUsingAlign = function() {
@@ -571,6 +738,44 @@
       }
     });
 
+    Layer.prototype.applyOriginX = function(newVal) {
+      var currentValues;
+      currentValues = this._layerNode.getOrigin();
+      return this._layerNode.setOrigin(newVal, currentValues[1], currentValues[2]);
+    };
+
+    Layer.property('originX', {
+      get: function() {
+        var currentValues;
+        currentValues = this._layerNode.getOrigin();
+        return currentValues[0];
+      },
+      set: function(newVal) {
+        if (this.originX !== newVal) {
+          return this.applyOriginX(newVal);
+        }
+      }
+    });
+
+    Layer.prototype.applyOriginY = function(newVal) {
+      var currentValues;
+      currentValues = this._layerNode.getOrigin();
+      return this._layerNode.setOrigin(currentValues[0], newVal, currentValues[2]);
+    };
+
+    Layer.property('originY', {
+      get: function() {
+        var currentValues;
+        currentValues = this._layerNode.getOrigin();
+        return currentValues[1];
+      },
+      set: function(newVal) {
+        if (this.originY !== newVal) {
+          return this.applyOriginY(newVal);
+        }
+      }
+    });
+
     Layer.prototype.retrieveCurveValue = function(str) {
       var result;
       result = {
@@ -589,7 +794,10 @@
     };
 
     Layer.prototype.startAnimation = function(animOptions) {
-      var borderRadiusTransition, borderRadiusValue, componentId, curveMaps, curveObject, curveValue, rotationComponent, rotationValue;
+      var borderRadiusTransition, borderRadiusValue, componentId, curveMaps, curveObject, curveValue, rotationComponent, rotationValue, rotationXValue, rotationYTransitionable, rotationYValue, rotationZValue, spinner;
+      rotationXValue = animOptions.properties.rotationX || null;
+      rotationYValue = animOptions.properties.rotationY || null;
+      rotationZValue = animOptions.properties.rotationZ || null;
       rotationValue = animOptions.properties.rotation || null;
       borderRadiusValue = animOptions.properties.borderRadius || null;
       curveMaps = {
@@ -598,9 +806,37 @@
       curveValue = animOptions.curve || '';
       curveObject = this.retrieveCurveValue(curveValue);
       curveValue = curveObject.name;
-      Logger.log("curveValue: " + curveValue);
       if (curveValue === "ease") {
         curveValue = "easeInOut";
+      }
+      if (rotationXValue !== null) {
+        rotationComponent = new Rotation(this._layerNode);
+        rotationComponent.setX(this.degreeToRadian(rotationXValue), {
+          duration: 1000
+        });
+      }
+      if (rotationYValue !== null) {
+        rotationYTransitionable = new Transitionable(this.rotationY);
+        rotationYTransitionable.set(rotationYValue, {
+          duration: 1000
+        });
+        spinner = this._layerNode.addComponent({
+          onUpdate: (function(_this) {
+            return function(time) {
+              _this.rotationY = rotationYTransitionable.get();
+              if (rotationYTransitionable.isActive()) {
+                return _this._layerNode.requestUpdate(spinner);
+              }
+            };
+          })(this)
+        });
+        this._layerNode.requestUpdate(spinner);
+      }
+      if (rotationZValue !== null) {
+        rotationComponent = new Rotation(this._layerNode);
+        rotationComponent.setZ(this.degreeToRadian(rotationZValue), {
+          duration: 1000
+        });
       }
       if (rotationValue !== null) {
         rotationComponent = new Rotation(this._layerNode);

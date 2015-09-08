@@ -1,0 +1,167 @@
+body,
+html {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: Roboto, Helvetica, Arial, sans-serif;
+}
+
+iframe {
+  border: 0;
+}
+
+.invisible {
+  visibility: hidden !important;
+}
+
+#wrapper,
+#wrapper-inner {
+  width: 100%;
+  height: 100%;
+  background-color: black;
+}
+
+#wrapper-inner {
+  opacity: 0.0;
+  -moz-transition-property: opacity;
+  -moz-transition-duration: 1s;
+  -webkit-transition-property: opacity;
+  -webkit-transition-duration: 1s;
+  transition-property: opacity;
+  transition-duration: 1s;
+}
+
+#header-container {
+  height: 40px;
+  background-color: #444;
+  border-bottom: 1px solid #333;
+}
+
+#header-logo {
+  height: 25px;
+  width: 25px;
+  margin-top: 7px;
+  margin-left: 1em;
+}
+
+#header-title {
+  color: #eee;
+  font-size: 12px;
+  position: absolute;
+  top: 13px;
+  left: 52px;
+}
+
+#content-container {
+  height: calc(100% - 40px);
+  width: 100%;
+  background-color: black;
+}
+
+#content-container-inner {
+  width: 100%;
+  height: 100%;
+  display: table;
+  table-layout: fixed;
+}
+
+#detail-container,
+#editor-container,
+#renderer-container {
+  display: table-cell;
+  height: 100%;
+  overflow: scroll;
+}
+
+#detail-container {
+  background-color: #333;
+  vertical-align: top;
+  color: #eee;
+  padding: 0 1em;
+}
+
+#detail-container p {
+  line-height: 1.4em;
+}
+
+#detail-container p code {
+  font-family: Consolas, monospace;
+  font-size: 1em;
+  padding: 2px 4px 1px 4px;
+  border-radius: 2px;
+  background-color: #555;
+  color: #e4ffee;
+}
+
+#editor-container {
+  background-color: #444;
+  position: relative;
+  overflow: hidden;
+}
+
+#editor-menu {
+  height: 30px;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+#file-dropdown {
+  width: 100%;
+  background: transparent;
+  padding-left: 10px;
+  padding-top: 0;
+  font-size: 12px;
+  line-height: 1;
+  border: 0;
+  border-radius: 0;
+  height: 30px;
+  color: white;
+  outline: none;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+#editor {
+  position: absolute;
+  width: 100%;
+  height: calc(100% - 30px);
+  top: 30px;
+  border-top: 1px solid #333;
+}
+
+.CodeMirror {
+  height: 100%;
+  font-family: 'Source Code Pro', Consolas, monospace;
+  font-size: 0.8em;
+}
+
+.CodeMirror-linenumber {
+  color: #666;
+}
+
+.CodeMirror-gutters {
+  border-right: 1px solid #666;
+}
+
+#renderer-container > iframe {
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 700px) {
+
+  #content-container-inner {
+    width: 100%;
+    height: 100%;
+  }
+
+  #detail-container,
+  #editor-container {
+    display: none;
+  }
+  #renderer-container {
+    height: 100%;
+  }
+}
