@@ -8,40 +8,32 @@ Clock = require("./Clock")
 
 Application.run ->    
 
-    # Set background
-    bg = new BackgroundLayer backgroundColor: "#000000"
-    bg.bringToFront()
-
-    # Create layer
+    # Create layer, set properties
     layerA = new Layer
-        image: './images/famous-logo.svg'
-        backgroundColor: "transparent"
-        width: 250
-        height: 250
-        
-    layerA.center()
+      width: 80, height: 80, backgroundColor: "#7ed6ff", borderRadius: "4px"
 
-    # layerA.animate 
-    #     properties:
-    #         rotationY: Clock.getTime()/1000
-        
-    # Rotate on click
-    i = 0
-    layerA.on Events.Click, ->
+    # Move down 300px
+    layerA.animate
+      properties:
+        y: 300
+      
+    # You can animate multiple properties at once
+    layerB = new Layer
+      width: 80, height: 80, x: 100, backgroundColor: "#26b4f6", borderRadius: "4px"
 
-        # layerA.rotationY = 160
-        # Logger.log "layerA.rotationY: #{layerA.rotationY}"
+    layerB.animate
+      properties:
+        y: 300
+        rotationZ: 360
+      # Duration of the animation
+      time: 2
 
-        doAnim = ->
-            Logger.log "existing layerA.rotationY: #{Math.abs(layerA.rotationY)}, plus 20: #{Math.abs(layerA.rotationY) + 20}"
+    # Curve options describe the animation curve. The default is linear, but you can use others like "cubic-bezier" or "spring"
+    layerC = new Layer
+      width: 80, height: 80, x: 200, backgroundColor: "#0079c6", borderRadius: "4px"
 
-            
-            layerA.animate
-                properties:
-                    rotationY: layerA.rotationY + 20
-
-            setTimeout ->
-                    doAnim()
-                , 500
-
-        doAnim()
+    layerC.animate
+      properties: 
+        y: 300
+      time: 3
+      curve: "outCubic"

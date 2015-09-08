@@ -15,33 +15,45 @@
   Clock = require("./Clock");
 
   Application.run(function() {
-    var bg, i, layerA;
-    bg = new BackgroundLayer({
-      backgroundColor: "#000000"
-    });
-    bg.bringToFront();
+    var layerA, layerB, layerC;
     layerA = new Layer({
-      image: './images/famous-logo.svg',
-      backgroundColor: "transparent",
-      width: 250,
-      height: 250
+      width: 80,
+      height: 80,
+      backgroundColor: "#7ed6ff",
+      borderRadius: "4px"
     });
-    layerA.center();
-    i = 0;
-    return layerA.on(Events.Click, function() {
-      var doAnim;
-      doAnim = function() {
-        Logger.log("existing layerA.rotationY: " + (Math.abs(layerA.rotationY)) + ", plus 20: " + (Math.abs(layerA.rotationY) + 20));
-        layerA.animate({
-          properties: {
-            rotationY: layerA.rotationY + 20
-          }
-        });
-        return setTimeout(function() {
-          return doAnim();
-        }, 500);
-      };
-      return doAnim();
+    layerA.animate({
+      properties: {
+        y: 300
+      }
+    });
+    layerB = new Layer({
+      width: 80,
+      height: 80,
+      x: 100,
+      backgroundColor: "#26b4f6",
+      borderRadius: "4px"
+    });
+    layerB.animate({
+      properties: {
+        y: 300,
+        rotationZ: 360
+      },
+      time: 2
+    });
+    layerC = new Layer({
+      width: 80,
+      height: 80,
+      x: 200,
+      backgroundColor: "#0079c6",
+      borderRadius: "4px"
+    });
+    return layerC.animate({
+      properties: {
+        y: 300
+      },
+      time: 3,
+      curve: "outCubic"
     });
   });
 

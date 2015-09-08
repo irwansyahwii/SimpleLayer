@@ -65,7 +65,6 @@
       this.applyZ = bind(this.applyZ, this);
       this.applyY = bind(this.applyY, this);
       this.applyX = bind(this.applyX, this);
-      this.addSubLayer = bind(this.addSubLayer, this);
       this.applyBorderRadius = bind(this.applyBorderRadius, this);
       this.applyBackgroundColor = bind(this.applyBackgroundColor, this);
       this.applyWidth = bind(this.applyWidth, this);
@@ -192,11 +191,16 @@
     });
 
     Layer.prototype.applyBorderRadius = function(borderRadius) {
-      this._layerElement.setProperty('border-radius', borderRadius + "px");
+      var completeValueString;
+      completeValueString = "";
+      if (typeof borderRadius === 'string') {
+        completeValueString = borderRadius;
+      } else {
+        completeValueString = borderRadius + "px";
+      }
+      this._layerElement.setProperty('border-radius', "" + completeValueString);
       return this._layerElement.setProperty('border', "1px solid " + this.backgroundColor);
     };
-
-    Layer.prototype.addSubLayer = function(subLayer) {};
 
     Layer.property('borderRadius', {
       get: function() {
@@ -794,12 +798,16 @@
     };
 
     Layer.prototype.startAnimation = function(animOptions) {
-      var borderRadiusTransition, borderRadiusValue, componentId, curveMaps, curveObject, curveValue, rotationComponent, rotationValue, rotationXValue, rotationYTransitionable, rotationYValue, rotationZValue, spinner;
+      var borderRadiusTransition, borderRadiusValue, componentId, curveMaps, curveObject, curveValue, posXValue, posYValue, positionComponent, rotationComponent, rotationValue, rotationXValue, rotationYTransitionable, rotationYValue, rotationZValue, spinner, timeValue;
       rotationXValue = animOptions.properties.rotationX || null;
       rotationYValue = animOptions.properties.rotationY || null;
       rotationZValue = animOptions.properties.rotationZ || null;
       rotationValue = animOptions.properties.rotation || null;
       borderRadiusValue = animOptions.properties.borderRadius || null;
+      posYValue = animOptions.properties.y || null;
+      posXValue = animOptions.properties.x || null;
+      timeValue = animOptions.time || 1;
+      timeValue = timeValue * 1000;
       curveMaps = {
         "ease": "easeInOut"
       };
@@ -809,16 +817,28 @@
       if (curveValue === "ease") {
         curveValue = "easeInOut";
       }
+      if (posXValue !== null) {
+        positionComponent = new Position(this._layerNode);
+        positionComponent.setX(posXValue, {
+          duration: timeValue
+        });
+      }
+      if (posYValue !== null) {
+        positionComponent = new Position(this._layerNode);
+        positionComponent.setY(posYValue, {
+          duration: timeValue
+        });
+      }
       if (rotationXValue !== null) {
         rotationComponent = new Rotation(this._layerNode);
         rotationComponent.setX(this.degreeToRadian(rotationXValue), {
-          duration: 1000
+          duration: timeValue
         });
       }
       if (rotationYValue !== null) {
         rotationYTransitionable = new Transitionable(this.rotationY);
         rotationYTransitionable.set(rotationYValue, {
-          duration: 1000
+          duration: timeValue
         });
         spinner = this._layerNode.addComponent({
           onUpdate: (function(_this) {
@@ -835,13 +855,13 @@
       if (rotationZValue !== null) {
         rotationComponent = new Rotation(this._layerNode);
         rotationComponent.setZ(this.degreeToRadian(rotationZValue), {
-          duration: 1000
+          duration: timeValue
         });
       }
       if (rotationValue !== null) {
         rotationComponent = new Rotation(this._layerNode);
         rotationComponent.setZ(this.angleToFamousRotation(rotationValue), {
-          duration: 1000,
+          duration: timeValue,
           curve: curveValue
         });
         this._layerNode.addComponent(rotationComponent);

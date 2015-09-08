@@ -153,12 +153,16 @@ class Layer
                 @applyBackgroundColor(newVal)
 
     applyBorderRadius:(borderRadius) =>
+
+        completeValueString = ""
+        if typeof borderRadius is 'string'
+            completeValueString = borderRadius
+        else
+            completeValueString = "#{borderRadius}px"
         
-        @_layerElement.setProperty('border-radius', "#{borderRadius}px")
+        @_layerElement.setProperty('border-radius', "#{completeValueString}")
         @_layerElement.setProperty('border', "1px solid #{@backgroundColor}")   
 
-
-    addSubLayer: (subLayer) =>
 
 
     @property 'borderRadius',
@@ -653,7 +657,15 @@ class Layer
         rotationYValue = animOptions.properties.rotationY || null 
         rotationZValue = animOptions.properties.rotationZ || null 
         rotationValue = animOptions.properties.rotation || null
+
         borderRadiusValue = animOptions.properties.borderRadius || null
+
+        posYValue = animOptions.properties.y || null
+        posXValue = animOptions.properties.x || null
+
+        timeValue = animOptions.time || 1
+        timeValue = timeValue * 1000
+
         
 
         curveMaps =
@@ -666,18 +678,27 @@ class Layer
         curveValue = curveObject.name
     
 
-        # Logger.log "rotationXValue: #{rotationXValue}"
-        # Logger.log "rotationYValue: #{rotationYValue}"
-        # Logger.log "rotationValue: #{rotationValue}"
 
         if curveValue is "ease"
             curveValue = "easeInOut"
+
+        if posXValue isnt null
+            positionComponent = new Position(@_layerNode)
+            positionComponent.setX(posXValue,
+                    duration: timeValue
+                )
+
+        if posYValue isnt null
+            positionComponent = new Position(@_layerNode)
+            positionComponent.setY(posYValue,
+                    duration: timeValue
+                )
 
         if rotationXValue isnt null
             rotationComponent = new Rotation(@_layerNode)    
 
             rotationComponent.setX(@degreeToRadian(rotationXValue), 
-                    duration: 1000
+                    duration: timeValue
                 )
 
         if rotationYValue isnt null
@@ -686,7 +707,7 @@ class Layer
 
             rotationYTransitionable.set(rotationYValue, 
                         duration:
-                            1000
+                            timeValue
                     )
 
             spinner = @_layerNode.addComponent
@@ -702,14 +723,14 @@ class Layer
             rotationComponent = new Rotation(@_layerNode)    
 
             rotationComponent.setZ(@degreeToRadian(rotationZValue), 
-                    duration: 1000
+                    duration: timeValue
                 )
         if rotationValue isnt null
             rotationComponent = new Rotation(@_layerNode)            
 
             rotationComponent.setZ( @angleToFamousRotation(rotationValue),
                     {
-                        duration: 1000
+                        duration: timeValue
                         curve: curveValue
                     }
                 )
