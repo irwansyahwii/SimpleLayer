@@ -38,7 +38,7 @@ Application.run ->
           properties: 
             y: 480
           time: 3
-          curve: "outCubic"
+          curve: "inOutCubic"
 
         setTimeout ->
                 startGame()

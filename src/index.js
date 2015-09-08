@@ -55,7 +55,7 @@
           y: 480
         },
         time: 3,
-        curve: "outCubic"
+        curve: "inOutCubic"
       });
       return setTimeout(function() {
         return startGame();

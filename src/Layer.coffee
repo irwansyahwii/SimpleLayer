@@ -686,12 +686,14 @@ class Layer
             positionComponent = new Position(@_layerNode)
             positionComponent.setX(posXValue,
                     duration: timeValue
+                    curve: curveValue
                 )
 
         if posYValue isnt null
             positionComponent = new Position(@_layerNode)
             positionComponent.setY(posYValue,
                     duration: timeValue
+                    curve: curveValue
                 )
 
         if rotationXValue isnt null
@@ -699,6 +701,7 @@ class Layer
 
             rotationComponent.setX(@degreeToRadian(rotationXValue), 
                     duration: timeValue
+                    curve: curveValue
                 )
 
         if rotationYValue isnt null
@@ -706,8 +709,8 @@ class Layer
             rotationYTransitionable = new Transitionable(@rotationY)
 
             rotationYTransitionable.set(rotationYValue, 
-                        duration:
-                            timeValue
+                        duration: timeValue
+                        curve: curveValue
                     )
 
             spinner = @_layerNode.addComponent
@@ -724,6 +727,7 @@ class Layer
 
             rotationComponent.setZ(@degreeToRadian(rotationZValue), 
                     duration: timeValue
+                    curve: curveValue
                 )
         if rotationValue isnt null
             rotationComponent = new Rotation(@_layerNode)            
@@ -731,7 +735,7 @@ class Layer
             rotationComponent.setZ( @angleToFamousRotation(rotationValue),
                     {
                         duration: timeValue
-                        curve: curveValue
+                        curve: curveValue                        
                     }
                 )
 

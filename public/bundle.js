@@ -41811,25 +41811,29 @@ module.exports = shaders;
       if (posXValue !== null) {
         positionComponent = new Position(this._layerNode);
         positionComponent.setX(posXValue, {
-          duration: timeValue
+          duration: timeValue,
+          curve: curveValue
         });
       }
       if (posYValue !== null) {
         positionComponent = new Position(this._layerNode);
         positionComponent.setY(posYValue, {
-          duration: timeValue
+          duration: timeValue,
+          curve: curveValue
         });
       }
       if (rotationXValue !== null) {
         rotationComponent = new Rotation(this._layerNode);
         rotationComponent.setX(this.degreeToRadian(rotationXValue), {
-          duration: timeValue
+          duration: timeValue,
+          curve: curveValue
         });
       }
       if (rotationYValue !== null) {
         rotationYTransitionable = new Transitionable(this.rotationY);
         rotationYTransitionable.set(rotationYValue, {
-          duration: timeValue
+          duration: timeValue,
+          curve: curveValue
         });
         spinner = this._layerNode.addComponent({
           onUpdate: (function (_this) {
@@ -41846,7 +41850,8 @@ module.exports = shaders;
       if (rotationZValue !== null) {
         rotationComponent = new Rotation(this._layerNode);
         rotationComponent.setZ(this.degreeToRadian(rotationZValue), {
-          duration: timeValue
+          duration: timeValue,
+          curve: curveValue
         });
       }
       if (rotationValue !== null) {
@@ -43072,7 +43077,7 @@ module.exports = shaders;
           y: 480
         },
         time: 3,
-        curve: "outCubic"
+        curve: "inOutCubic"
       });
       return setTimeout(function () {
         return startGame();
