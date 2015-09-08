@@ -13,8 +13,8 @@
     function BackgroundLayer(options) {
       this.bringToFront = bind(this.bringToFront, this);
       options.properties = options.properties || {};
-      options.width = -1;
-      options.height = -1;
+      delete options.width;
+      delete options.height;
       BackgroundLayer.__super__.constructor.call(this, options);
     }
 
