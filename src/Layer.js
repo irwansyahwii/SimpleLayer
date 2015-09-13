@@ -37,47 +37,7 @@
 
   DOMElement = famous.domRenderables.DOMElement;
 
-  FamousPropertySetter = {
-    width: function(layer) {
-      var nodeValues, propertyValue;
-      propertyValue = layer._properties.width;
-      nodeValues = layer._node.getAbsoluteSize();
-      console.log(nodeValues);
-      layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
-      return console.log(nodeValues);
-    },
-    height: function(layer) {
-      var nodeValues, propertyValue;
-      propertyValue = layer._properties.height;
-      nodeValues = layer._node.getAbsoluteSize();
-      console.log(nodeValues);
-      layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
-      return console.log(nodeValues);
-    },
-    x: function(layer) {
-      var nodeValues, propertyValue;
-      propertyValue = layer._properties.x;
-      nodeValues = layer._node.getPosition();
-      return layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
-    },
-    y: function(layer) {
-      var nodeValues, propertyValue;
-      propertyValue = layer._properties.y;
-      nodeValues = layer._node.getPosition();
-      return layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
-    },
-    rotationZ: function(layer) {
-      var nodeValues, propertyValue;
-      propertyValue = layer._properties.rotationZ * Math.PI / 180;
-      nodeValues = layer._node.getRotation();
-      return layer._node.setRotation(0, 0, propertyValue);
-    },
-    backgroundColor: function(layer) {
-      var propertyValue;
-      propertyValue = layer._properties.backgroundColor;
-      return layer._element.setProperty("background-color", propertyValue);
-    }
-  };
+  FamousPropertySetter = require("./FamousPropertySetter");
 
   layerValueTypeError = function(name, value) {
     throw new Error("Layer." + name + ": value '" + value + "' of type '" + (typeof value) + "'' is not valid");
@@ -621,10 +581,17 @@
       importable: true,
       exportable: false,
       get: function() {
-        return this._element.style;
+        return this._element._styles;
       },
       set: function(value) {
+        var key, val;
         _.extend(this._element.style, value);
+        console.log("new style value: " + value);
+        for (key in value) {
+          val = value[key];
+          this._properties[key] = val;
+          this._element.setProperty(key, val);
+        }
         return this.emit("change:style");
       }
     });

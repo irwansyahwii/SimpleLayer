@@ -1,51 +1,42 @@
 Framer = require("./Framer")
 
 Logger  = require('./Logger')
-# Layer = require("./Layer")
-# BackgroundLayer = require("./BackgroundLayer")
-# Application = require('./Application')
-# Events = require('./Events')
 
-# Clock = require("./Clock")
+# Setup
+notification = new Layer x:0, y:0, width: 200, height: 120, scale: 0, borderRadius: "8px", backgroundColor: "#28acff"
+notification.html = 'Click Me'
+notification.style =
+  fontSize: '30px'
+  textAlign: 'center'
+  lineHeight: '125px'
+  color: "white"
+notification.center()
 
-
-
-# Application.run ->    
+notification.animate
+  properties: { scale: 1 }
+  curve: 'spring'
+  curveOptions:
+    friction: 20
+  
+notification.on Events.Click, ->
+  # Setting the hinge to the top left
+  notification.originX = 0
+  notification.originY = 0
+  
+  # Assigning the result of the animation to a variable called hingeAnimation
+  hingeAnimation = notification.animate
+    properties:
+      rotationZ: 45
+    curve: 'spring'
+    curveOptions:
+      tension: 900
+      friction: 25
+      velocity: 30
     
-startGame = ->
-
-    # Create layer, set properties
-    layerA = new Layer
-      width: 80, height: 80, backgroundColor: "#7ed6ff", borderRadius: "4px"
-
-    # Move down 300px
-    layerA.animate
+  # When the first animation ends, we'll drop the layer out of view
+  hingeAnimation.on 'end', ->
+    notification.animate
       properties:
-        y: 480
-      
-    # You can animate multiple properties at once
-    layerB = new Layer
-      width: 80, height: 80, x: 100, backgroundColor: "#26b4f6", borderRadius: "4px"
-
-    layerB.animate
-      properties:
-        y: 480
-        rotationZ: 360
-      # Duration of the animation
-      time: 2
-
-    # Curve options describe the animation curve. The default is linear, but you can use others like "cubic-bezier" or "spring"
-    layerC = new Layer
-      width: 80, height: 80, x: 200, backgroundColor: "#0079c6", borderRadius: "4px"
-
-    layerC.animate
-      properties: 
-        y: 480
-      time: 3
-      curve: "inOutCubic"
-
-    # setTimeout ->
-    #         startGame()
-    #     , 2000
-
-startGame()
+        y: 2000
+      curve: 'cubic-bezier'
+      time: 1
