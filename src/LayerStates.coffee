@@ -22,8 +22,6 @@ class exports.LayerStates extends BaseClass
 
 		# Always add the default state as the current
 		@add "default", @layer.props
-		console.log "layer: #{@layer.name} props:"
-		console.log @layer.props
 
 		@_currentState = "default"
 		@_previousStates = []

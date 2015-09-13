@@ -41928,7 +41928,6 @@ module.exports = shaders;
         options.backgroundColor = "#fff";
       }
       BackgroundLayer.__super__.constructor.call(this, options);
-      this.name2 = "BackgroundLayer";
       this.sendToBack();
       this.layout();
       this._context.eventManager.wrap(window).addEventListener("resize", this.layout);
@@ -45878,9 +45877,6 @@ module.exports = shaders;
         return fallback;
       },
       set: function set(value) {
-        if (this.name !== "refresh") {
-          console.log("Trying to set Layer " + this.name + "." + name + ".set " + value);
-        }
         if (value && validator && !validator(value)) {
           layerValueTypeError(name, value);
         }
@@ -45929,7 +45925,6 @@ module.exports = shaders;
       Layer.__super__.constructor.call(this, options);
       this._context.addLayer(this);
       this._id = this._context.nextLayerId();
-      console.log("@_id: " + this._id);
       this._element.setId(this._id);
       if (!options.superLayer) {
         if (!options.shadow) {
@@ -46458,18 +46453,13 @@ module.exports = shaders;
       this._element = new DOMElement(this._node, {
         tagName: "div"
       });
-      console.log("@_element.setId to @_id: " + this._id);
       this._element._layer = this;
       return this._element;
     };
 
-    Layer.prototype._framerOriginal__insertElement = function () {
-      this.bringToFront();
-      return this._context.getRootElement().appendChild(this._element);
-    };
-
     Layer.prototype._insertElement = function () {
       this.bringToFront();
+      console.log("Add layer's " + this.name + " node to context rootElement");
       return this._context.getRootElement()._node.addChild(this._element._node);
     };
 
@@ -46574,16 +46564,25 @@ module.exports = shaders;
         return this._superLayer || null;
       },
       set: function set(layer) {
+        var foundIndex, parentChildren;
         if (layer === this._superLayer) {
           return;
         }
         if (!layer instanceof Layer) {
           throw Error("Layer.superLayer needs to be a Layer object");
         }
-        Utils.domCompleteCancel(this._insertElement);
-        this._context.getRootElement()._node.removeChild(this._element._node);
+        parentChildren = this._context.getRootElement()._node.getChildren();
+        foundIndex = parentChildren.indexOf(this._element._node);
+        if (foundIndex >= 0) {
+          this._context.getRootElement()._node.removeChild(this._element._node);
+        }
         if (this._superLayer) {
           this._superLayer._subLayers = _.without(this._superLayer._subLayers, this);
+          parentChildren = this._superLayer._element._node.getChildren();
+          foundIndex = parentChildren.indexOf(this._element._node);
+          if (foundIndex >= 0) {
+            this._superLayer._element._node.removeChild(this._element._node);
+          }
           this._element._node.dismount();
           this._superLayer.emit("change:subLayers", {
             added: [],
@@ -46591,9 +46590,6 @@ module.exports = shaders;
           });
         }
         if (layer) {
-          if (this._element._node.getParent() != null) {
-            this._element._node.dismount();
-          }
           layer._element._node.addChild(this._element._node);
           layer._subLayers.push(this);
           layer.emit("change:subLayers", {
@@ -47722,8 +47718,6 @@ module.exports = shaders;
       this._orderedStates = [];
       this.animationOptions = {};
       this.add("default", this.layer.props);
-      console.log("layer: " + this.layer.name + " props:");
-      console.log(this.layer.props);
       this._currentState = "default";
       this._previousStates = [];
       LayerStates.__super__.constructor.apply(this, arguments);
@@ -49947,8 +49941,6 @@ module.exports = shaders;
     backgroundColor: "#439FD8",
     name: "BackgroundLayer"
   });
-
-  console.log(bg);
 
   animSpeed = .25;
 

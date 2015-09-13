@@ -34,8 +34,8 @@ layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) -
 
 		set: (value) ->
 
-			if @name isnt "refresh"
-				console.log "Trying to set Layer #{@name}.#{name}.set #{value}"
+			# if @name isnt "refresh"
+			# 	console.log "Trying to set Layer #{@name}.#{name}.set #{value}"
 
 			if value and validator and not validator(value)
 				layerValueTypeError(name, value)
@@ -87,7 +87,6 @@ class exports.Layer extends BaseClass
 		@_context.addLayer(@)
 
 		@_id = @_context.nextLayerId()
-		console.log "@_id: #{@_id}"
 		@_element.setId(@_id)
 
 		# Insert the layer into the dom or the superLayer element
@@ -516,21 +515,14 @@ class exports.Layer extends BaseClass
 
 		@_element = new DOMElement(@_node, {tagName: "div"})
 
-		console.log "@_element.setId to @_id: #{@_id}"
-
 		@_element._layer = @
 		# @_element.classList.add("framerLayer")
 
 		@_element
 
-	_framerOriginal__insertElement: ->
-		@bringToFront()
-		@_context.getRootElement().appendChild(@_element)
-
 	_insertElement: ->
 		@bringToFront()
-		# console.log("Add layer's node to context rootElement")
-		
+		console.log("Add layer's #{@name} node to context rootElement")		
 		@_context.getRootElement()._node.addChild(@_element._node)
 
 	@define "html",
@@ -681,13 +673,21 @@ class exports.Layer extends BaseClass
 
 			# Cancel previous pending insertions
 			# Utils.domCompleteCancel @__insertElement
-			Utils.domCompleteCancel @_insertElement
 
-			@_context.getRootElement()._node.removeChild(@_element._node)
+			parentChildren = @_context.getRootElement()._node.getChildren()
+			foundIndex = parentChildren.indexOf(@_element._node)
+			if foundIndex >= 0
+				@_context.getRootElement()._node.removeChild(@_element._node)
 
 			# Remove from previous superlayer sublayers
-			if @_superLayer
+			if @_superLayer				
 				@_superLayer._subLayers = _.without @_superLayer._subLayers, @
+
+				parentChildren = @_superLayer._element._node.getChildren()
+				foundIndex = parentChildren.indexOf(@_element._node)
+				if foundIndex >= 0
+					@_superLayer._element._node.removeChild(@_element._node)
+
 				# @_superLayer._element._node.removeChild @_element._node
 				@_element._node.dismount()
 
@@ -695,8 +695,6 @@ class exports.Layer extends BaseClass
 
 			# Either insert the element to the new superlayer element or into dom
 			if layer
-				if @_element._node.getParent()?
-					@_element._node.dismount()
 				layer._element._node.addChild(@_element._node)
 				layer._subLayers.push @
 				layer.emit "change:subLayers", {added:[@], removed:[]}
