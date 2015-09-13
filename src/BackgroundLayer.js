@@ -26,30 +26,7 @@
       this._context.eventManager.wrap(window).addEventListener("resize", this.layout);
     }
 
-    BackgroundLayer.prototype.layout = function() {
-      if (this.superLayer) {
-        return this.frame = {
-          x: 0,
-          y: 0,
-          width: this.superLayer.width,
-          height: this.superLayer.height
-        };
-      } else if (this._context._parentLayer) {
-        return this.frame = {
-          x: 0,
-          y: 0,
-          width: this._context._parentLayer.width,
-          height: this._context._parentLayer.height
-        };
-      } else {
-        return this.frame = {
-          x: 0,
-          y: 0,
-          width: window.innerWidth,
-          height: window.innerHeight
-        };
-      }
-    };
+    BackgroundLayer.prototype.layout = function() {};
 
     return BackgroundLayer;
 

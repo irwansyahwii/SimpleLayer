@@ -53,10 +53,14 @@
     result = {
       "default": fallback,
       get: function() {
+        result = null;
         if (this._properties.hasOwnProperty(name)) {
-          return this._properties[name];
+          result = this._properties[name];
         }
-        return fallback;
+        if (result === null) {
+          result = fallback;
+        }
+        return result;
       },
       set: function(value) {
         if (value && validator && !validator(value)) {
