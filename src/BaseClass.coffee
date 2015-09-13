@@ -142,5 +142,9 @@ class exports.BaseClass extends EventEmitter
 					@_getPropertyDefaultValue(key)
 				)
 
+
+
 				if not (value in [null, undefined])
+					# console.log("key: #{key}, value: #{value}")
+					# if key is "width" or key is "height" or key is "backgroundColor" or key is "x" or key is "y"
 					@[key] = value

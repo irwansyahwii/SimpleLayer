@@ -7,6 +7,11 @@ Utils = require "./Utils"
 
 Counter = 1
 
+famous = require("famous")
+Engine = famous.core.FamousEngine
+Node = famous.core.Node
+DOMElement = famous.domRenderables.DOMElement
+
 class exports.Context extends BaseClass
 	
 	constructor: (options={}) ->
@@ -28,7 +33,7 @@ class exports.Context extends BaseClass
 		
 		@reset()
 
-	reset: ->
+	_framerOriginal_reset: ->
 
 		@eventManager?.reset()
 		@eventManager = new EventManager
@@ -61,10 +66,41 @@ class exports.Context extends BaseClass
 
 		@emit("reset", @)
 
+	reset: ->
+		@eventManager?.reset()
+		@eventManager = new EventManager
+
+		if @_rootElement
+			# Clean up the current root element:
+			if @_rootElement._node.isMounted()
+				# Already attached to the DOM - remove it:
+				@_rootElement._node.dismount()
+			else
+				# Not on the DOM yet. Prevent it from being added (for this happens
+				# async):
+				@_rootElement.__cancelAppendChild = true
+
+		# Create a fresh root element:
+		@_createRootElement()
+
+		@_delayTimers?.map (timer) -> window.clearTimeout(timer)
+		@_delayIntervals?.map (timer) -> window.clearInterval(timer)
+
+		if @_animationList
+			for animation in @_animationList
+				animation.stop(false)
+
+		@_layerList = []
+		@_animationList = []
+		@_delayTimers = []
+		@_delayIntervals = []
+		@_layerIdCounter = 1
+
+		@emit("reset", @)
 	destroy: ->
 		@reset()
-		if @_rootElement.parentNode
-			@_rootElement.parentNode.removeChild(@_rootElement)
+		if @_rootElement._node.isMounted()
+			@_rootElement._node.dismount()
 		Utils.domCompleteCancel(@_appendRootElement)
 
 	getRootElement: ->
@@ -88,7 +124,7 @@ class exports.Context extends BaseClass
 	nextLayerId: ->
 		@_layerIdCounter++
 
-	_createRootElement: ->
+	_framerOriginal__createRootElement: ->
 
 		@_rootElement = document.createElement("div")
 		@_rootElement.id = "FramerContextRoot-#{@_name}"
@@ -99,10 +135,39 @@ class exports.Context extends BaseClass
 		else
 			Utils.domComplete(@_appendRootElement)
 
-	_appendRootElement: =>
+	_createRootElement: ->
+		console.log("=== Context ===== ")
+
+		console.log("Assiging new Node() to @_rootNode")
+		@_rootNode = new Node()
+
+		console.log("Creating new DOMElement() and passing the @_rootNode")
+		@_rootElement = new DOMElement(@_rootNode, 
+				tagName: "div"
+			)
+		@_rootElement.id = "FramerContextRoot-#{@_name}"
+		# @_rootElement.classList.add("framerContext")
+
+		if @_parentLayer
+			@_appendRootElement()
+		else
+			Utils.domComplete(@_appendRootElement)			
+
+	_framerOriginal__appendRootElement: =>
 		parentElement = @_parentLayer?._element
 		parentElement ?= document.body
 		parentElement.appendChild(@_rootElement)
+
+	_appendRootElement: =>
+		console.log("=== Context ===== ")
+		
+		parentElement = @_parentLayer?._element._node
+		if not parentElement?
+			console.log("Calls Engine.createScene()")
+			parentElement = Engine.createScene()
+
+		console.log("Calls parentElement.addChild passing @_rootElement._node")
+		parentElement.addChild(@_rootElement._node)
 
 	run: (f) ->
 		previousContext = Framer.CurrentContext

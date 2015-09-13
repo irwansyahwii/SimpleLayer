@@ -40,16 +40,13 @@
       backgroundColor: "#0079c6",
       borderRadius: "4px"
     });
-    layerC.animate({
+    return layerC.animate({
       properties: {
         y: 480
       },
       time: 3,
       curve: "inOutCubic"
     });
-    return setTimeout(function() {
-      return startGame();
-    }, 2000);
   };
 
   startGame();

@@ -13,6 +13,48 @@ Utils = require "./Utils"
 
 NoCacheDateKey = Date.now()
 
+famous = require("famous")
+Engine = famous.core.FamousEngine
+Node = famous.core.Node
+DOMElement = famous.domRenderables.DOMElement
+
+
+FamousPropertySetter = 
+	width: (layer) ->
+		propertyValue = layer._properties.width
+		nodeValues = layer._node.getAbsoluteSize()
+		console.log(nodeValues)
+		layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2])
+		console.log(nodeValues)
+
+	height: (layer) ->
+		propertyValue = layer._properties.height
+		nodeValues = layer._node.getAbsoluteSize()
+		console.log(nodeValues)
+		layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2])
+		console.log(nodeValues)
+
+	x: (layer) ->
+		propertyValue = layer._properties.x
+		nodeValues = layer._node.getPosition()
+		layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2])
+	y: (layer) ->
+		propertyValue = layer._properties.y
+		nodeValues = layer._node.getPosition()
+		layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2])
+
+	rotationZ: (layer) ->
+		propertyValue = (layer._properties.rotationZ * Math.PI/180)
+		nodeValues = layer._node.getRotation()
+		layer._node.setRotation(0, 0, propertyValue)
+
+
+	backgroundColor: (layer) ->
+		propertyValue = layer._properties.backgroundColor
+		
+		layer._element.setProperty("background-color", propertyValue)
+
+
 layerValueTypeError = (name, value) ->
 	throw new Error("Layer.#{name}: value '#{value}' of type '#{typeof(value)}'' is not valid")
 
@@ -26,13 +68,19 @@ layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) -
 
 		set: (value) ->
 
-			# console.log "Layer.#{name}.set #{value}"
+			console.log "Layer.#{name}.set #{value}"
 
 			if value and validator and not validator(value)
 				layerValueTypeError(name, value)
 
 			@_properties[name] = value
-			@_element.style[cssProperty] = LayerStyle[cssProperty](@)
+			# console.log("cssProperty: #{cssProperty}")
+			# @_element.style[cssProperty] = LayerStyle[cssProperty](@)			
+			FamousPropertySetter[name]?(@)
+
+
+			# console.log("Setting property with name: #{name}")s
+
 
 			set?(@, value)
 			@emit("change:#{name}", value)
@@ -44,6 +92,9 @@ layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) -
 	result = _.extend(result, options)
 
 class exports.Layer extends BaseClass
+
+	
+
 
 	constructor: (options={}) ->
 
@@ -201,7 +252,8 @@ class exports.Layer extends BaseClass
 				console.warn "Layer.borderRadius should be a numeric property, not type #{typeof(value)}"
 
 			@_properties["borderRadius"] = value
-			@_element.style["borderRadius"] = LayerStyle["borderRadius"](@)
+			# @_element.style["borderRadius"] = LayerStyle["borderRadius"](@)
+			@_element.setProperty("borderRadius", LayerStyle["borderRadius"](@))
 
 			@emit("change:borderRadius", value)
 
@@ -439,18 +491,39 @@ class exports.Layer extends BaseClass
 	##############################################################
 	# DOM ELEMENTS
 
-	_createElement: ->
+	_framerOriginal__createElement: ->
 		return if @_element?
 		@_element = document.createElement "div"
 		@_element.classList.add("framerLayer")
 
-	_insertElement: ->
+	_createElement: ->
+		console.log("=== Layer, _createElement ===")
+
+		return if @_element?
+
+		console.log("Assigining @_node with new Node()")
+		@_node = new Node()
+		@_node.setSizeMode("absolute", "absolute", "absolute")
+		@_node.setAbsoluteSize(250, 250)
+		@_node.setOrigin(0.5, 0.5)
+
+		@_element = new DOMElement(@_node, {tagName: "div"})
+		# @_element.classList.add("framerLayer")
+
+		@_element
+
+	_framerOriginal__insertElement: ->
 		@bringToFront()
 		@_context.getRootElement().appendChild(@_element)
 
+	_insertElement: ->
+		@bringToFront()
+		console.log("Add layer's node to context rootElement")
+		@_context.getRootElement()._node.addChild(@_element._node)
+
 	@define "html",
 		get: ->
-			@_elementHTML?.innerHTML or ""
+			@_elementHTML?._content or ""
 
 		set: (value) ->
 
@@ -459,10 +532,12 @@ class exports.Layer extends BaseClass
 			# layer hierarchy.
 
 			if not @_elementHTML
-				@_elementHTML = document.createElement "div"
-				@_element.appendChild @_elementHTML
+				@_nodeHTML = new Node()
 
-			@_elementHTML.innerHTML = value
+				@_elementHTML = new DOMElement(@_nodeHTML, {tagName: "div"})
+				@_element._node.addChild(@_nodeHTML)
+
+			@_elementHTML.setContent(value)
 
 			# If the contents contains something else than plain text
 			# then we turn off ignoreEvents so buttons etc will work.
@@ -541,7 +616,8 @@ class exports.Layer extends BaseClass
 			@_setPropertyValue("image", value)
 
 			if value in [null, ""]
-				@style["background-image"] = null
+				# @style["background-image"] = null
+				@_element.setProperty("background-image", null)
 				return
 
 			imageUrl = value
@@ -561,14 +637,16 @@ class exports.Layer extends BaseClass
 				loader.src = imageUrl
 
 				loader.onload = =>
-					@style["background-image"] = "url('#{imageUrl}')"
+					# @style["background-image"] = "url('#{imageUrl}')"
+					@_element.setProperty("background-image", "url('#{imageUrl}')")
 					@emit "load", loader
 
 				loader.onerror = =>
 					@emit "error", loader
 
 			else
-				@style["background-image"] = "url('#{imageUrl}')"
+				# @style["background-image"] = "url('#{imageUrl}')"
+				@_element.setProperty("background-image", "url('#{imageUrl}')")
 
 	##############################################################
 	## HIERARCHY
@@ -593,12 +671,12 @@ class exports.Layer extends BaseClass
 			# Remove from previous superlayer sublayers
 			if @_superLayer
 				@_superLayer._subLayers = _.without @_superLayer._subLayers, @
-				@_superLayer._element.removeChild @_element
+				@_superLayer._element._node.removeChild @_element._node
 				@_superLayer.emit "change:subLayers", {added:[], removed:[@]}
 
 			# Either insert the element to the new superlayer element or into dom
 			if layer
-				layer._element.appendChild @_element
+				layer._element._node.addChild @_element._node
 				layer._subLayers.push @
 				layer.emit "change:subLayers", {added:[@], removed:[]}
 			else

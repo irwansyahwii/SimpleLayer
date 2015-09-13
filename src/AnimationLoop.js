@@ -69,11 +69,11 @@
 
     AnimationLoop.prototype.start = function() {
       var _timestamp, animationLoop, update, updater;
+      console.log("==== AnimationLoop ====");
       animationLoop = this;
       _timestamp = getTime();
       update = function() {
         var delta, timestamp;
-        console.log("heloo");
         if (animationLoop.delta) {
           delta = animationLoop.delta;
         } else {
@@ -92,7 +92,9 @@
           };
         })(this)
       };
+      console.log("Calling Engine.init");
       Engine.init();
+      console.log("Calling Engine.requestUpdate(updater)");
       return Engine.requestUpdate(updater);
     };
 

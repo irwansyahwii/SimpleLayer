@@ -44,8 +44,8 @@ startGame = ->
       time: 3
       curve: "inOutCubic"
 
-    setTimeout ->
-            startGame()
-        , 2000
+    # setTimeout ->
+    #         startGame()
+    #     , 2000
 
 startGame()

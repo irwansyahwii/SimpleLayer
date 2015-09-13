@@ -41467,11 +41467,11 @@ module.exports = shaders;
 
     AnimationLoop.prototype.start = function () {
       var _timestamp, animationLoop, update, updater;
+      console.log("==== AnimationLoop ====");
       animationLoop = this;
       _timestamp = getTime();
       update = function () {
         var delta, timestamp;
-        console.log("heloo");
         if (animationLoop.delta) {
           delta = animationLoop.delta;
         } else {
@@ -41490,7 +41490,9 @@ module.exports = shaders;
           };
         })(this)
       };
+      console.log("Calling Engine.init");
       Engine.init();
+      console.log("Calling Engine.requestUpdate(updater)");
       return Engine.requestUpdate(updater);
     };
 
@@ -44402,9 +44404,13 @@ module.exports = shaders;
   var BaseClass,
       Config,
       Counter,
+      DOMElement,
+      Engine,
       EventManager,
+      Node,
       Utils,
       _,
+      famous,
       bind = function bind(fn, me) {
     return function () {
       return fn.apply(me, arguments);
@@ -44436,6 +44442,14 @@ module.exports = shaders;
 
   Counter = 1;
 
+  famous = require("famous");
+
+  Engine = famous.core.FamousEngine;
+
+  Node = famous.core.Node;
+
+  DOMElement = famous.domRenderables.DOMElement;
+
   exports.Context = (function (superClass) {
     extend(Context, superClass);
 
@@ -44444,6 +44458,7 @@ module.exports = shaders;
         options = {};
       }
       this._appendRootElement = bind(this._appendRootElement, this);
+      this._framerOriginal__appendRootElement = bind(this._framerOriginal__appendRootElement, this);
       Context.__super__.constructor.apply(this, arguments);
       Counter++;
       options = _.defaults(options, {
@@ -44459,7 +44474,7 @@ module.exports = shaders;
       this.reset();
     }
 
-    Context.prototype.reset = function () {
+    Context.prototype._framerOriginal_reset = function () {
       var animation, i, len, ref, ref1, ref2, ref3;
       if ((ref = this.eventManager) != null) {
         ref.reset();
@@ -44498,10 +44513,49 @@ module.exports = shaders;
       return this.emit("reset", this);
     };
 
+    Context.prototype.reset = function () {
+      var animation, i, len, ref, ref1, ref2, ref3;
+      if ((ref = this.eventManager) != null) {
+        ref.reset();
+      }
+      this.eventManager = new EventManager();
+      if (this._rootElement) {
+        if (this._rootElement._node.isMounted()) {
+          this._rootElement._node.dismount();
+        } else {
+          this._rootElement.__cancelAppendChild = true;
+        }
+      }
+      this._createRootElement();
+      if ((ref1 = this._delayTimers) != null) {
+        ref1.map(function (timer) {
+          return window.clearTimeout(timer);
+        });
+      }
+      if ((ref2 = this._delayIntervals) != null) {
+        ref2.map(function (timer) {
+          return window.clearInterval(timer);
+        });
+      }
+      if (this._animationList) {
+        ref3 = this._animationList;
+        for (i = 0, len = ref3.length; i < len; i++) {
+          animation = ref3[i];
+          animation.stop(false);
+        }
+      }
+      this._layerList = [];
+      this._animationList = [];
+      this._delayTimers = [];
+      this._delayIntervals = [];
+      this._layerIdCounter = 1;
+      return this.emit("reset", this);
+    };
+
     Context.prototype.destroy = function () {
       this.reset();
-      if (this._rootElement.parentNode) {
-        this._rootElement.parentNode.removeChild(this._rootElement);
+      if (this._rootElement._node.isMounted()) {
+        this._rootElement._node.dismount();
       }
       return Utils.domCompleteCancel(this._appendRootElement);
     };
@@ -44535,7 +44589,7 @@ module.exports = shaders;
       return this._layerIdCounter++;
     };
 
-    Context.prototype._createRootElement = function () {
+    Context.prototype._framerOriginal__createRootElement = function () {
       this._rootElement = document.createElement("div");
       this._rootElement.id = "FramerContextRoot-" + this._name;
       this._rootElement.classList.add("framerContext");
@@ -44546,13 +44600,41 @@ module.exports = shaders;
       }
     };
 
-    Context.prototype._appendRootElement = function () {
+    Context.prototype._createRootElement = function () {
+      console.log("=== Context ===== ");
+      console.log("Assiging new Node() to @_rootNode");
+      this._rootNode = new Node();
+      console.log("Creating new DOMElement() and passing the @_rootNode");
+      this._rootElement = new DOMElement(this._rootNode, {
+        tagName: "div"
+      });
+      this._rootElement.id = "FramerContextRoot-" + this._name;
+      if (this._parentLayer) {
+        return this._appendRootElement();
+      } else {
+        return Utils.domComplete(this._appendRootElement);
+      }
+    };
+
+    Context.prototype._framerOriginal__appendRootElement = function () {
       var parentElement, ref;
       parentElement = (ref = this._parentLayer) != null ? ref._element : void 0;
       if (parentElement == null) {
         parentElement = document.body;
       }
       return parentElement.appendChild(this._rootElement);
+    };
+
+    Context.prototype._appendRootElement = function () {
+      var parentElement, ref;
+      console.log("=== Context ===== ");
+      parentElement = (ref = this._parentLayer) != null ? ref._element._node : void 0;
+      if (parentElement == null) {
+        console.log("Calls Engine.createScene()");
+        parentElement = Engine.createScene();
+      }
+      console.log("Calls parentElement.addChild passing @_rootElement._node");
+      return parentElement.addChild(this._rootElement._node);
     };
 
     Context.prototype.run = function (f) {
@@ -44585,7 +44667,7 @@ module.exports = shaders;
   })(BaseClass);
 }).call(undefined);
 
-},{"./BaseClass":152,"./Config":158,"./EventManager":164,"./Underscore":184,"./Utils":185}],160:[function(require,module,exports){
+},{"./BaseClass":152,"./Config":158,"./EventManager":164,"./Underscore":184,"./Utils":185,"famous":47}],160:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
@@ -45537,14 +45619,19 @@ module.exports = shaders;
   var Animation,
       BaseClass,
       Config,
+      DOMElement,
       Defaults,
+      Engine,
       EventEmitter,
+      FamousPropertySetter,
       LayerDraggable,
       LayerStates,
       LayerStyle,
       NoCacheDateKey,
+      Node,
       Utils,
       _,
+      famous,
       layerProperty,
       layerValueTypeError,
       bind = function bind(fn, me) {
@@ -45589,6 +45676,56 @@ module.exports = shaders;
 
   NoCacheDateKey = Date.now();
 
+  famous = require("famous");
+
+  Engine = famous.core.FamousEngine;
+
+  Node = famous.core.Node;
+
+  DOMElement = famous.domRenderables.DOMElement;
+
+  FamousPropertySetter = {
+    width: function width(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.width;
+      nodeValues = layer._node.getAbsoluteSize();
+      console.log(nodeValues);
+      layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
+      return console.log(nodeValues);
+    },
+    height: function height(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.height;
+      nodeValues = layer._node.getAbsoluteSize();
+      console.log(nodeValues);
+      layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
+      return console.log(nodeValues);
+    },
+    x: function x(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.x;
+      nodeValues = layer._node.getPosition();
+      return layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
+    },
+    y: function y(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.y;
+      nodeValues = layer._node.getPosition();
+      return layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
+    },
+    rotationZ: function rotationZ(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.rotationZ * Math.PI / 180;
+      nodeValues = layer._node.getRotation();
+      return layer._node.setRotation(0, 0, propertyValue);
+    },
+    backgroundColor: function backgroundColor(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.backgroundColor;
+      return layer._element.setProperty("background-color", propertyValue);
+    }
+  };
+
   layerValueTypeError = function (name, value) {
     throw new Error("Layer." + name + ": value '" + value + "' of type '" + typeof value + "'' is not valid");
   };
@@ -45607,11 +45744,14 @@ module.exports = shaders;
         return fallback;
       },
       set: function set(value) {
+        console.log("Layer." + name + ".set " + value);
         if (value && validator && !validator(value)) {
           layerValueTypeError(name, value);
         }
         this._properties[name] = value;
-        this._element.style[cssProperty] = LayerStyle[cssProperty](this);
+        if (typeof FamousPropertySetter[name] === "function") {
+          FamousPropertySetter[name](this);
+        }
         if (typeof _set === "function") {
           _set(this, value);
         }
@@ -45805,7 +45945,7 @@ module.exports = shaders;
           console.warn("Layer.borderRadius should be a numeric property, not type " + typeof value);
         }
         this._properties["borderRadius"] = value;
-        this._element.style["borderRadius"] = LayerStyle["borderRadius"](this);
+        this._element.setProperty("borderRadius", LayerStyle["borderRadius"](this));
         return this.emit("change:borderRadius", value);
       }
     });
@@ -46153,7 +46293,7 @@ module.exports = shaders;
       }
     });
 
-    Layer.prototype._createElement = function () {
+    Layer.prototype._framerOriginal__createElement = function () {
       if (this._element != null) {
         return;
       }
@@ -46161,22 +46301,47 @@ module.exports = shaders;
       return this._element.classList.add("framerLayer");
     };
 
-    Layer.prototype._insertElement = function () {
+    Layer.prototype._createElement = function () {
+      console.log("=== Layer, _createElement ===");
+      if (this._element != null) {
+        return;
+      }
+      console.log("Assigining @_node with new Node()");
+      this._node = new Node();
+      this._node.setSizeMode("absolute", "absolute", "absolute");
+      this._node.setAbsoluteSize(250, 250);
+      this._node.setOrigin(0.5, 0.5);
+      this._element = new DOMElement(this._node, {
+        tagName: "div"
+      });
+      return this._element;
+    };
+
+    Layer.prototype._framerOriginal__insertElement = function () {
       this.bringToFront();
       return this._context.getRootElement().appendChild(this._element);
+    };
+
+    Layer.prototype._insertElement = function () {
+      this.bringToFront();
+      console.log("Add layer's node to context rootElement");
+      return this._context.getRootElement()._node.addChild(this._element._node);
     };
 
     Layer.define("html", {
       get: function get() {
         var ref;
-        return ((ref = this._elementHTML) != null ? ref.innerHTML : void 0) || "";
+        return ((ref = this._elementHTML) != null ? ref._content : void 0) || "";
       },
       set: function set(value) {
         if (!this._elementHTML) {
-          this._elementHTML = document.createElement("div");
-          this._element.appendChild(this._elementHTML);
+          this._nodeHTML = new Node();
+          this._elementHTML = new DOMElement(this._nodeHTML, {
+            tagName: "div"
+          });
+          this._element._node.addChild(this._nodeHTML);
         }
-        this._elementHTML.innerHTML = value;
+        this._elementHTML.setContent(value);
         return this.emit("change:html");
       }
     });
@@ -46235,7 +46400,7 @@ module.exports = shaders;
         this.backgroundColor = null;
         this._setPropertyValue("image", value);
         if (value === null || value === "") {
-          this.style["background-image"] = null;
+          this._element.setProperty("background-image", null);
           return;
         }
         imageUrl = value;
@@ -46248,7 +46413,7 @@ module.exports = shaders;
           loader.src = imageUrl;
           loader.onload = (function (_this) {
             return function () {
-              _this.style["background-image"] = "url('" + imageUrl + "')";
+              _this._element.setProperty("background-image", "url('" + imageUrl + "')");
               return _this.emit("load", loader);
             };
           })(this);
@@ -46258,7 +46423,7 @@ module.exports = shaders;
             };
           })(this);
         } else {
-          return this.style["background-image"] = "url('" + imageUrl + "')";
+          return this._element.setProperty("background-image", "url('" + imageUrl + "')");
         }
       }
     });
@@ -46280,14 +46445,14 @@ module.exports = shaders;
         Utils.domCompleteCancel(this.__insertElement);
         if (this._superLayer) {
           this._superLayer._subLayers = _.without(this._superLayer._subLayers, this);
-          this._superLayer._element.removeChild(this._element);
+          this._superLayer._element._node.removeChild(this._element._node);
           this._superLayer.emit("change:subLayers", {
             added: [],
             removed: [this]
           });
         }
         if (layer) {
-          layer._element.appendChild(this._element);
+          layer._element._node.addChild(this._element._node);
           layer._subLayers.push(this);
           layer.emit("change:subLayers", {
             added: [this],
@@ -46709,7 +46874,7 @@ module.exports = shaders;
   })(BaseClass);
 }).call(undefined);
 
-},{"./Animation":143,"./BaseClass":152,"./Config":158,"./Defaults":161,"./EventEmitter":163,"./LayerDraggable":173,"./LayerStates":174,"./LayerStyle":175,"./Underscore":184,"./Utils":185}],173:[function(require,module,exports){
+},{"./Animation":143,"./BaseClass":152,"./Config":158,"./Defaults":161,"./EventEmitter":163,"./LayerDraggable":173,"./LayerStates":174,"./LayerStyle":175,"./Underscore":184,"./Utils":185,"famous":47}],173:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
@@ -49669,16 +49834,13 @@ module.exports = shaders;
       backgroundColor: "#0079c6",
       borderRadius: "4px"
     });
-    layerC.animate({
+    return layerC.animate({
       properties: {
         y: 480
       },
       time: 3,
       curve: "inOutCubic"
     });
-    return setTimeout(function () {
-      return startGame();
-    }, 2000);
   };
 
   startGame();

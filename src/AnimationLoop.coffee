@@ -69,11 +69,12 @@ class exports.AnimationLoop extends EventEmitter
 		tick()
 
 	start: =>		
+		console.log("==== AnimationLoop ====")
 		animationLoop = @
 		_timestamp = getTime()
 
 		update = ->
-			console.log("heloo")
+			# console.log("heloo")
 			if animationLoop.delta
 				delta = animationLoop.delta
 			else
@@ -89,5 +90,9 @@ class exports.AnimationLoop extends EventEmitter
 			onUpdate: () =>
 				update()
 				Engine.requestUpdate(updater)
+
+
+		console.log("Calling Engine.init")
 		Engine.init()
+		console.log("Calling Engine.requestUpdate(updater)")
 		Engine.requestUpdate(updater)
