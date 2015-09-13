@@ -26,7 +26,10 @@ class EventManagerElement
 
 				@element._node.onReceive = (event, payload) =>
 					# console.log("Layer #{@element._layer.name} onReceive: #{event}")
-					
+					# console.log payload
+					payload.preventDefault = ->
+						payload.defaultPrevented = true
+
 					handlerArray = @_events[event]
 					# console.log "handlerArray:"
 					# console.log handlerArray

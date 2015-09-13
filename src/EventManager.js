@@ -31,6 +31,9 @@
           return this.element._node.onReceive = (function(_this) {
             return function(event, payload) {
               var handler, handlerArray, i, len, results;
+              payload.preventDefault = function() {
+                return payload.defaultPrevented = true;
+              };
               handlerArray = _this._events[event];
               if (handlerArray != null) {
                 results = [];

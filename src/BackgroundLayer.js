@@ -23,7 +23,6 @@
       BackgroundLayer.__super__.constructor.call(this, options);
       this.sendToBack();
       this.layout();
-      this._context.eventManager.wrap(window).addEventListener("resize", this.layout);
     }
 
     BackgroundLayer.prototype.layout = function() {};

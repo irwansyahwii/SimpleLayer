@@ -631,11 +631,6 @@
       this._node.setSizeMode("absolute", "absolute", "absolute");
       this._node.setAbsoluteSize(250, 250);
       this._node.setOrigin(0.5, 0.5);
-      this._node.onReceive = (function(_this) {
-        return function(event, payLoad) {
-          return console.log("Node: " + _this.name + " on receive: " + event);
-        };
-      })(this);
       this._element = new DOMElement(this._node, {
         tagName: "div"
       });

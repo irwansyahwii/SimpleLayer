@@ -510,10 +510,10 @@ class exports.Layer extends BaseClass
 
 
 
-		@_node.onReceive = (event, payLoad) =>
+		# @_node.onReceive = (event, payLoad) =>
 
 		# 	# @_node.emit(event, payLoad)
-			console.log("Node: #{@name} on receive: #{event}")
+			# console.log("Node: #{@name} on receive: #{event}")
 		# 	# console.log event
 		# 	# console.log payLoad
 		# 	# @emit(event)
