@@ -28,9 +28,11 @@ class EventManagerElement
 					# console.log("Layer #{@element._layer.name} onReceive: #{event}")
 					
 					handlerArray = @_events[event]
+					# console.log "handlerArray:"
+					# console.log handlerArray
 					if handlerArray?
 						for handler in handlerArray
-							handler()
+							handler(payload)
 
 
 		else
