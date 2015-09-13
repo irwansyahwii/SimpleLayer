@@ -643,7 +643,9 @@
       this._node.addUIEvent(Events.MouseMove);
       this._node.onReceive = (function(_this) {
         return function(event, payLoad) {
-          return _this.emit(event);
+          console.log("Node on receive: " + event);
+          payLoad.preventDefault = function() {};
+          return _this.emit(event, payLoad);
         };
       })(this);
       this._element = new DOMElement(this._node, {

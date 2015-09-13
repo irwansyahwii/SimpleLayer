@@ -184,6 +184,8 @@
 
     LayerDraggable.prototype._touchStart = function(event) {
       var touchEvent;
+      console.log("Receivint _touchStart event on draggable");
+      console.log(event);
       this._isMoving = this.isAnimating;
       this.layer.animateStop();
       this._stopSimulation();

@@ -490,7 +490,14 @@ class exports.Layer extends BaseClass
 		# @_node.addUIEvent(Events.MouseWheel)
 
 		@_node.onReceive = (event, payLoad) =>
-			@emit(event)
+			console.log("Node on receive: #{event}")
+			# console.log event
+			# console.log payLoad
+			# @emit(event)
+			payLoad.preventDefault = ->
+				#adasd
+				
+			@emit(event, payLoad)
 			# if event is Events.Click
 			# 	@emit(Events.Click)
 

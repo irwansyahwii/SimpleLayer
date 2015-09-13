@@ -111,6 +111,9 @@ class exports.LayerDraggable extends BaseClass
 
 	_touchStart: (event) =>
 
+		console.log("Receivint _touchStart event on draggable")
+		console.log(event)
+
 		# Only reset isMoving if this was not animating when we were clicking
 		# so we can use it to detect a click versus a drag.
 		@_isMoving = @isAnimating

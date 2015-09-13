@@ -65,10 +65,20 @@ FamousPropertySetter =
         layer._node.setScale(propertyValue, propertyValue, propertyValue)
         
 
+    rotationX: (layer) ->
+        propertyValue = (layer._properties.rotationX * Math.PI/180)
+        nodeValues = layer._node.getRotation()
+        layer._node.setRotation(propertyValue, nodeValues[1], nodeValues[2])
+
+    rotationY: (layer) ->
+        propertyValue = (layer._properties.rotationY * Math.PI/180)
+        nodeValues = layer._node.getRotation()
+        layer._node.setRotation(nodeValues[0], propertyValue, nodeValues[2])
+
     rotationZ: (layer) ->
         propertyValue = (layer._properties.rotationZ * Math.PI/180)
         nodeValues = layer._node.getRotation()
-        layer._node.setRotation(0, 0, propertyValue)
+        layer._node.setRotation(nodeValues[0], nodeValues[1], propertyValue)
 
 
     backgroundColor: (layer) ->
