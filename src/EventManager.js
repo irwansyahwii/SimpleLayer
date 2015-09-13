@@ -36,7 +36,7 @@
                 results = [];
                 for (i = 0, len = handlerArray.length; i < len; i++) {
                   handler = handlerArray[i];
-                  results.push(handler());
+                  results.push(handler(payload));
                 }
                 return results;
               }
