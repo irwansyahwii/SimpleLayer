@@ -10,6 +10,7 @@ Utils = require "./Utils"
 {LayerStyle} = require "./LayerStyle"
 {LayerStates} = require "./LayerStates"
 {LayerDraggable} = require "./LayerDraggable"
+{Events} = require "./Events"
 
 NoCacheDateKey = Date.now()
 
@@ -477,6 +478,11 @@ class exports.Layer extends BaseClass
 		@_node.setSizeMode("absolute", "absolute", "absolute")
 		@_node.setAbsoluteSize(250, 250)
 		@_node.setOrigin(0.5, 0.5)
+
+		@_node.addUIEvent(Events.Click)
+		@_node.onReceive = (event, payLoad) =>
+			if event is Events.Click
+				@emit(Events.Click)
 
 		@_element = new DOMElement(@_node, {tagName: "div"})
 		# @_element.classList.add("framerLayer")

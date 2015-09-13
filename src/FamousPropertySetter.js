@@ -3,21 +3,53 @@
   var FamousPropertySetter;
 
   FamousPropertySetter = {
+    visible: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.visible;
+      if (propertyValue) {
+        return layer._element.setProperty("display", "block");
+      } else {
+        return layer._element.setProperty("display", "none");
+      }
+    },
+    opacity: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.opacity;
+      return layer._node.setOpacity(propertyValue);
+    },
+    index: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.index;
+      return layer._element.setProperty("zIndex", propertyValue);
+    },
+    color: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.color;
+      return layer._element.setProperty("color", propertyValue);
+    },
     width: function(layer) {
       var nodeValues, propertyValue;
       propertyValue = layer._properties.width;
       nodeValues = layer._node.getAbsoluteSize();
-      console.log(nodeValues);
-      layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
-      return console.log(nodeValues);
+      return layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
     },
     height: function(layer) {
       var nodeValues, propertyValue;
       propertyValue = layer._properties.height;
       nodeValues = layer._node.getAbsoluteSize();
-      console.log(nodeValues);
-      layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
-      return console.log(nodeValues);
+      return layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
+    },
+    originX: function(layer) {
+      var originValues, propertyValue;
+      propertyValue = layer._properties.originX;
+      originValues = layer._node.getOrigin();
+      return layer._node.setOrigin(propertyValue, originValues[1], originValues[2]);
+    },
+    originY: function(layer) {
+      var originValues, propertyValue;
+      propertyValue = layer._properties.originY;
+      originValues = layer._node.getOrigin();
+      return layer._node.setOrigin(originValues[0], propertyValue, originValues[2]);
     },
     x: function(layer) {
       var nodeValues, propertyValue;
@@ -38,13 +70,10 @@
       return layer._node.setPosition(nodeValues[0], nodeValues[1], propertyValue);
     },
     scale: function(layer) {
-      var nodeValues, originValues, propertyValue;
+      var nodeValues, propertyValue;
       propertyValue = layer._properties.scale;
-      originValues = layer._node.getOrigin();
-      layer._node.setOrigin(0.5, 0.5);
       nodeValues = layer._node.getScale();
-      layer._node.setScale(propertyValue, propertyValue, propertyValue);
-      return layer._node.setOrigin(originValues[0], originValues[1], originValues[2]);
+      return layer._node.setScale(propertyValue, propertyValue, propertyValue);
     },
     rotationZ: function(layer) {
       var nodeValues, propertyValue;

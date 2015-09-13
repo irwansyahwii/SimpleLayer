@@ -1,17 +1,48 @@
 FamousPropertySetter = 
+    visible:(layer) ->
+        propertyValue = layer._properties.visible
+        if propertyValue
+            layer._element.setProperty("display", "block")
+        else
+            layer._element.setProperty("display", "none")
+
+    opacity: (layer) ->
+        propertyValue = layer._properties.opacity
+        # nodeValues = layer._node.getOpacity()
+        layer._node.setOpacity(propertyValue)
+
+    index: (layer) ->
+        propertyValue = layer._properties.index
+        layer._element.setProperty("zIndex", propertyValue)
+
+    color: (layer) ->
+        propertyValue = layer._properties.color
+        layer._element.setProperty("color", propertyValue)
+
     width: (layer) ->
         propertyValue = layer._properties.width
         nodeValues = layer._node.getAbsoluteSize()
-        console.log(nodeValues)
         layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2])
-        console.log(nodeValues)
 
     height: (layer) ->
         propertyValue = layer._properties.height
         nodeValues = layer._node.getAbsoluteSize()
-        console.log(nodeValues)
         layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2])
-        console.log(nodeValues)
+
+
+    originX: (layer) ->
+        propertyValue = layer._properties.originX
+
+        originValues = layer._node.getOrigin()
+
+        layer._node.setOrigin(propertyValue, originValues[1], originValues[2])
+
+    originY: (layer) ->
+        propertyValue = layer._properties.originY
+
+        originValues = layer._node.getOrigin()
+
+        layer._node.setOrigin(originValues[0], propertyValue, originValues[2])
 
     x: (layer) ->
         propertyValue = layer._properties.x
@@ -30,13 +61,9 @@ FamousPropertySetter =
     scale: (layer) ->        
         propertyValue = layer._properties.scale
 
-        originValues = layer._node.getOrigin()
-        layer._node.setOrigin(0.5, 0.5)
-
         nodeValues = layer._node.getScale()
         layer._node.setScale(propertyValue, propertyValue, propertyValue)
         
-        layer._node.setOrigin(originValues[0], originValues[1], originValues[2])
 
     rotationZ: (layer) ->
         propertyValue = (layer._properties.rotationZ * Math.PI/180)
