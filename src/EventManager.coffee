@@ -2,32 +2,65 @@ Utils = require "./Utils"
 
 EventManagerIdCounter = 0
 
+famous = require("famous")
+DOMElement = famous.domRenderables.DOMElement
+FamousEventMap = famous.domRenderers.Events.EventMap
+
 class EventManagerElement
 
 	constructor: (@element) ->
 		@_events = {}
 
 	addEventListener: (eventName, listener) ->
-		
-		# Filter out all the events that are not dom valid
-		if not Utils.domValidEvent(@element, eventName)
-			return
 
-		@_events[eventName] ?= []
-		@_events[eventName].push(listener)
+		# console.log "checking @element type: #{@element.constructor.name}"
+		if @element.constructor.name is "DOMElement"
+			# console.log "eventName: #{eventName}"
+
+			if FamousEventMap[eventName]
+				# console.log("Layer #{@element._layer.name} Subscribing to #{eventName}")
+				@_events[eventName] ?= []
+				@_events[eventName].push(listener)
+
+				@element._node.addUIEvent(eventName)
+
+				@element._node.onReceive = (event, payload) =>
+					# console.log("Layer #{@element._layer.name} onReceive: #{event}")
+					
+					handlerArray = @_events[event]
+					if handlerArray?
+						for handler in handlerArray
+							handler()
+
+
+		else
 		
-		@element.addEventListener(eventName, listener)
+			# Filter out all the events that are not dom valid
+			if not Utils.domValidEvent(@element, eventName)
+				return
+
+			@_events[eventName] ?= []
+			@_events[eventName].push(listener)
+
+
+			@element.addEventListener(eventName, listener)
 
 	removeEventListener: (eventName, listener) ->
+		
 		return unless @_events
 		return unless @_events[eventName]
 
 		@_events[eventName] = _.without @_events[eventName], listener		
-		@element.removeEventListener(eventName, listener)
+
+		if @element.constructor.name is "DOMElement"
+			@element._node.removeUIEvent(eventName)	
+		else
+			@element.removeEventListener(eventName, listener)
 
 		return
 
 	removeAllEventListeners: (eventName) ->
+		console.log("removeAllEventListeners called")
 
 		events = if eventName then [eventName] else _.keys(@_events)
 

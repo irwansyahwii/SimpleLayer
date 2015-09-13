@@ -59,7 +59,9 @@
         return fallback;
       },
       set: function(value) {
-        console.log("Layer." + name + ".set " + value);
+        if (this.name !== "refresh") {
+          console.log("Trying to set Layer " + this.name + "." + name + ".set " + value);
+        }
         if (value && validator && !validator(value)) {
           layerValueTypeError(name, value);
         }
@@ -108,6 +110,8 @@
       Layer.__super__.constructor.call(this, options);
       this._context.addLayer(this);
       this._id = this._context.nextLayerId();
+      console.log("@_id: " + this._id);
+      this._element.setId(this._id);
       if (!options.superLayer) {
         if (!options.shadow) {
           this._insertElement();
@@ -242,7 +246,7 @@
     Layer.define("name", {
       "default": "",
       get: function() {
-        return this._getPropertyValue("name");
+        return this._element._attributes["name"];
       },
       set: function(value) {
         this._setPropertyValue("name", value);
@@ -256,9 +260,6 @@
         return this._properties["borderRadius"];
       },
       set: function(value) {
-        if (value && !_.isNumber(value)) {
-          console.warn("Layer.borderRadius should be a numeric property, not type " + (typeof value));
-        }
         this._properties["borderRadius"] = value;
         this._element.setProperty("borderRadius", LayerStyle["borderRadius"](this));
         return this.emit("change:borderRadius", value);
@@ -588,7 +589,6 @@
       set: function(value) {
         var key, val;
         _.extend(this._element.style, value);
-        console.log("new style value: " + value);
         for (key in value) {
           val = value[key];
           this._properties[key] = val;
@@ -624,33 +624,23 @@
     };
 
     Layer.prototype._createElement = function() {
-      console.log("=== Layer, _createElement ===");
       if (this._element != null) {
         return;
       }
-      console.log("Assigining @_node with new Node()");
       this._node = new Node();
       this._node.setSizeMode("absolute", "absolute", "absolute");
       this._node.setAbsoluteSize(250, 250);
       this._node.setOrigin(0.5, 0.5);
-      this._node.addUIEvent(Events.TouchStart);
-      this._node.addUIEvent(Events.TouchEnd);
-      this._node.addUIEvent(Events.TouchMove);
-      this._node.addUIEvent(Events.MouseUp);
-      this._node.addUIEvent(Events.MouseDown);
-      this._node.addUIEvent(Events.MouseOver);
-      this._node.addUIEvent(Events.MouseOut);
-      this._node.addUIEvent(Events.MouseMove);
       this._node.onReceive = (function(_this) {
         return function(event, payLoad) {
-          console.log("Node on receive: " + event);
-          payLoad.preventDefault = function() {};
-          return _this.emit(event, payLoad);
+          return console.log("Node: " + _this.name + " on receive: " + event);
         };
       })(this);
       this._element = new DOMElement(this._node, {
         tagName: "div"
       });
+      console.log("@_element.setId to @_id: " + this._id);
+      this._element._layer = this;
       return this._element;
     };
 
@@ -661,24 +651,16 @@
 
     Layer.prototype._insertElement = function() {
       this.bringToFront();
-      console.log("Add layer's node to context rootElement");
       return this._context.getRootElement()._node.addChild(this._element._node);
     };
 
     Layer.define("html", {
       get: function() {
         var ref;
-        return ((ref = this._elementHTML) != null ? ref._content : void 0) || "";
+        return ((ref = this._element) != null ? ref._content : void 0) || "";
       },
       set: function(value) {
-        if (!this._elementHTML) {
-          this._nodeHTML = new Node();
-          this._elementHTML = new DOMElement(this._nodeHTML, {
-            tagName: "div"
-          });
-          this._element._node.addChild(this._nodeHTML);
-        }
-        this._elementHTML.setContent(value);
+        this._element.setContent(value);
         return this.emit("change:html");
       }
     });
@@ -779,16 +761,20 @@
         if (!layer instanceof Layer) {
           throw Error("Layer.superLayer needs to be a Layer object");
         }
-        Utils.domCompleteCancel(this.__insertElement);
+        Utils.domCompleteCancel(this._insertElement);
+        this._context.getRootElement()._node.removeChild(this._element._node);
         if (this._superLayer) {
           this._superLayer._subLayers = _.without(this._superLayer._subLayers, this);
-          this._superLayer._element._node.removeChild(this._element._node);
+          this._element._node.dismount();
           this._superLayer.emit("change:subLayers", {
             added: [],
             removed: [this]
           });
         }
         if (layer) {
+          if (this._element._node.getParent() != null) {
+            this._element._node.dismount();
+          }
           layer._element._node.addChild(this._element._node);
           layer._subLayers.push(this);
           layer.emit("change:subLayers", {
@@ -1065,25 +1051,25 @@
 
     Layer.define("scrollX", {
       get: function() {
-        return this._element.scrollLeft;
+        return this._element._styles['scrollLeft'];
       },
       set: function(value) {
         if (!_.isNumber(value)) {
           layerValueTypeError("scrollX", value);
         }
-        return this._element.scrollLeft = value;
+        return this._element.setProperty("scrollLeft", value);
       }
     });
 
     Layer.define("scrollY", {
       get: function() {
-        return this._element.scrollTop;
+        return this._element._styles["scrollTop"];
       },
       set: function(value) {
         if (!_.isNumber(value)) {
           layerValueTypeError("scrollY", value);
         }
-        return this._element.scrollTop = value;
+        return this._element.setProperty("scrollTop", value);
       }
     });
 

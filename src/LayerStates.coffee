@@ -5,6 +5,7 @@
 {Defaults} = require "./Defaults"
 
 LayerStatesIgnoredKeys = ["ignoreEvents"]
+# LayerStatesIgnoredKeys = []
 
 # Animation events
 Events.StateWillSwitch = "willSwitch"
@@ -21,6 +22,8 @@ class exports.LayerStates extends BaseClass
 
 		# Always add the default state as the current
 		@add "default", @layer.props
+		console.log "layer: #{@layer.name} props:"
+		console.log @layer.props
 
 		@_currentState = "default"
 		@_previousStates = []
@@ -66,6 +69,8 @@ class exports.LayerStates extends BaseClass
 		if not @_states.hasOwnProperty(stateName)
 			throw Error "No such state: '#{stateName}'"
 
+		
+
 		@emit(Events.StateWillSwitch, @_currentState, stateName, @)
 
 		@_previousStates.push(@_currentState)
@@ -74,6 +79,9 @@ class exports.LayerStates extends BaseClass
 		properties = {}
 		animatingKeys = @animatingKeys()
 
+
+		
+		
 		for propertyName, value of @_states[stateName]
 
 			# Don't animate ignored properties
@@ -83,28 +91,36 @@ class exports.LayerStates extends BaseClass
 			if propertyName not in animatingKeys
 				continue
 
+
 			# Allow dynamic properties as functions
 			value = value.call(@layer, @layer, stateName) if _.isFunction(value)
 
 			# Set the new value 
 			properties[propertyName] = value
 
+		
 		# If we are only transitioning to non-animatable (numeric) properties
 		# we fallback to an instant switch
 		animatablePropertyKeys = []
 
+
+		
 		for k, v of properties
 			animatablePropertyKeys.push(k) if _.isNumber(v)
 
+		
 		if animatablePropertyKeys.length == 0
 			instant = true
 
+		
 		if instant is true
+			
 			# We want to switch immediately without animation
 			@layer.props = properties
 			@emit Events.StateDidSwitch, _.last(@_previousStates), stateName, @
 
 		else
+			
 			# Start the animation and update the state when finished
 			animationOptions ?= @animationOptions
 			animationOptions.properties = properties
@@ -118,6 +134,8 @@ class exports.LayerStates extends BaseClass
 					@layer[k] = v if not _.isNumber(v)
 
 				@emit Events.StateDidSwitch, _.last(@_previousStates), stateName, @
+
+		
 
 
 

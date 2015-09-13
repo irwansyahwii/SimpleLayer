@@ -6,6 +6,42 @@ FamousPropertySetter =
         else
             layer._element.setProperty("display", "none")
 
+    ignoreEvents: (layer) ->
+        propertyValue = layer._properties.ignoreEvents
+        if propertyValue
+            layer._element.setProperty("pointerEvents", "none")
+        else
+            layer._element.setProperty("pointerEvents", "auto")
+
+    clip:(layer) ->
+        propertyValue = layer._properties.clip
+
+        if layer._properties.scrollHorizontal is true or layer._properties.scrollVertical is true
+            layer._element.setProperty("overflow", "auto")
+        if layer._properties.clip is true
+            layer._element.setProperty("overflow", "hidden")
+            
+        layer._element.setProperty("overflow", "visible")
+
+
+    scrollHorizontal: (layer) ->
+
+    scrollVertical: (layer) ->
+
+
+    shadowColor: (layer) ->
+
+    force2d: (layer) ->
+
+    borderRadius: (layer) ->
+        if not _.isNumber(layer._properties.borderRadius)
+            layer._element.setProperty("borderRadius", layer._properties.borderRadius)
+
+        else
+            layer._element.setProperty("borderRadius", layer._properties.borderRadius)
+            
+        
+
     opacity: (layer) ->
         propertyValue = layer._properties.opacity
         # nodeValues = layer._node.getOpacity()
@@ -84,6 +120,6 @@ FamousPropertySetter =
     backgroundColor: (layer) ->
         propertyValue = layer._properties.backgroundColor
         
-        layer._element.setProperty("background-color", propertyValue)
+        layer._element.setProperty("background-color",  propertyValue)
 
 module.exports = FamousPropertySetter

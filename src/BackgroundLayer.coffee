@@ -11,6 +11,8 @@ class exports.BackgroundLayer extends Layer
 		options.backgroundColor ?= "#fff"
 		
 		super options
+
+		@name2 = "BackgroundLayer"
 		
 		@sendToBack()
 		@layout()

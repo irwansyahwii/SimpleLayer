@@ -3,6 +3,18 @@
 
 Utils = {}
 
+famous = require("famous")
+
+Engine = famous.core.FamousEngine;
+
+Clock = Engine.getClock()
+
+setTimeout = (callback, delay) ->
+	Clock.setTimeout(callback, delay)
+
+setInterval = (callback, delay) ->
+	Clock.setInterval(callback, delay)
+
 Utils.reset = ->
 	Framer.CurrentContext.reset()
 

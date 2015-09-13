@@ -12,6 +12,37 @@
         return layer._element.setProperty("display", "none");
       }
     },
+    ignoreEvents: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.ignoreEvents;
+      if (propertyValue) {
+        return layer._element.setProperty("pointerEvents", "none");
+      } else {
+        return layer._element.setProperty("pointerEvents", "auto");
+      }
+    },
+    clip: function(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.clip;
+      if (layer._properties.scrollHorizontal === true || layer._properties.scrollVertical === true) {
+        layer._element.setProperty("overflow", "auto");
+      }
+      if (layer._properties.clip === true) {
+        layer._element.setProperty("overflow", "hidden");
+      }
+      return layer._element.setProperty("overflow", "visible");
+    },
+    scrollHorizontal: function(layer) {},
+    scrollVertical: function(layer) {},
+    shadowColor: function(layer) {},
+    force2d: function(layer) {},
+    borderRadius: function(layer) {
+      if (!_.isNumber(layer._properties.borderRadius)) {
+        return layer._element.setProperty("borderRadius", layer._properties.borderRadius);
+      } else {
+        return layer._element.setProperty("borderRadius", layer._properties.borderRadius);
+      }
+    },
     opacity: function(layer) {
       var propertyValue;
       propertyValue = layer._properties.opacity;

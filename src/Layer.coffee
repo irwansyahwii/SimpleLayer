@@ -34,7 +34,8 @@ layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) -
 
 		set: (value) ->
 
-			console.log "Layer.#{name}.set #{value}"
+			if @name isnt "refresh"
+				console.log "Trying to set Layer #{@name}.#{name}.set #{value}"
 
 			if value and validator and not validator(value)
 				layerValueTypeError(name, value)
@@ -86,6 +87,8 @@ class exports.Layer extends BaseClass
 		@_context.addLayer(@)
 
 		@_id = @_context.nextLayerId()
+		console.log "@_id: #{@_id}"
+		@_element.setId(@_id)
 
 		# Insert the layer into the dom or the superLayer element
 		if not options.superLayer
@@ -197,12 +200,17 @@ class exports.Layer extends BaseClass
 	@define "name",
 		default: ""
 		get: -> 
-			@_getPropertyValue "name"
+			# @_getPropertyValue "name"
+			@_element._attributes["name"]
 		set: (value) ->
+
+
 			@_setPropertyValue "name", value
 			# Set the name attribute of the dom element too
 			# See: https://github.com/koenbok/Framer/issues/63
 			@_element.setAttribute "name", value
+
+			
 
 	##############################################################
 	# Border radius compatibility
@@ -214,8 +222,8 @@ class exports.Layer extends BaseClass
 
 		set: (value) ->
 
-			if value and not _.isNumber(value)
-				console.warn "Layer.borderRadius should be a numeric property, not type #{typeof(value)}"
+			# if value and not _.isNumber(value)
+			# 	console.warn "Layer.borderRadius should be a numeric property, not type #{typeof(value)}"
 
 			@_properties["borderRadius"] = value
 			# @_element.style["borderRadius"] = LayerStyle["borderRadius"](@)
@@ -439,7 +447,7 @@ class exports.Layer extends BaseClass
 		get: -> @_element._styles
 		set: (value) ->
 			_.extend @_element.style, value
-			console.log("new style value: #{value}")
+			
 
 			for key, val of value
 				@_properties[key] = val
@@ -468,40 +476,49 @@ class exports.Layer extends BaseClass
 		@_element = document.createElement "div"
 		@_element.classList.add("framerLayer")
 
+
 	_createElement: ->
-		console.log("=== Layer, _createElement ===")
 
 		return if @_element?
 
-		console.log("Assigining @_node with new Node()")
 		@_node = new Node()
 		@_node.setSizeMode("absolute", "absolute", "absolute")
 		@_node.setAbsoluteSize(250, 250)
 		@_node.setOrigin(0.5, 0.5)
 
-		@_node.addUIEvent(Events.TouchStart)
-		@_node.addUIEvent(Events.TouchEnd)
-		@_node.addUIEvent(Events.TouchMove)
-		@_node.addUIEvent(Events.MouseUp)
-		@_node.addUIEvent(Events.MouseDown)
-		@_node.addUIEvent(Events.MouseOver)
-		@_node.addUIEvent(Events.MouseOut)
-		@_node.addUIEvent(Events.MouseMove)
-		# @_node.addUIEvent(Events.MouseWheel)
+		# @_node.addUIEvent(Events.Click)
+		# @_node.addUIEvent(Events.TouchStart)
+		# @_node.addUIEvent(Events.TouchEnd)
+		# @_node.addUIEvent(Events.TouchMove)
+		# @_node.addUIEvent(Events.MouseUp)
+		# @_node.addUIEvent(Events.MouseDown)
+		# @_node.addUIEvent(Events.MouseOver)
+		# @_node.addUIEvent(Events.MouseOut)
+		# @_node.addUIEvent(Events.MouseMove)
+
+
 
 		@_node.onReceive = (event, payLoad) =>
-			console.log("Node on receive: #{event}")
-			# console.log event
-			# console.log payLoad
-			# @emit(event)
-			payLoad.preventDefault = ->
-				#adasd
-				
-			@emit(event, payLoad)
-			# if event is Events.Click
-			# 	@emit(Events.Click)
+
+		# 	# @_node.emit(event, payLoad)
+			console.log("Node: #{@name} on receive: #{event}")
+		# 	# console.log event
+		# 	# console.log payLoad
+		# 	# @emit(event)
+		# 	payLoad.preventDefault = ->
+		# 		#adasd
+		# 		console.log("preventDefault")
+
+		# 	@emit(event, payLoad)
+		# 	# if event is Events.Click
+		# 	# 	@emit(Events.Click)
+
 
 		@_element = new DOMElement(@_node, {tagName: "div"})
+
+		console.log "@_element.setId to @_id: #{@_id}"
+
+		@_element._layer = @
 		# @_element.classList.add("framerLayer")
 
 		@_element
@@ -512,12 +529,14 @@ class exports.Layer extends BaseClass
 
 	_insertElement: ->
 		@bringToFront()
-		console.log("Add layer's node to context rootElement")
+		# console.log("Add layer's node to context rootElement")
+		
 		@_context.getRootElement()._node.addChild(@_element._node)
 
 	@define "html",
 		get: ->
-			@_elementHTML?._content or ""
+			# @_elementHTML?._content or ""
+			@_element?._content or ""
 
 		set: (value) ->
 
@@ -525,13 +544,14 @@ class exports.Layer extends BaseClass
 			# a child node to insert it in, so it won't mess with Framers
 			# layer hierarchy.
 
-			if not @_elementHTML
-				@_nodeHTML = new Node()
+			# if not @_elementHTML
+			# 	@_nodeHTML = new Node()
 
-				@_elementHTML = new DOMElement(@_nodeHTML, {tagName: "div"})
-				@_element._node.addChild(@_nodeHTML)
+			# 	@_elementHTML = new DOMElement(@_nodeHTML, {tagName: "div"})
+			# 	@_element._node.addChild(@_nodeHTML)
 
-			@_elementHTML.setContent(value)
+			# @_elementHTML.setContent(value)
+			@_element.setContent(value)
 
 			# If the contents contains something else than plain text
 			# then we turn off ignoreEvents so buttons etc will work.
@@ -660,17 +680,24 @@ class exports.Layer extends BaseClass
 				throw Error "Layer.superLayer needs to be a Layer object"
 
 			# Cancel previous pending insertions
-			Utils.domCompleteCancel @__insertElement
+			# Utils.domCompleteCancel @__insertElement
+			Utils.domCompleteCancel @_insertElement
+
+			@_context.getRootElement()._node.removeChild(@_element._node)
 
 			# Remove from previous superlayer sublayers
 			if @_superLayer
 				@_superLayer._subLayers = _.without @_superLayer._subLayers, @
-				@_superLayer._element._node.removeChild @_element._node
+				# @_superLayer._element._node.removeChild @_element._node
+				@_element._node.dismount()
+
 				@_superLayer.emit "change:subLayers", {added:[], removed:[@]}
 
 			# Either insert the element to the new superlayer element or into dom
 			if layer
-				layer._element._node.addChild @_element._node
+				if @_element._node.getParent()?
+					@_element._node.dismount()
+				layer._element._node.addChild(@_element._node)
 				layer._subLayers.push @
 				layer.emit "change:subLayers", {added:[@], removed:[]}
 			else
@@ -860,16 +887,18 @@ class exports.Layer extends BaseClass
 			@scrollY = frame.y
 
 	@define "scrollX",
-		get: -> @_element.scrollLeft
+		get: -> @_element._styles['scrollLeft']
 		set: (value) ->
 			layerValueTypeError("scrollX", value) if not _.isNumber(value)
-			@_element.scrollLeft = value
+			# @_element.scrollLeft = value
+			@_element.setProperty("scrollLeft", value)
 
 	@define "scrollY",
-		get: -> @_element.scrollTop
+		get: -> @_element._styles["scrollTop"]
 		set: (value) -> 
 			layerValueTypeError("scrollY", value) if not _.isNumber(value)
-			@_element.scrollTop = value
+			# @_element.scrollTop = value
+			@_element.setProperty("scrollTop", value)
 
 	##############################################################
 	## EVENTS

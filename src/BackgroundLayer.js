@@ -21,6 +21,7 @@
         options.backgroundColor = "#fff";
       }
       BackgroundLayer.__super__.constructor.call(this, options);
+      this.name2 = "BackgroundLayer";
       this.sendToBack();
       this.layout();
       this._context.eventManager.wrap(window).addEventListener("resize", this.layout);
