@@ -1,6 +1,2 @@
-# Taken from https://github.com/koenbok/Framer/blob/master/framer/Underscore.coffee
-
-_ = require "lodash"
-
-
-module.exports = _
+# This allows us to switch out the underscore utility library
+exports._ = require "lodash"
