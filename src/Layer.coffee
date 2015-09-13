@@ -479,10 +479,20 @@ class exports.Layer extends BaseClass
 		@_node.setAbsoluteSize(250, 250)
 		@_node.setOrigin(0.5, 0.5)
 
-		@_node.addUIEvent(Events.Click)
+		@_node.addUIEvent(Events.TouchStart)
+		@_node.addUIEvent(Events.TouchEnd)
+		@_node.addUIEvent(Events.TouchMove)
+		@_node.addUIEvent(Events.MouseUp)
+		@_node.addUIEvent(Events.MouseDown)
+		@_node.addUIEvent(Events.MouseOver)
+		@_node.addUIEvent(Events.MouseOut)
+		@_node.addUIEvent(Events.MouseMove)
+		# @_node.addUIEvent(Events.MouseWheel)
+
 		@_node.onReceive = (event, payLoad) =>
-			if event is Events.Click
-				@emit(Events.Click)
+			@emit(event)
+			# if event is Events.Click
+			# 	@emit(Events.Click)
 
 		@_element = new DOMElement(@_node, {tagName: "div"})
 		# @_element.classList.add("framerLayer")

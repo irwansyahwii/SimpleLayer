@@ -633,12 +633,17 @@
       this._node.setSizeMode("absolute", "absolute", "absolute");
       this._node.setAbsoluteSize(250, 250);
       this._node.setOrigin(0.5, 0.5);
-      this._node.addUIEvent(Events.Click);
+      this._node.addUIEvent(Events.TouchStart);
+      this._node.addUIEvent(Events.TouchEnd);
+      this._node.addUIEvent(Events.TouchMove);
+      this._node.addUIEvent(Events.MouseUp);
+      this._node.addUIEvent(Events.MouseDown);
+      this._node.addUIEvent(Events.MouseOver);
+      this._node.addUIEvent(Events.MouseOut);
+      this._node.addUIEvent(Events.MouseMove);
       this._node.onReceive = (function(_this) {
         return function(event, payLoad) {
-          if (event === Events.Click) {
-            return _this.emit(Events.Click);
-          }
+          return _this.emit(event);
         };
       })(this);
       this._element = new DOMElement(this._node, {
