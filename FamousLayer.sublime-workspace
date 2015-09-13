@@ -4,6 +4,22 @@
 		"selected_items":
 		[
 			[
+				"Scr",
+				"ScreenClass"
+			],
+			[
+				"_s",
+				"_styles"
+			],
+			[
+				"la",
+				"layerA"
+			],
+			[
+				"pro",
+				"property"
+			],
+			[
 				"com",
 				"completeValueString"
 			],
@@ -14,10 +30,6 @@
 			[
 				"time",
 				"timeValue"
-			],
-			[
-				"pro",
-				"properties"
 			],
 			[
 				"requ",
@@ -86,10 +98,6 @@
 			[
 				"rotatio",
 				"rotationYValue"
-			],
-			[
-				"la",
-				"layerA"
 			],
 			[
 				"val",
@@ -294,10 +302,6 @@
 			[
 				"con",
 				"contextSize"
-			],
-			[
-				"_s",
-				"_superlayer"
 			],
 			[
 				"roo",
@@ -510,79 +514,11 @@
 			[
 				"Produ",
 				"ProductName"
-			],
-			[
-				"hide",
-				"audiclubna_hide_group_profile_fields"
 			]
 		]
 	},
 	"buffers":
 	[
-		{
-			"file": "src/index.coffee",
-			"settings":
-			{
-				"buffer_size": 1263,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "public/index.html",
-			"settings":
-			{
-				"buffer_size": 1159,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/BackgroundLayer.coffee",
-			"settings":
-			{
-				"buffer_size": 334,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/Layer.coffee",
-			"settings":
-			{
-				"buffer_size": 20147,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/Application.coffee",
-			"settings":
-			{
-				"buffer_size": 1801,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "node_modules/famous/components/Rotation.js",
-			"settings":
-			{
-				"buffer_size": 2732,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "node_modules/famous/math/Quaternion.js",
-			"settings":
-			{
-				"buffer_size": 13284,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "node_modules/famous/core/Node.js",
-			"settings":
-			{
-				"buffer_size": 38703,
-				"line_ending": "Unix"
-			}
-		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -696,23 +632,64 @@
 	[
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/eventemitter3",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/test",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/math",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/transitions",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/images",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/render-loops",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src",
-		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/framer",
-		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/imported",
-		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/imported/BrainItOn2"
+		"/Users/irwansyah/PROJECTS/Framerjs",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer"
 	],
 	"file_history":
 	[
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/Position.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Simulators/SpringSimulator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Integrator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Utils.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Simulator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Config.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStates.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Defaults.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Events.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/FamousEngine.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Framer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/AnimationLoop.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/EventEmitter.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BaseClass.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Screen.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Underscore.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Context.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Context.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/AttackPlans.txt",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Dispatch.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Node.js",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/AnimationLoop.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Animation.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables/DOMElement.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/render-loops/RequestAnimationFrameLoop.js",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Simulation.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Animator.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Framer.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Print.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Components/DeviceComponent.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/EventManager.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Application.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animation.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/SpringRK4Animator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/SpringDHOAnimator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/LinearAnimator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/BezierCurveAnimator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/UIManager.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/math/Quaternion.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/Rotation.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BackgroundLayer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Logger.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animator.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/Position.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Clock.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Compositor.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/index.js",
@@ -723,27 +700,15 @@
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/container.css",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/main.css",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/images/famous-logo.svg",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Node.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables/DOMElement.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
 		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/index.html",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
 		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/app.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Utils.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BackgroundLayer.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Events.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Underscore.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/README.md",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Application.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousWindow.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/runtime.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Context.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Scene.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/FamousEngine.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/bundle.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerId.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Logger.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/FamousWindow.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/Layer.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/Application.coffee",
@@ -806,38 +771,7 @@
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_state.sql",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_province_canada.sql",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/acna_members_by_province_canada.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/total_membership_canada.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/membership_by_state.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/membership_by_state_top10.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_state_orderbycount.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/total_membership_us.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_paypal_wps/ms_paypal_wps.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/countries/countries.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.js",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/themes/acna_bootstrap_theme/templates/user-login.tpl.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/themes/acna_bootstrap_theme/templates/views-view-fields--activate-latest-tab--block.tpl.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/themes/acna_bootstrap_theme/templates/user-profile.tpl.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/profile2/profile2.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/acna_imis_import/import_scripts/EmailSendingTables.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/adhoc_data.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_check/ms_check.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.css",
-		"/Users/irwansyah/PROJECTS/Titanium/South Hilss/Resources/ui/common/TopMenuBar.coffee",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.plans.inc",
-		"/Users/irwansyah/Desktop/test.html",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.rules.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.install",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_authorizenet/ms_authorizenet.install",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_discounts/ms_discounts.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/views/includes/view.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/modules/user/user.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/entity/includes/entity.controller.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_authorizenet/includes/authnet.class.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.forms.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_cres/ms_cres.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/modules/user/user.test"
+		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/total_membership_canada.sql"
 	],
 	"find":
 	{
@@ -848,6 +782,7 @@
 		"height": 93.0,
 		"where_history":
 		[
+			"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer",
 			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
 			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/",
 			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
@@ -878,6 +813,37 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"emit",
+			"_updateQueue",
+			"__domComplete",
+			"_events",
+			"_UIEvents",
+			"getUIEvents",
+			"\"update\"",
+			"_parentLayer",
+			"\"update\"",
+			"_updates",
+			"rAF",
+			"\"update\"",
+			"Loop",
+			"run ",
+			"run(",
+			"run()",
+			"run",
+			".run",
+			"Framer.Context.run",
+			"utils",
+			"rAF",
+			".start(",
+			".start",
+			"start",
+			"_chann",
+			"style",
+			"_styles",
+			"style",
+			"_st",
+			"Utils",
+			"duration: timeValue",
 			"y: 700",
 			"1000",
 			"Y",
@@ -974,38 +940,7 @@
 			"buttonTower2B",
 			"buttonTower2A",
 			"buttonTower1D",
-			"background",
-			"lineImage",
-			"buttonTower1C",
-			"buttonTower1B",
-			"buttonTower1A",
-			"floorPlanscreen",
-			"FloorplanScreen",
-			"floorPlanscreen",
-			"buttonSitePlan",
-			"backgroundImage",
-			"buttonFloorplan",
-			"buttonLocation",
-			"buttonFloorplan",
-			"410",
-			"buttonFloorplan",
-			"buttonLocation",
-			"buttonAbout",
-			"buttonGallery",
-			"buttonHome",
-			"buttonFloorplan",
-			"buttonHome",
-			"raiseOnDoubleTapped",
-			"GalleryScreen",
-			"galleryScreen",
-			"GalleryScreen",
-			"galleryScreen",
-			"GalleryScreen",
-			"galleryScreen",
-			"GalleryScreen",
-			"galleryScreen",
-			"GalleryScreen",
-			"buttonLocation"
+			"background"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1023,247 +958,8 @@
 	"groups":
 	[
 		{
-			"selected": 1,
 			"sheets":
 			[
-				{
-					"buffer": 0,
-					"file": "src/index.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1263,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								497,
-								497
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 107.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "public/index.html",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1159,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								313,
-								313
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "src/BackgroundLayer.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 334,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								275,
-								275
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage"
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/Layer.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 20147,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								3968,
-								3968
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 2127.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/Application.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 1801,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								837,
-								837
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 376.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "node_modules/famous/components/Rotation.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 2732,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								0,
-								0
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 399.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "node_modules/famous/math/Quaternion.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 13284,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								5606,
-								5657
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 279.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 6,
-					"type": "text"
-				},
-				{
-					"buffer": 7,
-					"file": "node_modules/famous/core/Node.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 38703,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								29714,
-								29714
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 14253.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 7,
-					"type": "text"
-				}
 			]
 		}
 	],
@@ -1320,6 +1016,126 @@
 		"selected_items":
 		[
 			[
+				"inte",
+				"FamousLayer/src/Integrator.coffee"
+			],
+			[
+				"springsimulator",
+				"FamousLayer/src/Simulators/SpringSimulator.coffee"
+			],
+			[
+				"utils",
+				"FamousLayer/src/Utils.coffee"
+			],
+			[
+				"conf",
+				"FamousLayer/src/Config.coffee"
+			],
+			[
+				"config",
+				"FamousLayer/src/Config.coffee"
+			],
+			[
+				"simu",
+				"FamousLayer/src/Simulator.coffee"
+			],
+			[
+				"default",
+				"FamousLayer/src/Defaults.coffee"
+			],
+			[
+				"event",
+				"FamousLayer/src/Events.coffee"
+			],
+			[
+				"index",
+				"FamousLayer/src/index.coffee"
+			],
+			[
+				"layersta",
+				"FamousLayer/src/LayerStates.coffee"
+			],
+			[
+				"screenc",
+				"FamousLayer/src/Screen.coffee"
+			],
+			[
+				"unders",
+				"FamousLayer/src/Underscore.coffee"
+			],
+			[
+				"basecla",
+				"FamousLayer/src/BaseClass.coffee"
+			],
+			[
+				"evente",
+				"FamousLayer/src/EventEmitter.coffee"
+			],
+			[
+				"framer",
+				"FamousLayer/src/Framer.coffee"
+			],
+			[
+				"context",
+				"FamousLayer/node_modules/famous/renderers/Context.js"
+			],
+			[
+				"famousen",
+				"FamousLayer/node_modules/famous/core/FamousEngine.js"
+			],
+			[
+				"node",
+				"FamousLayer/node_modules/famous/core/Node.js"
+			],
+			[
+				"dispatch",
+				"FamousLayer/node_modules/famous/core/Dispatch.js"
+			],
+			[
+				"famousengi",
+				"FamousLayer/node_modules/famous/core/FamousEngine.js"
+			],
+			[
+				"requestanimationframeloop",
+				"FamousLayer/node_modules/famous/render-loops/RequestAnimationFrameLoop.js"
+			],
+			[
+				"animationlo",
+				"Framerjs/Framer/framer/AnimationLoop.coffee"
+			],
+			[
+				"framer.co",
+				"Framerjs/Framer/framer/Framer.coffee"
+			],
+			[
+				"domele",
+				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"eventmana",
+				"Framerjs/Framer/framer/EventManager.coffee"
+			],
+			[
+				"uima",
+				"FamousLayer/node_modules/famous/renderers/UIManager.js"
+			],
+			[
+				"application",
+				"FamousLayer/src/Application.coffee"
+			],
+			[
+				"domel",
+				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"layer",
+				"FamousLayer/src/Layer.coffee"
+			],
+			[
+				"ani",
+				"FamousLayer/src/Animation.coffee"
+			],
+			[
 				"rotatio",
 				"FamousLayer/node_modules/famous/components/Rotation.js"
 			],
@@ -1336,20 +1152,12 @@
 				"FamousLayer/node_modules/famous/components/Position.js"
 			],
 			[
-				"node",
-				"FamousLayer/node_modules/famous/core/Node.js"
-			],
-			[
 				"layer.co",
 				"FamousLayer/src/Layer.coffee"
 			],
 			[
 				"",
 				"node_modules/famous/dom-renderables/DOMElement.js"
-			],
-			[
-				"index",
-				"src/index.coffee"
 			],
 			[
 				"inde",
@@ -1628,10 +1436,6 @@
 				"sites/all/modules/audiclubna/audiclubna.module"
 			],
 			[
-				"uima",
-				"test1/node_modules/famous/renderers/UIManager.js"
-			],
-			[
 				"famoue",
 				"test1/node_modules/famous/core/FamousEngine.js"
 			],
@@ -1650,18 +1454,6 @@
 			[
 				"animation",
 				"Framer/framer/Animation.coffee"
-			],
-			[
-				"utils",
-				"Framer/framer/Utils.coffee"
-			],
-			[
-				"basecla",
-				"Framer/framer/BaseClass.coffee"
-			],
-			[
-				"layer",
-				"Framer/framer/Layer.coffee"
 			],
 			[
 				"mailing",
@@ -1734,102 +1526,6 @@
 			[
 				"membership_by_source_products",
 				"sites/default/sql/membership_by_source_products.sql"
-			],
-			[
-				"membership_by_source",
-				"sites/default/sql/membership_by_source.sql"
-			],
-			[
-				"acna_mem",
-				"sites/default/files/forena-reports/acna_members_by_source.frx"
-			],
-			[
-				"fram",
-				"framer/framer.js"
-			],
-			[
-				"adhox",
-				"irwan-ACNA-Website/sites/default/files/forena-reports/adhoc_report.frx"
-			],
-			[
-				"source.sq",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_source.sql"
-			],
-			[
-				"source.sql",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_source_products.sql"
-			],
-			[
-				"adh",
-				"irwan-ACNA-Website/sites/default/files/forena-reports/adhoc_report.frx"
-			],
-			[
-				"generate",
-				"acna-tools/generate-audit-sql.js"
-			],
-			[
-				"adhoc",
-				"irwan-ACNA-Website/sites/default/files/forena-reports/adhoc_report.frx"
-			],
-			[
-				"setupin",
-				"mrm-playground/src/client/setup/js/domain_models/SetupInformation.js"
-			],
-			[
-				"facebook",
-				"mrm-playground/src/client/setup/jspm_packages/bower/angular-facebook@0.2.3/lib/angular-facebook.js"
-			],
-			[
-				"ad",
-				"irwan-ACNA-Website/sites/default/sql/adhoc_data.sql"
-			],
-			[
-				"listyear",
-				"irwan-ACNA-Website/sites/default/sql/list_years.sql"
-			],
-			[
-				"adhoc_",
-				"irwan-ACNA-Website/sites/default/sql/adhoc_data_count.sql"
-			],
-			[
-				"app_cli",
-				"mrm-playground/src/client/setup/js/app_client.js"
-			],
-			[
-				".git",
-				".gitignore"
-			],
-			[
-				"produ",
-				"sites/default/sql/product_plan_list.sql"
-			],
-			[
-				"product",
-				"sites/default/sql/product_plan_list.sql"
-			],
-			[
-				"filech",
-				"src/server/implementations/FileCheckerUsingNodeFS.ts"
-			],
-			[
-				"mrm",
-				"src/server/implementations/MRMExpressSetup.ts"
-			],
-			[
-				"expressts",
-				"src/server/typings/express/express.d.ts"
-			],
-			[
-				"iappli",
-				"src/server/interfaces/IApplication.ts"
-			],
-			[
-				"iapp",
-				"src/server/interfaces/IApplication.js"
-			],
-			[
-				"ilogg",
-				"src/server/interfaces/ILogger.ts"
 			]
 		],
 		"width": 0.0

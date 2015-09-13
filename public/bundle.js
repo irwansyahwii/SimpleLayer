@@ -1,4 +1,268 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+//
+// We store our EE objects in a plain object whose properties are event names.
+// If `Object.create(null)` is not supported we prefix the event names with a
+// `~` to make sure that the built-in object properties are not overridden or
+// used as an attack vector.
+// We also assume that `Object.create(null)` is available when the event name
+// is an ES6 Symbol.
+//
+var prefix = typeof Object.create !== 'function' ? '~' : false;
+
+/**
+ * Representation of a single EventEmitter function.
+ *
+ * @param {Function} fn Event handler to be called.
+ * @param {Mixed} context Context for function execution.
+ * @param {Boolean} once Only emit once
+ * @api private
+ */
+function EE(fn, context, once) {
+  this.fn = fn;
+  this.context = context;
+  this.once = once || false;
+}
+
+/**
+ * Minimal EventEmitter interface that is molded against the Node.js
+ * EventEmitter interface.
+ *
+ * @constructor
+ * @api public
+ */
+function EventEmitter() { /* Nothing to set */ }
+
+/**
+ * Holds the assigned EventEmitters by name.
+ *
+ * @type {Object}
+ * @private
+ */
+EventEmitter.prototype._events = undefined;
+
+/**
+ * Return a list of assigned event listeners.
+ *
+ * @param {String} event The events that should be listed.
+ * @param {Boolean} exists We only need to know if there are listeners.
+ * @returns {Array|Boolean}
+ * @api public
+ */
+EventEmitter.prototype.listeners = function listeners(event, exists) {
+  var evt = prefix ? prefix + event : event
+    , available = this._events && this._events[evt];
+
+  if (exists) return !!available;
+  if (!available) return [];
+  if (available.fn) return [available.fn];
+
+  for (var i = 0, l = available.length, ee = new Array(l); i < l; i++) {
+    ee[i] = available[i].fn;
+  }
+
+  return ee;
+};
+
+/**
+ * Emit an event to all registered event listeners.
+ *
+ * @param {String} event The name of the event.
+ * @returns {Boolean} Indication if we've emitted an event.
+ * @api public
+ */
+EventEmitter.prototype.emit = function emit(event, a1, a2, a3, a4, a5) {
+  var evt = prefix ? prefix + event : event;
+
+  if (!this._events || !this._events[evt]) return false;
+
+  var listeners = this._events[evt]
+    , len = arguments.length
+    , args
+    , i;
+
+  if ('function' === typeof listeners.fn) {
+    if (listeners.once) this.removeListener(event, listeners.fn, undefined, true);
+
+    switch (len) {
+      case 1: return listeners.fn.call(listeners.context), true;
+      case 2: return listeners.fn.call(listeners.context, a1), true;
+      case 3: return listeners.fn.call(listeners.context, a1, a2), true;
+      case 4: return listeners.fn.call(listeners.context, a1, a2, a3), true;
+      case 5: return listeners.fn.call(listeners.context, a1, a2, a3, a4), true;
+      case 6: return listeners.fn.call(listeners.context, a1, a2, a3, a4, a5), true;
+    }
+
+    for (i = 1, args = new Array(len -1); i < len; i++) {
+      args[i - 1] = arguments[i];
+    }
+
+    listeners.fn.apply(listeners.context, args);
+  } else {
+    var length = listeners.length
+      , j;
+
+    for (i = 0; i < length; i++) {
+      if (listeners[i].once) this.removeListener(event, listeners[i].fn, undefined, true);
+
+      switch (len) {
+        case 1: listeners[i].fn.call(listeners[i].context); break;
+        case 2: listeners[i].fn.call(listeners[i].context, a1); break;
+        case 3: listeners[i].fn.call(listeners[i].context, a1, a2); break;
+        default:
+          if (!args) for (j = 1, args = new Array(len -1); j < len; j++) {
+            args[j - 1] = arguments[j];
+          }
+
+          listeners[i].fn.apply(listeners[i].context, args);
+      }
+    }
+  }
+
+  return true;
+};
+
+/**
+ * Register a new EventListener for the given event.
+ *
+ * @param {String} event Name of the event.
+ * @param {Functon} fn Callback function.
+ * @param {Mixed} context The context of the function.
+ * @api public
+ */
+EventEmitter.prototype.on = function on(event, fn, context) {
+  var listener = new EE(fn, context || this)
+    , evt = prefix ? prefix + event : event;
+
+  if (!this._events) this._events = prefix ? {} : Object.create(null);
+  if (!this._events[evt]) this._events[evt] = listener;
+  else {
+    if (!this._events[evt].fn) this._events[evt].push(listener);
+    else this._events[evt] = [
+      this._events[evt], listener
+    ];
+  }
+
+  return this;
+};
+
+/**
+ * Add an EventListener that's only called once.
+ *
+ * @param {String} event Name of the event.
+ * @param {Function} fn Callback function.
+ * @param {Mixed} context The context of the function.
+ * @api public
+ */
+EventEmitter.prototype.once = function once(event, fn, context) {
+  var listener = new EE(fn, context || this, true)
+    , evt = prefix ? prefix + event : event;
+
+  if (!this._events) this._events = prefix ? {} : Object.create(null);
+  if (!this._events[evt]) this._events[evt] = listener;
+  else {
+    if (!this._events[evt].fn) this._events[evt].push(listener);
+    else this._events[evt] = [
+      this._events[evt], listener
+    ];
+  }
+
+  return this;
+};
+
+/**
+ * Remove event listeners.
+ *
+ * @param {String} event The event we want to remove.
+ * @param {Function} fn The listener that we need to find.
+ * @param {Mixed} context Only remove listeners matching this context.
+ * @param {Boolean} once Only remove once listeners.
+ * @api public
+ */
+EventEmitter.prototype.removeListener = function removeListener(event, fn, context, once) {
+  var evt = prefix ? prefix + event : event;
+
+  if (!this._events || !this._events[evt]) return this;
+
+  var listeners = this._events[evt]
+    , events = [];
+
+  if (fn) {
+    if (listeners.fn) {
+      if (
+           listeners.fn !== fn
+        || (once && !listeners.once)
+        || (context && listeners.context !== context)
+      ) {
+        events.push(listeners);
+      }
+    } else {
+      for (var i = 0, length = listeners.length; i < length; i++) {
+        if (
+             listeners[i].fn !== fn
+          || (once && !listeners[i].once)
+          || (context && listeners[i].context !== context)
+        ) {
+          events.push(listeners[i]);
+        }
+      }
+    }
+  }
+
+  //
+  // Reset the array, or remove it completely if we have no more listeners.
+  //
+  if (events.length) {
+    this._events[evt] = events.length === 1 ? events[0] : events;
+  } else {
+    delete this._events[evt];
+  }
+
+  return this;
+};
+
+/**
+ * Remove all listeners or only the listeners for the specified event.
+ *
+ * @param {String} event The event want to remove all listeners for.
+ * @api public
+ */
+EventEmitter.prototype.removeAllListeners = function removeAllListeners(event) {
+  if (!this._events) return this;
+
+  if (event) delete this._events[prefix ? prefix + event : event];
+  else this._events = prefix ? {} : Object.create(null);
+
+  return this;
+};
+
+//
+// Alias methods names because people roll like that.
+//
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+EventEmitter.prototype.addListener = EventEmitter.prototype.on;
+
+//
+// This function doesn't apply anymore.
+//
+EventEmitter.prototype.setMaxListeners = function setMaxListeners() {
+  return this;
+};
+
+//
+// Expose the prefix.
+//
+EventEmitter.prefixed = prefix;
+
+//
+// Expose the module.
+//
+if ('undefined' !== typeof module) {
+  module.exports = EventEmitter;
+}
+
+},{}],2:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -77,7 +341,7 @@ Align.prototype.onUpdate = Align.prototype.update;
 
 module.exports = Align;
 
-},{"./Position":7}],2:[function(require,module,exports){
+},{"./Position":8}],3:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -392,7 +656,7 @@ Camera.prototype.onTransformChange = function onTransformChange(transform) {
 
 module.exports = Camera;
 
-},{"../core/Commands":15}],3:[function(require,module,exports){
+},{"../core/Commands":16}],4:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -898,7 +1162,7 @@ function _processMouseLeave() {
 
 module.exports = GestureHandler;
 
-},{"../math/Vec2":49,"../utilities/CallbackStore":94}],4:[function(require,module,exports){
+},{"../math/Vec2":50,"../utilities/CallbackStore":95}],5:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -977,7 +1241,7 @@ MountPoint.prototype.onUpdate = MountPoint.prototype.update;
 
 module.exports = MountPoint;
 
-},{"./Position":7}],5:[function(require,module,exports){
+},{"./Position":8}],6:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1144,7 +1408,7 @@ Opacity.prototype.onUpdate = Opacity.prototype.update;
 
 module.exports = Opacity;
 
-},{"../transitions/Transitionable":92}],6:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],7:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1223,7 +1487,7 @@ Origin.prototype.onUpdate = Origin.prototype.update;
 
 module.exports = Origin;
 
-},{"./Position":7}],7:[function(require,module,exports){
+},{"./Position":8}],8:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1510,7 +1774,7 @@ Position.prototype.halt = function halt() {
 
 module.exports = Position;
 
-},{"../transitions/Transitionable":92}],8:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],9:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1605,7 +1869,7 @@ Rotation.prototype.onUpdate = Rotation.prototype.update;
 
 module.exports = Rotation;
 
-},{"./Position":7}],9:[function(require,module,exports){
+},{"./Position":8}],10:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -1682,7 +1946,7 @@ Scale.prototype.onUpdate = Scale.prototype.update;
 
 module.exports = Scale;
 
-},{"./Position":7}],10:[function(require,module,exports){
+},{"./Position":8}],11:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -2092,7 +2356,7 @@ Size.prototype.halt = function halt () {
 
 module.exports = Size;
 
-},{"../transitions/Transitionable":92}],11:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],12:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2435,7 +2699,7 @@ Transform.prototype.onUpdate = Transform.prototype.clean;
 
 module.exports = Transform;
 
-},{"../math/Quaternion":48,"../transitions/Transitionable":92}],12:[function(require,module,exports){
+},{"../math/Quaternion":49,"../transitions/Transitionable":93}],13:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -2476,7 +2740,7 @@ module.exports = {
     Transform: require('./Transform')
 };
 
-},{"./Align":1,"./Camera":2,"./GestureHandler":3,"./MountPoint":4,"./Opacity":5,"./Origin":6,"./Position":7,"./Rotation":8,"./Scale":9,"./Size":10,"./Transform":11}],13:[function(require,module,exports){
+},{"./Align":2,"./Camera":3,"./GestureHandler":4,"./MountPoint":5,"./Opacity":6,"./Origin":7,"./Position":8,"./Rotation":9,"./Scale":10,"./Size":11,"./Transform":12}],14:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2593,7 +2857,7 @@ Channel.prototype.postMessage = function postMessage(message) {
 
 module.exports = Channel;
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2803,7 +3067,7 @@ Clock.prototype.clearTimer = function (timer) {
 module.exports = Clock;
 
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -2874,7 +3138,7 @@ var Commands = {
 
 module.exports = Commands;
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3286,7 +3550,7 @@ function _splitTo (string, target) {
 
 module.exports = new Dispatch();
 
-},{"./Event":17,"./Path":20}],17:[function(require,module,exports){
+},{"./Event":18,"./Path":21}],18:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -3339,7 +3603,7 @@ function stopPropagation () {
 module.exports = Event;
 
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -3804,7 +4068,7 @@ FamousEngine.prototype.stopEngine = function stopEngine() {
 
 module.exports = new FamousEngine();
 
-},{"../render-loops/RequestAnimationFrameLoop":83,"../renderers/Compositor":86,"../renderers/UIManager":88,"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Scene":22,"./SizeSystem":24,"./TransformSystem":26}],19:[function(require,module,exports){
+},{"../render-loops/RequestAnimationFrameLoop":84,"../renderers/Compositor":87,"../renderers/UIManager":89,"./Channel":14,"./Clock":15,"./Commands":16,"./Dispatch":17,"./Scene":23,"./SizeSystem":25,"./TransformSystem":27}],20:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5053,7 +5317,7 @@ Node.prototype.dismount = function dismount () {
 
 module.exports = Node;
 
-},{"./Dispatch":16,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],20:[function(require,module,exports){
+},{"./Dispatch":17,"./Size":24,"./SizeSystem":25,"./Transform":26,"./TransformSystem":27}],21:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -5227,7 +5491,7 @@ PathUtils.prototype.getSelector = function getSelector(path) {
 module.exports = new PathUtils();
 
 
-},{}],21:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5396,7 +5660,7 @@ PathStore.prototype.getPaths = function getPaths () {
 
 module.exports = PathStore;
 
-},{"./Path":20}],22:[function(require,module,exports){
+},{"./Path":21}],23:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5549,7 +5813,7 @@ Scene.prototype.mount = function mount (path) {
 
 module.exports = Scene;
 
-},{"./Commands":15,"./Dispatch":16,"./Node":19,"./SizeSystem":24,"./TransformSystem":26}],23:[function(require,module,exports){
+},{"./Commands":16,"./Dispatch":17,"./Node":20,"./SizeSystem":25,"./TransformSystem":27}],24:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -5883,7 +6147,7 @@ Size.prototype.fromComponents = function fromComponents (components) {
 module.exports = Size;
 
 
-},{}],24:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -6156,7 +6420,7 @@ function sizeChanged (node, components, size) {
 
 module.exports = new SizeSystem();
 
-},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Size":23}],25:[function(require,module,exports){
+},{"./Dispatch":17,"./Path":21,"./PathStore":22,"./Size":24}],26:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -6929,7 +7193,7 @@ function multiply (out, a, b) {
 
 module.exports = Transform;
 
-},{}],26:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -7291,7 +7555,7 @@ function worldTransformChanged (node, components, transform) {
 module.exports = new TransformSystem();
 
 
-},{"./Dispatch":16,"./Path":20,"./PathStore":21,"./Transform":25}],27:[function(require,module,exports){
+},{"./Dispatch":17,"./Path":21,"./PathStore":22,"./Transform":26}],28:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7335,7 +7599,7 @@ module.exports = {
     TransformSystem: require('./TransformSystem')
 };
 
-},{"./Channel":13,"./Clock":14,"./Commands":15,"./Dispatch":16,"./Event":17,"./FamousEngine":18,"./Node":19,"./Path":20,"./PathStore":21,"./Scene":22,"./Size":23,"./SizeSystem":24,"./Transform":25,"./TransformSystem":26}],28:[function(require,module,exports){
+},{"./Channel":14,"./Clock":15,"./Commands":16,"./Dispatch":17,"./Event":18,"./FamousEngine":19,"./Node":20,"./Path":21,"./PathStore":22,"./Scene":23,"./Size":24,"./SizeSystem":25,"./Transform":26,"./TransformSystem":27}],29:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -7982,9 +8246,6 @@ DOMElement.prototype.on = function on (event, listener) {
  * @return {undefined} undefined
  */
 DOMElement.prototype.onReceive = function onReceive (event, payload) {
-    console.log("event:");
-    console.log(event);
-
     if (event === 'resize') {
         this._renderSize[0] = payload.val[0];
         this._renderSize[1] = payload.val[1];
@@ -8032,7 +8293,7 @@ DOMElement.prototype.draw = function draw() {
 
 module.exports = DOMElement;
 
-},{"../core/Commands":15,"../core/TransformSystem":26,"../utilities/CallbackStore":94}],29:[function(require,module,exports){
+},{"../core/Commands":16,"../core/TransformSystem":27,"../utilities/CallbackStore":95}],30:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -8063,7 +8324,7 @@ module.exports = {
     DOMElement: require('./DOMElement')
 };
 
-},{"./DOMElement":28}],30:[function(require,module,exports){
+},{"./DOMElement":29}],31:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8789,7 +9050,7 @@ DOMRenderer.prototype._stringifyMatrix = function _stringifyMatrix(m) {
 
 module.exports = DOMRenderer;
 
-},{"../core/Path":20,"../utilities/vendorPrefix":104,"./ElementCache":31,"./Math":32,"./events/EventMap":36}],31:[function(require,module,exports){
+},{"../core/Path":21,"../utilities/vendorPrefix":105,"./ElementCache":32,"./Math":33,"./events/EventMap":37}],32:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -8854,7 +9115,7 @@ function ElementCache (element, path) {
 
 module.exports = ElementCache;
 
-},{"./VoidElements":33}],32:[function(require,module,exports){
+},{"./VoidElements":34}],33:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9040,7 +9301,7 @@ module.exports = {
     invert: invert
 };
 
-},{}],33:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9093,7 +9354,7 @@ var VoidElements = {
 
 module.exports = VoidElements;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9161,7 +9422,7 @@ CompositionEvent.prototype.toString = function toString () {
 
 module.exports = CompositionEvent;
 
-},{"./UIEvent":42}],35:[function(require,module,exports){
+},{"./UIEvent":43}],36:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9281,7 +9542,7 @@ Event.prototype.toString = function toString () {
 
 module.exports = Event;
 
-},{}],36:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9372,7 +9633,7 @@ var EventMap = {
 
 module.exports = EventMap;
 
-},{"./CompositionEvent":34,"./Event":35,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],37:[function(require,module,exports){
+},{"./CompositionEvent":35,"./Event":36,"./FocusEvent":38,"./InputEvent":39,"./KeyboardEvent":40,"./MouseEvent":41,"./TouchEvent":42,"./UIEvent":43,"./WheelEvent":44}],38:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9434,7 +9695,7 @@ FocusEvent.prototype.toString = function toString () {
 
 module.exports = FocusEvent;
 
-},{"./UIEvent":42}],38:[function(require,module,exports){
+},{"./UIEvent":43}],39:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9525,7 +9786,7 @@ InputEvent.prototype.toString = function toString () {
 
 module.exports = InputEvent;
 
-},{"./UIEvent":42}],39:[function(require,module,exports){
+},{"./UIEvent":43}],40:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9686,7 +9947,7 @@ KeyboardEvent.prototype.toString = function toString () {
 
 module.exports = KeyboardEvent;
 
-},{"./UIEvent":42}],40:[function(require,module,exports){
+},{"./UIEvent":43}],41:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -9856,7 +10117,7 @@ MouseEvent.prototype.toString = function toString () {
 
 module.exports = MouseEvent;
 
-},{"./UIEvent":42}],41:[function(require,module,exports){
+},{"./UIEvent":43}],42:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10054,7 +10315,7 @@ TouchEvent.prototype.toString = function toString () {
 
 module.exports = TouchEvent;
 
-},{"./UIEvent":42}],42:[function(require,module,exports){
+},{"./UIEvent":43}],43:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10122,7 +10383,7 @@ UIEvent.prototype.toString = function toString () {
 
 module.exports = UIEvent;
 
-},{"./Event":35}],43:[function(require,module,exports){
+},{"./Event":36}],44:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10233,7 +10494,7 @@ WheelEvent.prototype.toString = function toString () {
 
 module.exports = WheelEvent;
 
-},{"./MouseEvent":40}],44:[function(require,module,exports){
+},{"./MouseEvent":41}],45:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -10274,7 +10535,7 @@ module.exports = {
 };
 
 
-},{"./CompositionEvent":34,"./Event":35,"./EventMap":36,"./FocusEvent":37,"./InputEvent":38,"./KeyboardEvent":39,"./MouseEvent":40,"./TouchEvent":41,"./UIEvent":42,"./WheelEvent":43}],45:[function(require,module,exports){
+},{"./CompositionEvent":35,"./Event":36,"./EventMap":37,"./FocusEvent":38,"./InputEvent":39,"./KeyboardEvent":40,"./MouseEvent":41,"./TouchEvent":42,"./UIEvent":43,"./WheelEvent":44}],46:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10309,7 +10570,7 @@ module.exports = {
     VoidElements: require('./VoidElements')
 };
 
-},{"./DOMRenderer":30,"./ElementCache":31,"./Math":32,"./VoidElements":33,"./events":44}],46:[function(require,module,exports){
+},{"./DOMRenderer":31,"./ElementCache":32,"./Math":33,"./VoidElements":34,"./events":45}],47:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -10353,7 +10614,7 @@ module.exports = {
     polyfills: require('./polyfills')
 };
 
-},{"./components":12,"./core":27,"./dom-renderables":29,"./dom-renderers":45,"./math":51,"./physics":79,"./polyfills":81,"./render-loops":84,"./renderers":89,"./transitions":93,"./utilities":100,"./webgl-geometries":109,"./webgl-materials":123,"./webgl-renderables":125,"./webgl-renderers":138,"./webgl-shaders":140}],47:[function(require,module,exports){
+},{"./components":13,"./core":28,"./dom-renderables":30,"./dom-renderers":46,"./math":52,"./physics":80,"./polyfills":82,"./render-loops":85,"./renderers":90,"./transitions":94,"./utilities":101,"./webgl-geometries":110,"./webgl-materials":124,"./webgl-renderables":126,"./webgl-renderers":139,"./webgl-shaders":141}],48:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -10845,7 +11106,7 @@ Mat33.multiply = function multiply(matrix1, matrix2, output) {
 
 module.exports = Mat33;
 
-},{}],48:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11395,7 +11656,7 @@ Quaternion.dot = function dot(q1, q2) {
 
 module.exports = Quaternion;
 
-},{}],49:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -11766,7 +12027,7 @@ Vec2.cross = function(v1,v2) {
 
 module.exports = Vec2;
 
-},{}],50:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -12374,7 +12635,7 @@ Vec3.project = function project(v1, v2, output) {
 
 module.exports = Vec3;
 
-},{}],51:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -12407,7 +12668,7 @@ module.exports = {
 };
 
 
-},{"./Mat33":47,"./Quaternion":48,"./Vec2":49,"./Vec3":50}],52:[function(require,module,exports){
+},{"./Mat33":48,"./Quaternion":49,"./Vec2":50,"./Vec3":51}],53:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13208,7 +13469,7 @@ module.exports = {
     ConvexHull: ConvexHull
 };
 
-},{"../math/Mat33":47,"../math/Vec3":50,"../utilities/ObjectManager":97}],53:[function(require,module,exports){
+},{"../math/Mat33":48,"../math/Vec3":51,"../utilities/ObjectManager":98}],54:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13708,7 +13969,7 @@ function _integratePose(body, dt) {
 
 module.exports = PhysicsEngine;
 
-},{"../math/Quaternion":48,"../math/Vec3":50,"../utilities/CallbackStore":94,"./bodies/Particle":55,"./constraints/Constraint":62,"./forces/Force":73}],54:[function(require,module,exports){
+},{"../math/Quaternion":49,"../math/Vec3":51,"../utilities/CallbackStore":95,"./bodies/Particle":56,"./constraints/Constraint":63,"./forces/Force":74}],55:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -13774,7 +14035,7 @@ Box.prototype.constructor = Box;
 
 module.exports = Box;
 
-},{"../../math/Vec3":50,"./convexBodyFactory":58}],55:[function(require,module,exports){
+},{"../../math/Vec3":51,"./convexBodyFactory":59}],56:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14278,7 +14539,7 @@ Particle.prototype.updateShape = function updateShape() {};
 
 module.exports = Particle;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"../../utilities/CallbackStore":94}],56:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"../../utilities/CallbackStore":95}],57:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14400,7 +14661,7 @@ Sphere.prototype.support = function support(direction) {
  */
 module.exports = Sphere;
 
-},{"../../math/Vec3":50,"./Particle":55}],57:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Particle":56}],58:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14489,7 +14750,7 @@ Wall.prototype.constructor = Wall;
 
 module.exports = Wall;
 
-},{"../../math/Vec3":50,"./Particle":55}],58:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Particle":56}],59:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14744,7 +15005,7 @@ function _computeInertiaProperties(T) {
 
 module.exports = convexBodyFactory;
 
-},{"../../math/Mat33":47,"../../math/Vec3":50,"../Geometry":52,"./Particle":55}],59:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Vec3":51,"../Geometry":53,"./Particle":56}],60:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -14868,7 +15129,7 @@ Angle.prototype.resolve = function update() {
 
 module.exports = Angle;
 
-},{"../../math/Mat33":47,"../../math/Vec3":50,"./Constraint":62}],60:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Vec3":51,"./Constraint":63}],61:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15039,7 +15300,7 @@ BallAndSocket.prototype.resolve = function resolve() {
 
 module.exports = BallAndSocket;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],61:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Constraint":63}],62:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15449,7 +15710,7 @@ Collision.BruteForceAABB = BruteForce.BruteForceAABB;
 
 module.exports = Collision;
 
-},{"../../math/Vec3":50,"../../utilities/ObjectManager":97,"./Constraint":62,"./collision/BruteForce":68,"./collision/ContactManifold":69,"./collision/ConvexCollisionDetection":70,"./collision/SweepAndPrune":71}],62:[function(require,module,exports){
+},{"../../math/Vec3":51,"../../utilities/ObjectManager":98,"./Constraint":63,"./collision/BruteForce":69,"./collision/ContactManifold":70,"./collision/ConvexCollisionDetection":71,"./collision/SweepAndPrune":72}],63:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15535,7 +15796,7 @@ Constraint.prototype.resolve = function resolve(time, dt) {};
 
 module.exports = Constraint;
 
-},{}],63:[function(require,module,exports){
+},{}],64:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15736,7 +15997,7 @@ Curve.prototype.resolve = function resolve() {
 
 module.exports = Curve;
 
-},{"../../math/Vec3":50,"./Constraint":62}],64:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],65:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -15916,7 +16177,7 @@ Direction.prototype.resolve = function update() {
 
 module.exports = Direction;
 
-},{"../../math/Vec3":50,"./Constraint":62}],65:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],66:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16093,7 +16354,7 @@ Distance.prototype.resolve = function resolve() {
 
 module.exports = Distance;
 
-},{"../../math/Vec3":50,"./Constraint":62}],66:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Constraint":63}],67:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16345,7 +16606,7 @@ Hinge.prototype.resolve = function resolve() {
 
 module.exports = Hinge;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Constraint":62}],67:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Constraint":63}],68:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16517,7 +16778,7 @@ AABB.vertexThreshold = 100;
 
 module.exports = AABB;
 
-},{}],68:[function(require,module,exports){
+},{}],69:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -16635,7 +16896,7 @@ BruteForce.prototype.update = function update() {
 module.exports.BruteForceAABB = BruteForceAABB;
 module.exports.BruteForce = BruteForce;
 
-},{"./AABB":67}],69:[function(require,module,exports){
+},{"./AABB":68}],70:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17234,7 +17495,7 @@ Contact.prototype.resolve = function resolve() {
 
 module.exports = ContactManifoldTable;
 
-},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],70:[function(require,module,exports){
+},{"../../../math/Vec3":51,"../../../utilities/ObjectManager":98}],71:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17460,7 +17721,7 @@ function epa(body1, body2, polytope) {
 module.exports.gjk = gjk;
 module.exports.epa = epa;
 
-},{"../../../math/Vec3":50,"../../../utilities/ObjectManager":97}],71:[function(require,module,exports){
+},{"../../../math/Vec3":51,"../../../utilities/ObjectManager":98}],72:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17704,7 +17965,7 @@ SweepVolume.prototype.update = function() {
 
 module.exports = SweepAndPrune;
 
-},{"./AABB":67}],72:[function(require,module,exports){
+},{"./AABB":68}],73:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17813,7 +18074,7 @@ Drag.prototype.update = function update() {
 
 module.exports = Drag;
 
-},{"../../math/Vec3":50,"./Force":73}],73:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],74:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -17919,7 +18180,7 @@ Force.prototype.update = function update(time, dt) {};
 
 module.exports = Force;
 
-},{}],74:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18042,7 +18303,7 @@ Gravity1D.prototype.update = function() {
 
 module.exports = Gravity1D;
 
-},{"../../math/Vec3":50,"./Force":73}],75:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],76:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18138,7 +18399,7 @@ Gravity3D.prototype.update = function() {
 
 module.exports = Gravity3D;
 
-},{"../../math/Vec3":50,"./Force":73}],76:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],77:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18243,7 +18504,7 @@ RotationalDrag.prototype.update = function update() {
 
 module.exports = RotationalDrag;
 
-},{"../../math/Vec3":50,"./Force":73}],77:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],78:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18387,7 +18648,7 @@ RotationalSpring.prototype.update = function update() {
 
 module.exports = RotationalSpring;
 
-},{"../../math/Mat33":47,"../../math/Quaternion":48,"../../math/Vec3":50,"./Force":73}],78:[function(require,module,exports){
+},{"../../math/Mat33":48,"../../math/Quaternion":49,"../../math/Vec3":51,"./Force":74}],79:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18553,7 +18814,7 @@ Spring.prototype.update = function() {
 
 module.exports = Spring;
 
-},{"../../math/Vec3":50,"./Force":73}],79:[function(require,module,exports){
+},{"../../math/Vec3":51,"./Force":74}],80:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -18608,7 +18869,7 @@ module.exports = {
     Geometry: require('./Geometry')
 };
 
-},{"./Geometry":52,"./PhysicsEngine":53,"./bodies/Box":54,"./bodies/Particle":55,"./bodies/Sphere":56,"./bodies/Wall":57,"./bodies/convexBodyFactory":58,"./constraints/Angle":59,"./constraints/BallAndSocket":60,"./constraints/Collision":61,"./constraints/Constraint":62,"./constraints/Curve":63,"./constraints/Direction":64,"./constraints/Distance":65,"./constraints/Hinge":66,"./forces/Drag":72,"./forces/Force":73,"./forces/Gravity1D":74,"./forces/Gravity3D":75,"./forces/RotationalDrag":76,"./forces/RotationalSpring":77,"./forces/Spring":78}],80:[function(require,module,exports){
+},{"./Geometry":53,"./PhysicsEngine":54,"./bodies/Box":55,"./bodies/Particle":56,"./bodies/Sphere":57,"./bodies/Wall":58,"./bodies/convexBodyFactory":59,"./constraints/Angle":60,"./constraints/BallAndSocket":61,"./constraints/Collision":62,"./constraints/Constraint":63,"./constraints/Curve":64,"./constraints/Direction":65,"./constraints/Distance":66,"./constraints/Hinge":67,"./forces/Drag":73,"./forces/Force":74,"./forces/Gravity1D":75,"./forces/Gravity3D":76,"./forces/RotationalDrag":77,"./forces/RotationalSpring":78,"./forces/Spring":79}],81:[function(require,module,exports){
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating
 // requestAnimationFrame polyfill by Erik Möller. fixes from Paul Irish and Tino Zijdel
@@ -18693,7 +18954,7 @@ var animationFrame = {
 
 module.exports = animationFrame;
 
-},{}],81:[function(require,module,exports){
+},{}],82:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -18725,7 +18986,7 @@ module.exports = {
     cancelAnimationFrame: require('./animationFrame').cancelAnimationFrame
 };
 
-},{"./animationFrame":80}],82:[function(require,module,exports){
+},{"./animationFrame":81}],83:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -18886,7 +19147,7 @@ ContainerLoop.prototype.noLongerUpdate = function noLongerUpdate(updateable) {
 
 module.exports = ContainerLoop;
 
-},{"./now":85}],83:[function(require,module,exports){
+},{"./now":86}],84:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19198,7 +19459,7 @@ RequestAnimationFrameLoop.prototype.noLongerUpdate = function noLongerUpdate(upd
 
 module.exports = RequestAnimationFrameLoop;
 
-},{"../polyfills":81}],84:[function(require,module,exports){
+},{"../polyfills":82}],85:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -19231,7 +19492,7 @@ module.exports = {
     now: require('./now')
 };
 
-},{"./ContainerLoop":82,"./RequestAnimationFrameLoop":83,"./now":85}],85:[function(require,module,exports){
+},{"./ContainerLoop":83,"./RequestAnimationFrameLoop":84,"./now":86}],86:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19264,7 +19525,7 @@ var now = (window.performance && window.performance.now) ? function() {
 
 module.exports = now;
 
-},{}],86:[function(require,module,exports){
+},{}],87:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -19553,7 +19814,7 @@ Compositor.prototype.clearCommands = function clearCommands() {
 
 module.exports = Compositor;
 
-},{"../core/Commands":15,"./Context":87,"./inject-css":90}],87:[function(require,module,exports){
+},{"../core/Commands":16,"./Context":88,"./inject-css":91}],88:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20100,7 +20361,7 @@ function changeViewTransform (context, path, commands, iterator) {
 
 module.exports = Context;
 
-},{"../components/Camera":2,"../core/Commands":15,"../dom-renderers/DOMRenderer":30,"../webgl-renderers/WebGLRenderer":135}],88:[function(require,module,exports){
+},{"../components/Camera":3,"../core/Commands":16,"../dom-renderers/DOMRenderer":31,"../webgl-renderers/WebGLRenderer":136}],89:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20259,7 +20520,7 @@ UIManager.prototype.update = function update (time) {
 
 module.exports = UIManager;
 
-},{"../core/Commands":15}],89:[function(require,module,exports){
+},{"../core/Commands":16}],90:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20293,7 +20554,7 @@ module.exports = {
     injectCSS: require('./inject-css')
 };
 
-},{"./Compositor":86,"./Context":87,"./UIManager":88,"./inject-css":90}],90:[function(require,module,exports){
+},{"./Compositor":87,"./Context":88,"./UIManager":89,"./inject-css":91}],91:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20384,7 +20645,7 @@ function injectCSS() {
 
 module.exports = injectCSS;
 
-},{}],91:[function(require,module,exports){
+},{}],92:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -20640,7 +20901,7 @@ var Curves = {
 
 module.exports = Curves;
 
-},{}],92:[function(require,module,exports){
+},{}],93:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21098,7 +21359,7 @@ Transitionable.prototype.set = function(state, transition, callback) {
 
 module.exports = Transitionable;
 
-},{"../core/FamousEngine":18,"./Curves":91}],93:[function(require,module,exports){
+},{"../core/FamousEngine":19,"./Curves":92}],94:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21130,7 +21391,7 @@ module.exports = {
     Transitionable: require('./Transitionable')
 };
 
-},{"./Curves":91,"./Transitionable":92}],94:[function(require,module,exports){
+},{"./Curves":92,"./Transitionable":93}],95:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21228,7 +21489,7 @@ CallbackStore.prototype.trigger = function trigger (key, payload) {
 
 module.exports = CallbackStore;
 
-},{}],95:[function(require,module,exports){
+},{}],96:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21678,7 +21939,7 @@ var colorNames = { aliceblue: '#f0f8ff', antiquewhite: '#faebd7', aqua: '#00ffff
 
 module.exports = Color;
 
-},{"../transitions/Transitionable":92}],96:[function(require,module,exports){
+},{"../transitions/Transitionable":93}],97:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21785,7 +22046,7 @@ module.exports = {
 };
 
 
-},{}],97:[function(require,module,exports){
+},{}],98:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21878,7 +22139,7 @@ ObjectManager.disposeOf = function(type) {
 
 module.exports = ObjectManager;
 
-},{}],98:[function(require,module,exports){
+},{}],99:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -21922,7 +22183,7 @@ function clamp(value, lower, upper) {
 module.exports = clamp;
 
 
-},{}],99:[function(require,module,exports){
+},{}],100:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -21986,7 +22247,7 @@ var clone = function clone(b) {
 
 module.exports = clone;
 
-},{}],100:[function(require,module,exports){
+},{}],101:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -22027,7 +22288,7 @@ module.exports = {
 };
 
 
-},{"./CallbackStore":94,"./Color":95,"./KeyCodes":96,"./ObjectManager":97,"./clamp":98,"./clone":99,"./keyValueToArrays":101,"./loadURL":102,"./strip":103,"./vendorPrefix":104}],101:[function(require,module,exports){
+},{"./CallbackStore":95,"./Color":96,"./KeyCodes":97,"./ObjectManager":98,"./clamp":99,"./clone":100,"./keyValueToArrays":102,"./loadURL":103,"./strip":104,"./vendorPrefix":105}],102:[function(require,module,exports){
 'use strict';
 
 /**
@@ -22084,7 +22345,7 @@ module.exports = function keyValuesToArrays(obj) {
     };
 };
 
-},{}],102:[function(require,module,exports){
+},{}],103:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22135,7 +22396,7 @@ var loadURL = function loadURL(url, callback) {
 
 module.exports = loadURL;
 
-},{}],103:[function(require,module,exports){
+},{}],104:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22201,7 +22462,7 @@ function strip(obj) {
 
 module.exports = strip;
 
-},{}],104:[function(require,module,exports){
+},{}],105:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22261,7 +22522,7 @@ function vendorPrefix(property) {
 
 module.exports = vendorPrefix;
 
-},{}],105:[function(require,module,exports){
+},{}],106:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22468,7 +22729,7 @@ DynamicGeometry.prototype.getTextureCoords = function () {
 
 module.exports = DynamicGeometry;
 
-},{"./Geometry":106}],106:[function(require,module,exports){
+},{"./Geometry":107}],107:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -22534,7 +22795,7 @@ function Geometry(options) {
 
 module.exports = Geometry;
 
-},{}],107:[function(require,module,exports){
+},{}],108:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23102,7 +23363,7 @@ GeometryHelper.addBackfaceTriangles = function addBackfaceTriangles(vertices, in
 
 module.exports = GeometryHelper;
 
-},{"../math/Vec2":49,"../math/Vec3":50}],108:[function(require,module,exports){
+},{"../math/Vec2":50,"../math/Vec3":51}],109:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23596,7 +23857,7 @@ function flatten(arr) {
 
 module.exports = OBJLoader;
 
-},{"../utilities/loadURL":102,"./GeometryHelper":107}],109:[function(require,module,exports){
+},{"../utilities/loadURL":103,"./GeometryHelper":108}],110:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23641,7 +23902,7 @@ module.exports = {
     OBJLoader: require('./OBJLoader')
 };
 
-},{"./DynamicGeometry":105,"./Geometry":106,"./GeometryHelper":107,"./OBJLoader":108,"./primitives/Box":110,"./primitives/Circle":111,"./primitives/Cylinder":112,"./primitives/GeodesicSphere":113,"./primitives/Icosahedron":114,"./primitives/ParametricCone":115,"./primitives/Plane":116,"./primitives/Sphere":117,"./primitives/Tetrahedron":118,"./primitives/Torus":119,"./primitives/Triangle":120}],110:[function(require,module,exports){
+},{"./DynamicGeometry":106,"./Geometry":107,"./GeometryHelper":108,"./OBJLoader":109,"./primitives/Box":111,"./primitives/Circle":112,"./primitives/Cylinder":113,"./primitives/GeodesicSphere":114,"./primitives/Icosahedron":115,"./primitives/ParametricCone":116,"./primitives/Plane":117,"./primitives/Sphere":118,"./primitives/Tetrahedron":119,"./primitives/Torus":120,"./primitives/Triangle":121}],111:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23736,7 +23997,7 @@ function BoxGeometry(options) {
 
 module.exports = BoxGeometry;
 
-},{"../Geometry":106}],111:[function(require,module,exports){
+},{"../Geometry":107}],112:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23852,7 +24113,7 @@ function getCircleBuffers(detail) {
 
 module.exports = Circle;
 
-},{"../Geometry":106,"../GeometryHelper":107}],112:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],113:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -23941,7 +24202,7 @@ Cylinder.generator = function generator(r, u, v, pos) {
 
 module.exports = Cylinder;
 
-},{"../Geometry":106,"../GeometryHelper":107}],113:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],114:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24021,7 +24282,7 @@ function GeodesicSphere (options) {
 
 module.exports = GeodesicSphere;
 
-},{"../Geometry":106,"../GeometryHelper":107}],114:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],115:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24097,7 +24358,7 @@ function Icosahedron() {
 
 module.exports = Icosahedron;
 
-},{"../Geometry":106,"../GeometryHelper":107}],115:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],116:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24183,7 +24444,7 @@ ParametricCone.generator = function generator(r, u, v, pos) {
 
 module.exports = ParametricCone;
 
-},{"../Geometry":106,"../GeometryHelper":107}],116:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],117:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24274,7 +24535,7 @@ function Plane(options) {
 
 module.exports = Plane;
 
-},{"../Geometry":106,"../GeometryHelper":107}],117:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],118:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24362,7 +24623,7 @@ ParametricSphere.generator = function generator(u, v, pos) {
 
 module.exports = ParametricSphere;
 
-},{"../Geometry":106,"../GeometryHelper":107}],118:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],119:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24465,7 +24726,7 @@ function Tetrahedron(options) {
 
 module.exports = Tetrahedron;
 
-},{"../Geometry":106,"../GeometryHelper":107}],119:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],120:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24551,7 +24812,7 @@ Torus.generator = function generator(c, a, u, v, pos) {
 
 module.exports = Torus;
 
-},{"../Geometry":106,"../GeometryHelper":107}],120:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],121:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24631,7 +24892,7 @@ function Triangle (options) {
 
 module.exports = Triangle;
 
-},{"../Geometry":106,"../GeometryHelper":107}],121:[function(require,module,exports){
+},{"../Geometry":107,"../GeometryHelper":108}],122:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -24842,7 +25103,7 @@ expressions.Custom = function (schema, inputs, uniforms) {
     return new Material('custom', {glsl: schema, output: 1, uniforms: uniforms || {}} , inputs);
 };
 
-},{"./TextureRegistry":122}],122:[function(require,module,exports){
+},{"./TextureRegistry":123}],123:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24927,7 +25188,7 @@ TextureRegistry.get = function get(accessor) {
 
 module.exports = TextureRegistry;
 
-},{}],123:[function(require,module,exports){
+},{}],124:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -24959,7 +25220,7 @@ module.exports = {
     TextureRegistry: require('./TextureRegistry')
 };
 
-},{"./Material":121,"./TextureRegistry":122}],124:[function(require,module,exports){
+},{"./Material":122,"./TextureRegistry":123}],125:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25625,7 +25886,7 @@ Mesh.prototype.draw = function draw () {
 
 module.exports = Mesh;
 
-},{"../core/Commands":15,"../core/TransformSystem":26,"../webgl-geometries":109}],125:[function(require,module,exports){
+},{"../core/Commands":16,"../core/TransformSystem":27,"../webgl-geometries":110}],126:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25658,7 +25919,7 @@ module.exports = {
     AmbientLight: require('./lights/AmbientLight')
 };
 
-},{"./Mesh":124,"./lights/AmbientLight":126,"./lights/PointLight":128}],126:[function(require,module,exports){
+},{"./Mesh":125,"./lights/AmbientLight":127,"./lights/PointLight":129}],127:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25719,7 +25980,7 @@ AmbientLight.prototype.constructor = AmbientLight;
 
 module.exports = AmbientLight;
 
-},{"../../core/Commands":15,"./Light":127}],127:[function(require,module,exports){
+},{"../../core/Commands":16,"./Light":128}],128:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25841,7 +26102,7 @@ Light.prototype.onUpdate = function onUpdate() {
 
 module.exports = Light;
 
-},{"../../core/Commands":15}],128:[function(require,module,exports){
+},{"../../core/Commands":16}],129:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -25935,7 +26196,7 @@ PointLight.prototype.onTransformChange = function onTransformChange (transform) 
 
 module.exports = PointLight;
 
-},{"../../core/TransformSystem":26,"./Light":127}],129:[function(require,module,exports){
+},{"../../core/TransformSystem":27,"./Light":128}],130:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26007,7 +26268,7 @@ Buffer.prototype.subData = function subData() {
 
 module.exports = Buffer;
 
-},{}],130:[function(require,module,exports){
+},{}],131:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26154,7 +26415,7 @@ BufferRegistry.prototype.allocate = function allocate(geometryId, name, value, s
 
 module.exports = BufferRegistry;
 
-},{"./Buffer":129}],131:[function(require,module,exports){
+},{"./Buffer":130}],132:[function(require,module,exports){
 'use strict';
 
 /**
@@ -26249,7 +26510,7 @@ function _processErrors(errors, source) {
     }
 }
 
-},{}],132:[function(require,module,exports){
+},{}],133:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26737,7 +26998,7 @@ Program.prototype.compileShader = function compileShader(shader, source) {
 
 module.exports = Program;
 
-},{"../utilities/clone":99,"../utilities/keyValueToArrays":101,"../webgl-shaders":140,"./Debug":131}],133:[function(require,module,exports){
+},{"../utilities/clone":100,"../utilities/keyValueToArrays":102,"../webgl-shaders":141,"./Debug":132}],134:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -26878,7 +27139,7 @@ Texture.prototype.readBack = function readBack(x, y, width, height) {
 
 module.exports = Texture;
 
-},{}],134:[function(require,module,exports){
+},{}],135:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27090,7 +27351,7 @@ TextureManager.prototype.bindTexture = function bindTexture(id) {
 
 module.exports = TextureManager;
 
-},{"./Texture":133,"./createCheckerboard":137}],135:[function(require,module,exports){
+},{"./Texture":134,"./createCheckerboard":138}],136:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -27946,7 +28207,7 @@ WebGLRenderer.prototype.resetOptions = function resetOptions(options) {
 
 module.exports = WebGLRenderer;
 
-},{"../utilities/keyValueToArrays":101,"./BufferRegistry":130,"./Program":132,"./TextureManager":134,"./compileMaterial":136,"./radixSort":139}],136:[function(require,module,exports){
+},{"../utilities/keyValueToArrays":102,"./BufferRegistry":131,"./Program":133,"./TextureManager":135,"./compileMaterial":137,"./radixSort":140}],137:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28094,7 +28355,7 @@ function _arrayToVec(array) {
 
 module.exports = compileMaterial;
 
-},{}],137:[function(require,module,exports){
+},{}],138:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28138,7 +28399,7 @@ function createCheckerBoard() {
 
 module.exports = createCheckerBoard;
 
-},{}],138:[function(require,module,exports){
+},{}],139:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  * 
@@ -28174,7 +28435,7 @@ module.exports = {
     Texture: require('./Texture')
 };
 
-},{"./Buffer":129,"./BufferRegistry":130,"./Program":132,"./Texture":133,"./WebGLRenderer":135,"./createCheckerboard":137}],139:[function(require,module,exports){
+},{"./Buffer":130,"./BufferRegistry":131,"./Program":133,"./Texture":134,"./WebGLRenderer":136,"./createCheckerboard":138}],140:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28305,7 +28566,7 @@ function radixSort(list, registry) {
 
 module.exports = radixSort;
 
-},{}],140:[function(require,module,exports){
+},{}],141:[function(require,module,exports){
 /**
  * The MIT License (MIT)
  *
@@ -28341,7 +28602,7 @@ var shaders = {
 
 module.exports = shaders;
 
-},{}],141:[function(require,module,exports){
+},{}],142:[function(require,module,exports){
 (function (global){
 /**
  * @license
@@ -40696,100 +40957,435 @@ module.exports = shaders;
 }.call(this));
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],142:[function(require,module,exports){
+},{}],143:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
 (function () {
-  var Application, Engine, FamousWindow, Logger, famous;
-
-  famous = require("famous");
-
-  Engine = famous.core.FamousEngine;
-
-  FamousWindow = require("./FamousWindow");
-
-  Logger = require("./Logger");
-
-  Function.prototype.getter = function (prop, get) {
-    return Object.defineProperty(this.prototype, prop, {
-      get: get,
-      configurable: true
-    });
+  var AnimatorClassBezierPresets,
+      AnimatorClasses,
+      BezierCurveAnimator,
+      Config,
+      Defaults,
+      EventEmitter,
+      LinearAnimator,
+      SpringDHOAnimator,
+      SpringRK4Animator,
+      Utils,
+      _,
+      evaluateRelativeProperty,
+      isRelativeProperty,
+      numberRE,
+      relativePropertyRE,
+      slice = [].slice,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
   };
 
-  Function.prototype.setter = function (prop, set) {
-    return Object.defineProperty(this.prototype, prop, {
-      set: set,
-      configurable: true
-    });
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  Config = require("./Config").Config;
+
+  Defaults = require("./Defaults").Defaults;
+
+  EventEmitter = require("./EventEmitter").EventEmitter;
+
+  LinearAnimator = require("./Animators/LinearAnimator").LinearAnimator;
+
+  BezierCurveAnimator = require("./Animators/BezierCurveAnimator").BezierCurveAnimator;
+
+  SpringRK4Animator = require("./Animators/SpringRK4Animator").SpringRK4Animator;
+
+  SpringDHOAnimator = require("./Animators/SpringDHOAnimator").SpringDHOAnimator;
+
+  AnimatorClasses = {
+    "linear": LinearAnimator,
+    "bezier-curve": BezierCurveAnimator,
+    "spring-rk4": SpringRK4Animator,
+    "spring-dho": SpringDHOAnimator
   };
 
-  Function.prototype.property = function (prop, desc) {
-    return Object.defineProperty(this.prototype, prop, desc);
+  AnimatorClasses["spring"] = AnimatorClasses["spring-rk4"];
+
+  AnimatorClasses["cubic-bezier"] = AnimatorClasses["bezier-curve"];
+
+  AnimatorClassBezierPresets = ["ease", "ease-in", "ease-out", "ease-in-out"];
+
+  numberRE = /[+-]?(?:\d*\.|)\d+(?:[eE][+-]?\d+|)/;
+
+  relativePropertyRE = new RegExp('^(?:([+-])=|)(' + numberRE.source + ')([a-z%]*)$', 'i');
+
+  isRelativeProperty = function (v) {
+    return _.isString(v) && relativePropertyRE.test(v);
   };
 
-  Application = (function () {
-    function Application() {}
+  evaluateRelativeProperty = function (target, k, v) {
+    var match, number, ref, rest, sign, unit;
+    ref = relativePropertyRE.exec(v), match = ref[0], sign = ref[1], number = ref[2], unit = ref[3], rest = 5 <= ref.length ? slice.call(ref, 4) : [];
+    if (sign) {
+      return target[k] + (sign + 1) * number;
+    }
+    return +number;
+  };
 
-    Application.rootWindow = null;
+  exports.Animation = (function (superClass) {
+    extend(Animation, superClass);
 
-    Application.hasInitialized = false;
+    function Animation(options) {
+      if (options == null) {
+        options = {};
+      }
+      this._updateValue = bind(this._updateValue, this);
+      this._update = bind(this._update, this);
+      this._start = bind(this._start, this);
+      this.start = bind(this.start, this);
+      options = Defaults.getDefaults("Animation", options);
+      Animation.__super__.constructor.call(this, options);
+      this.options = _.clone(_.defaults(options, {
+        layer: null,
+        properties: {},
+        curve: "linear",
+        curveOptions: {},
+        time: 1,
+        repeat: 0,
+        delay: 0,
+        debug: false
+      }));
+      if (options.origin) {
+        console.warn("Animation.origin: please use layer.originX and layer.originY");
+      }
+      this.options.properties = Animation.filterAnimatableProperties(this.options.properties);
+      this._parseAnimatorOptions();
+      this._originalState = this._currentState();
+      this._repeatCounter = this.options.repeat;
+    }
 
-    Application.isReady = false;
-
-    Application.run = function (mainFn) {
-      var poolContext;
-      poolContext = function () {
-        var ctx, rootWin;
-        rootWin = Application.getRootWindow();
-        Application.init();
-        ctx = rootWin.scene.getUpdater().compositor.getContext('body');
-        if (ctx != null) {
-          if (mainFn !== null) {
-            return mainFn();
-          }
-        } else {
-          return setTimeout(function () {
-            return poolContext();
-          }, 1);
+    Animation.prototype.start = function () {
+      var AnimatorClass, animation, k, property, ref, ref1, ref2, v;
+      if (this.options.layer === null) {
+        console.error("Animation: missing layer");
+      }
+      AnimatorClass = this._animatorClass();
+      if (this.options.debug) {
+        console.log("Animation.start " + AnimatorClass.name, this.options.curveOptions);
+      }
+      this._animator = new AnimatorClass(this.options.curveOptions);
+      this._target = this.options.layer;
+      this._stateA = this._currentState();
+      this._stateB = {};
+      ref = this.options.properties;
+      for (k in ref) {
+        v = ref[k];
+        if (_.isFunction(v)) {
+          v = v();
+        } else if (isRelativeProperty(v)) {
+          v = evaluateRelativeProperty(this._target, k, v);
         }
-      };
-      return poolContext();
+        if (this._stateA[k] !== v) {
+          this._stateB[k] = v;
+        }
+      }
+      if (_.keys(this._stateA).length === 0) {
+        console.warn("Animation: nothing to animate, no animatable properties");
+        return false;
+      }
+      if (_.isEqual(this._stateA, this._stateB)) {
+        console.warn("Animation: nothing to animate, all properties are equal to what it is now");
+        return false;
+      }
+      ref1 = this._target.animatingProperties();
+      for (property in ref1) {
+        animation = ref1[property];
+        if (this._stateA.hasOwnProperty(property)) {
+          animation.stop();
+        }
+      }
+      if (this.options.debug) {
+        console.log("Animation.start");
+        ref2 = this._stateB;
+        for (k in ref2) {
+          v = ref2[k];
+          console.log("\t" + k + ": " + this._stateA[k] + " -> " + this._stateB[k]);
+        }
+      }
+      if (this._repeatCounter > 0) {
+        this.once("end", (function (_this) {
+          return function () {
+            var ref3;
+            ref3 = _this._stateA;
+            for (k in ref3) {
+              v = ref3[k];
+              _this._target[k] = v;
+            }
+            _this._repeatCounter--;
+            return _this.start();
+          };
+        })(this));
+      }
+      if (this.options.delay) {
+        Utils.delay(this.options.delay, this._start);
+      } else {
+        this._start();
+      }
+      return true;
     };
 
-    Application.init = function () {
-      if (!Application.hasInitialized) {
-        Logger.log("Initializing application...");
-        Application.hasInitialized = true;
-        Logger.log("Initializing famous engine...");
-        return Engine.init();
+    Animation.prototype.stop = function (emit) {
+      if (emit == null) {
+        emit = true;
+      }
+      this.options.layer._context._animationList = _.without(this.options.layer._context._animationList, this);
+      if (emit) {
+        this.emit("stop");
+      }
+      return Framer.Loop.off("update", this._update);
+    };
+
+    Animation.prototype.reverse = function () {
+      var animation, options;
+      options = _.clone(this.options);
+      options.properties = this._originalState;
+      animation = new Animation(options);
+      return animation;
+    };
+
+    Animation.prototype.copy = function () {
+      return new Animation(_.clone(this.options));
+    };
+
+    Animation.prototype.revert = function () {
+      return this.reverse();
+    };
+
+    Animation.prototype.inverse = function () {
+      return this.reverse();
+    };
+
+    Animation.prototype.invert = function () {
+      return this.reverse();
+    };
+
+    Animation.prototype.emit = function (event) {
+      Animation.__super__.emit.apply(this, arguments);
+      return this.options.layer.emit(event, this);
+    };
+
+    Animation.prototype.animatingProperties = function () {
+      return _.keys(this._stateA);
+    };
+
+    Animation.prototype._start = function () {
+      this.options.layer._context._animationList.push(this);
+      this.emit("start");
+      return Framer.Loop.on("update", this._update);
+    };
+
+    Animation.prototype._update = function (delta) {
+      var emit;
+      if (this._animator.finished()) {
+        this._updateValue(1);
+        this.stop(emit = false);
+        this.emit("end");
+        return this.emit("stop");
+      } else {
+        return this._updateValue(this._animator.next(delta));
       }
     };
 
-    Application.getRootWindow = function () {
-      if (Application.rootWindow === null) {
-        Logger.log("Creating a new window for root window...");
-        Application.rootWindow = new FamousWindow({
-          isRootWindow: true
-        });
+    Animation.prototype._updateValue = function (value) {
+      var k, ref, v;
+      ref = this._stateB;
+      for (k in ref) {
+        v = ref[k];
+        this._target[k] = Utils.mapRange(value, 0, 1, this._stateA[k], this._stateB[k]);
       }
-      return Application.rootWindow;
     };
 
-    return Application;
-  })();
+    Animation.prototype._currentState = function () {
+      return _.pick(this.options.layer, _.keys(this.options.properties));
+    };
 
-  module.exports = Application;
+    Animation.prototype._animatorClass = function () {
+      var animatorClassName, parsedCurve;
+      parsedCurve = Utils.parseFunction(this.options.curve);
+      animatorClassName = parsedCurve.name.toLowerCase();
+      if (AnimatorClasses.hasOwnProperty(animatorClassName)) {
+        return AnimatorClasses[animatorClassName];
+      }
+      if (indexOf.call(AnimatorClassBezierPresets, animatorClassName) >= 0) {
+        return BezierCurveAnimator;
+      }
+      return LinearAnimator;
+    };
+
+    Animation.prototype._parseAnimatorOptions = function () {
+      var animatorClass, animatorClassName, base, base1, i, j, k, l, len, len1, parsedCurve, ref, ref1, results, value;
+      animatorClass = this._animatorClass();
+      parsedCurve = Utils.parseFunction(this.options.curve);
+      animatorClassName = parsedCurve.name.toLowerCase();
+      if (animatorClass === LinearAnimator || animatorClass === BezierCurveAnimator) {
+        if (_.isString(this.options.curveOptions) || _.isArray(this.options.curveOptions)) {
+          this.options.curveOptions = {
+            values: this.options.curveOptions
+          };
+        }
+        if ((base = this.options.curveOptions).time == null) {
+          base.time = this.options.time;
+        }
+      }
+      if (animatorClass === BezierCurveAnimator && indexOf.call(AnimatorClassBezierPresets, animatorClassName) >= 0) {
+        this.options.curveOptions.values = animatorClassName;
+        if ((base1 = this.options.curveOptions).time == null) {
+          base1.time = this.options.time;
+        }
+      }
+      if (parsedCurve.args.length) {
+        if (animatorClass === BezierCurveAnimator) {
+          this.options.curveOptions.values = parsedCurve.args.map(function (v) {
+            return parseFloat(v) || 0;
+          });
+        }
+        if (animatorClass === SpringRK4Animator) {
+          ref = ["tension", "friction", "velocity", "tolerance"];
+          for (i = j = 0, len = ref.length; j < len; i = ++j) {
+            k = ref[i];
+            value = parseFloat(parsedCurve.args[i]);
+            if (value) {
+              this.options.curveOptions[k] = value;
+            }
+          }
+        }
+        if (animatorClass === SpringDHOAnimator) {
+          ref1 = ["stiffness", "damping", "mass", "tolerance"];
+          results = [];
+          for (i = l = 0, len1 = ref1.length; l < len1; i = ++l) {
+            k = ref1[i];
+            value = parseFloat(parsedCurve.args[i]);
+            if (value) {
+              results.push(this.options.curveOptions[k] = value);
+            } else {
+              results.push(void 0);
+            }
+          }
+          return results;
+        }
+      }
+    };
+
+    Animation.filterAnimatableProperties = function (properties) {
+      var animatableProperties, k, v;
+      animatableProperties = {};
+      for (k in properties) {
+        v = properties[k];
+        if (_.isNumber(v) || _.isFunction(v) || isRelativeProperty(v)) {
+          animatableProperties[k] = v;
+        }
+      }
+      return animatableProperties;
+    };
+
+    return Animation;
+  })(EventEmitter);
 }).call(undefined);
 
-},{"./FamousWindow":146,"./Logger":149,"famous":46}],143:[function(require,module,exports){
+},{"./Animators/BezierCurveAnimator":147,"./Animators/LinearAnimator":148,"./Animators/SpringDHOAnimator":149,"./Animators/SpringRK4Animator":150,"./Config":158,"./Defaults":161,"./EventEmitter":163,"./Underscore":184,"./Utils":185}],144:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
 (function () {
-  var BackgroundLayer,
-      Layer,
+  var AnimationGroup,
+      EventEmitter,
+      _,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  _ = require("./Underscore")._;
+
+  EventEmitter = require("./EventEmitter").EventEmitter;
+
+  AnimationGroup = (function (superClass) {
+    extend(AnimationGroup, superClass);
+
+    function AnimationGroup(animations) {
+      if (animations == null) {
+        animations = [];
+      }
+      this.setAnimations(animations);
+      this._currentAnimation = null;
+    }
+
+    AnimationGroup.prototype.setAnimations = function (animations) {
+      return this._animations = _.map(animations, function (animation) {
+        return animation.copy();
+      });
+    };
+
+    AnimationGroup.prototype.start = function () {
+      this.emit("start");
+      _.map(this._animations, (function (_this) {
+        return function (animation, index) {
+          var nextAnimation;
+          nextAnimation = _this._animations[index + 1];
+          if (nextAnimation) {
+            return animation.on(Events.AnimationEnd, function () {
+              nextAnimation.start();
+              return _this._currentAnimation = animation;
+            });
+          } else {
+            return animation.on(Events.AnimationEnd, function () {
+              _this.emit("end");
+              return _this._currentAnimation = null;
+            });
+          }
+        };
+      })(this));
+      return this._animations[0].start();
+    };
+
+    AnimationGroup.prototype.stop = function () {
+      var ref;
+      return (ref = this._currentAnimation) != null ? ref.stop() : void 0;
+    };
+
+    return AnimationGroup;
+  })(EventEmitter);
+}).call(undefined);
+
+},{"./EventEmitter":163,"./Underscore":184}],145:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Config,
+      Engine,
+      EventEmitter,
+      Utils,
+      _,
+      famous,
+      getTime,
       bind = function bind(fn, me) {
     return function () {
       return fn.apply(me, arguments);
@@ -40804,52 +41400,3757 @@ module.exports = shaders;
   },
       hasProp = ({}).hasOwnProperty;
 
-  Layer = require("./Layer");
+  _ = require("./Underscore")._;
 
-  BackgroundLayer = (function (superClass) {
-    extend(BackgroundLayer, superClass);
+  Utils = require("./Utils");
 
-    function BackgroundLayer(options) {
-      this.bringToFront = bind(this.bringToFront, this);
-      options.properties = options.properties || {};
-      delete options.width;
-      delete options.height;
-      BackgroundLayer.__super__.constructor.call(this, options);
-    }
+  Config = require("./Config").Config;
 
-    BackgroundLayer.prototype.bringToFront = function () {};
-
-    return BackgroundLayer;
-  })(Layer);
-
-  module.exports = BackgroundLayer;
-}).call(undefined);
-
-},{"./Layer":147}],144:[function(require,module,exports){
-// Generated by CoffeeScript 1.9.2
-"use strict";
-
-(function () {
-  var Clock, Engine, famous;
+  EventEmitter = require("./EventEmitter").EventEmitter;
 
   famous = require("famous");
 
   Engine = famous.core.FamousEngine;
 
-  Clock = (function () {
-    function Clock() {}
+  getTime = function () {
+    return Utils.getTime() * 1000;
+  };
 
-    Clock.getTime = function () {
-      return Engine.getClock().getTime();
+  exports.AnimationLoop = (function (superClass) {
+    extend(AnimationLoop, superClass);
+
+    function AnimationLoop() {
+      this.start = bind(this.start, this);
+      this._framerOriginalStart = bind(this._framerOriginalStart, this);
+      this.delta = 1 / 60;
+      this.raf = true;
+      if (Utils.webkitVersion() > 600 && Utils.isDesktop()) {
+        this.raf = false;
+      }
+      if (Utils.webkitVersion() > 600 && Utils.isFramerStudio()) {
+        this.raf = false;
+      }
+    }
+
+    AnimationLoop.prototype._framerOriginalStart = function () {
+      var _timestamp, animationLoop, tick, update;
+      animationLoop = this;
+      _timestamp = getTime();
+      update = function () {
+        var delta, timestamp;
+        if (animationLoop.delta) {
+          delta = animationLoop.delta;
+        } else {
+          timestamp = getTime();
+          delta = (timestamp - _timestamp) / 1000;
+          _timestamp = timestamp;
+        }
+        animationLoop.emit("update", delta);
+        return animationLoop.emit("render", delta);
+      };
+      tick = function (timestamp) {
+        if (animationLoop.raf) {
+          update();
+          return window.requestAnimationFrame(tick);
+        } else {
+          return window.setTimeout(function () {
+            update();
+            return window.requestAnimationFrame(tick);
+          }, 0);
+        }
+      };
+      return tick();
     };
 
-    return Clock;
-  })();
+    AnimationLoop.prototype.start = function () {
+      var _timestamp, animationLoop, update, updater;
+      console.log("==== AnimationLoop ====");
+      animationLoop = this;
+      _timestamp = getTime();
+      update = function () {
+        var delta, timestamp;
+        if (animationLoop.delta) {
+          delta = animationLoop.delta;
+        } else {
+          timestamp = getTime();
+          delta = (timestamp - _timestamp) / 1000;
+          _timestamp = timestamp;
+        }
+        animationLoop.emit("update", delta);
+        return animationLoop.emit("render", delta);
+      };
+      updater = {
+        onUpdate: (function (_this) {
+          return function () {
+            update();
+            return Engine.requestUpdate(updater);
+          };
+        })(this)
+      };
+      console.log("Calling Engine.init");
+      Engine.init();
+      console.log("Calling Engine.requestUpdate(updater)");
+      return Engine.requestUpdate(updater);
+    };
 
-  module.exports = Clock;
+    return AnimationLoop;
+  })(EventEmitter);
 }).call(undefined);
 
-},{"famous":46}],145:[function(require,module,exports){
+},{"./Config":158,"./EventEmitter":163,"./Underscore":184,"./Utils":185,"famous":47}],146:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Config, Utils;
+
+  Utils = require("./Utils");
+
+  Config = require("./Config").Config;
+
+  exports.Animator = (function () {
+    "The animator class is a very simple class that\n	- Takes a set of input values at setup({input values})\n	- Emits an output value for progress (0 -> 1) in value(progress)";
+    function Animator(options) {
+      if (options == null) {
+        options = {};
+      }
+      this.setup(options);
+    }
+
+    Animator.prototype.setup = function (options) {
+      throw Error("Not implemented");
+    };
+
+    Animator.prototype.next = function (delta) {
+      throw Error("Not implemented");
+    };
+
+    Animator.prototype.finished = function () {
+      throw Error("Not implemented");
+    };
+
+    return Animator;
+  })();
+}).call(undefined);
+
+},{"./Config":158,"./Utils":185}],147:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Animator,
+      BezierCurveDefaults,
+      UnitBezier,
+      Utils,
+      _,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  _ = require("../Underscore")._;
+
+  Utils = require("../Utils");
+
+  Animator = require("../Animator").Animator;
+
+  BezierCurveDefaults = {
+    "linear": [0, 0, 1, 1],
+    "ease": [.25, .1, .25, 1],
+    "ease-in": [.42, 0, 1, 1],
+    "ease-out": [0, 0, .58, 1],
+    "ease-in-out": [.42, 0, .58, 1]
+  };
+
+  exports.BezierCurveAnimator = (function (superClass) {
+    extend(BezierCurveAnimator, superClass);
+
+    function BezierCurveAnimator() {
+      return BezierCurveAnimator.__super__.constructor.apply(this, arguments);
+    }
+
+    BezierCurveAnimator.prototype.setup = function (options) {
+      if (_.isString(options) && BezierCurveDefaults.hasOwnProperty(options.toLowerCase())) {
+        options = {
+          values: BezierCurveDefaults[options.toLowerCase()]
+        };
+      }
+      if (options.values && _.isString(options.values) && BezierCurveDefaults.hasOwnProperty(options.values.toLowerCase())) {
+        options = {
+          values: BezierCurveDefaults[options.values.toLowerCase()],
+          time: options.time
+        };
+      }
+      if (_.isArray(options) && options.length === 4) {
+        options = {
+          values: options
+        };
+      }
+      this.options = _.defaults(options, {
+        values: BezierCurveDefaults["ease-in-out"],
+        time: 1,
+        precision: 1 / 1000
+      });
+      return this._unitBezier = new UnitBezier(this.options.values[0], this.options.values[1], this.options.values[2], this.options.values[3], this._time = 0);
+    };
+
+    BezierCurveAnimator.prototype.next = function (delta) {
+      this._time += delta;
+      if (this.finished()) {
+        return 1;
+      }
+      return this._unitBezier.solve(this._time / this.options.time);
+    };
+
+    BezierCurveAnimator.prototype.finished = function () {
+      return this._time >= this.options.time - this.options.precision;
+    };
+
+    return BezierCurveAnimator;
+  })(Animator);
+
+  UnitBezier = (function () {
+    UnitBezier.prototype.epsilon = 1e-6;
+
+    function UnitBezier(p1x, p1y, p2x, p2y) {
+      this.cx = 3.0 * p1x;
+      this.bx = 3.0 * (p2x - p1x) - this.cx;
+      this.ax = 1.0 - this.cx - this.bx;
+      this.cy = 3.0 * p1y;
+      this.by = 3.0 * (p2y - p1y) - this.cy;
+      this.ay = 1.0 - this.cy - this.by;
+    }
+
+    UnitBezier.prototype.sampleCurveX = function (t) {
+      return ((this.ax * t + this.bx) * t + this.cx) * t;
+    };
+
+    UnitBezier.prototype.sampleCurveY = function (t) {
+      return ((this.ay * t + this.by) * t + this.cy) * t;
+    };
+
+    UnitBezier.prototype.sampleCurveDerivativeX = function (t) {
+      return (3.0 * this.ax * t + 2.0 * this.bx) * t + this.cx;
+    };
+
+    UnitBezier.prototype.solveCurveX = function (x) {
+      var d2, i, t0, t1, t2, x2;
+      t2 = x;
+      i = 0;
+      while (i < 8) {
+        x2 = this.sampleCurveX(t2) - x;
+        if (Math.abs(x2) < this.epsilon) {
+          return t2;
+        }
+        d2 = this.sampleCurveDerivativeX(t2);
+        if (Math.abs(d2) < this.epsilon) {
+          break;
+        }
+        t2 = t2 - x2 / d2;
+        i++;
+      }
+      t0 = 0.0;
+      t1 = 1.0;
+      t2 = x;
+      if (t2 < t0) {
+        return t0;
+      }
+      if (t2 > t1) {
+        return t1;
+      }
+      while (t0 < t1) {
+        x2 = this.sampleCurveX(t2);
+        if (Math.abs(x2 - x) < this.epsilon) {
+          return t2;
+        }
+        if (x > x2) {
+          t0 = t2;
+        } else {
+          t1 = t2;
+        }
+        t2 = (t1 - t0) * .5 + t0;
+      }
+      return t2;
+    };
+
+    UnitBezier.prototype.solve = function (x) {
+      return this.sampleCurveY(this.solveCurveX(x));
+    };
+
+    return UnitBezier;
+  })();
+}).call(undefined);
+
+},{"../Animator":146,"../Underscore":184,"../Utils":185}],148:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Animator,
+      Utils,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Animator = require("../Animator").Animator;
+
+  exports.LinearAnimator = (function (superClass) {
+    extend(LinearAnimator, superClass);
+
+    function LinearAnimator() {
+      return LinearAnimator.__super__.constructor.apply(this, arguments);
+    }
+
+    LinearAnimator.prototype.setup = function (options) {
+      this.options = _.defaults(options, {
+        time: 1,
+        precision: 1 / 1000
+      });
+      return this._time = 0;
+    };
+
+    LinearAnimator.prototype.next = function (delta) {
+      this._time += delta;
+      if (this.finished()) {
+        return 1;
+      }
+      return this._time / this.options.time;
+    };
+
+    LinearAnimator.prototype.finished = function () {
+      return this._time >= this.options.time - this.options.precision;
+    };
+
+    return LinearAnimator;
+  })(Animator);
+}).call(undefined);
+
+},{"../Animator":146,"../Utils":185}],149:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Animator,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Animator = require("../Animator").Animator;
+
+  exports.SpringDHOAnimator = (function (superClass) {
+    extend(SpringDHOAnimator, superClass);
+
+    function SpringDHOAnimator() {
+      this.finished = bind(this.finished, this);
+      return SpringDHOAnimator.__super__.constructor.apply(this, arguments);
+    }
+
+    SpringDHOAnimator.prototype.setup = function (options) {
+      this.options = _.defaults(options, {
+        velocity: 0,
+        tolerance: 1 / 10000,
+        stiffness: 50,
+        damping: 2,
+        mass: 0.2,
+        time: null
+      });
+      console.log("SpringDHOAnimator.options", this.options, options);
+      this._time = 0;
+      this._value = 0;
+      return this._velocity = this.options.velocity;
+    };
+
+    SpringDHOAnimator.prototype.next = function (delta) {
+      var F_damper, F_spring, b, k;
+      if (this.finished()) {
+        return 1;
+      }
+      this._time += delta;
+      k = 0 - this.options.stiffness;
+      b = 0 - this.options.damping;
+      F_spring = k * (this._value - 1);
+      F_damper = b * this._velocity;
+      this._velocity += (F_spring + F_damper) / this.options.mass * delta;
+      this._value += this._velocity * delta;
+      return this._value;
+    };
+
+    SpringDHOAnimator.prototype.finished = function () {
+      return this._time > 0 && Math.abs(this._velocity) < this.options.tolerance;
+    };
+
+    return SpringDHOAnimator;
+  })(Animator);
+}).call(undefined);
+
+},{"../Animator":146,"../Utils":185}],150:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Animator,
+      Integrator,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Animator = require("../Animator").Animator;
+
+  Integrator = require("../Integrator").Integrator;
+
+  exports.SpringRK4Animator = (function (superClass) {
+    extend(SpringRK4Animator, superClass);
+
+    function SpringRK4Animator() {
+      this.finished = bind(this.finished, this);
+      return SpringRK4Animator.__super__.constructor.apply(this, arguments);
+    }
+
+    SpringRK4Animator.prototype.setup = function (options) {
+      this.options = _.defaults(options, {
+        tension: 500,
+        friction: 10,
+        velocity: 0,
+        tolerance: 1 / 10000,
+        time: null
+      });
+      this._time = 0;
+      this._value = 0;
+      this._velocity = this.options.velocity;
+      this._stopSpring = false;
+      return this._integrator = new Integrator((function (_this) {
+        return function (state) {
+          return -_this.options.tension * state.x - _this.options.friction * state.v;
+        };
+      })(this));
+    };
+
+    SpringRK4Animator.prototype.next = function (delta) {
+      var finalVelocity, net1DVelocity, netFloat, netValueIsLow, netVelocityIsLow, stateAfter, stateBefore;
+      if (this.finished()) {
+        return 1;
+      }
+      this._time += delta;
+      stateBefore = {};
+      stateAfter = {};
+      stateBefore.x = this._value - 1;
+      stateBefore.v = this._velocity;
+      stateAfter = this._integrator.integrateState(stateBefore, delta);
+      this._value = 1 + stateAfter.x;
+      finalVelocity = stateAfter.v;
+      netFloat = stateAfter.x;
+      net1DVelocity = stateAfter.v;
+      netValueIsLow = Math.abs(netFloat) < this.options.tolerance;
+      netVelocityIsLow = Math.abs(net1DVelocity) < this.options.tolerance;
+      this._stopSpring = netValueIsLow && netVelocityIsLow;
+      this._velocity = finalVelocity;
+      return this._value;
+    };
+
+    SpringRK4Animator.prototype.finished = function () {
+      return this._stopSpring;
+    };
+
+    return SpringRK4Animator;
+  })(Animator);
+}).call(undefined);
+
+},{"../Animator":146,"../Integrator":172,"../Utils":185}],151:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Layer,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Layer = require("./Layer").Layer;
+
+  "Todo: make it work in a parent layer";
+
+  exports.BackgroundLayer = (function (superClass) {
+    extend(BackgroundLayer, superClass);
+
+    function BackgroundLayer(options) {
+      if (options == null) {
+        options = {};
+      }
+      this.layout = bind(this.layout, this);
+      if (options.backgroundColor == null) {
+        options.backgroundColor = "#fff";
+      }
+      BackgroundLayer.__super__.constructor.call(this, options);
+      this.name2 = "BackgroundLayer";
+      this.sendToBack();
+      this.layout();
+      this._context.eventManager.wrap(window).addEventListener("resize", this.layout);
+    }
+
+    BackgroundLayer.prototype.layout = function () {
+      if (this.superLayer) {
+        return this.frame = {
+          x: 0,
+          y: 0,
+          width: this.superLayer.width,
+          height: this.superLayer.height
+        };
+      } else if (this._context._parentLayer) {
+        return this.frame = {
+          x: 0,
+          y: 0,
+          width: this._context._parentLayer.width,
+          height: this._context._parentLayer.height
+        };
+      } else {
+        return this.frame = {
+          x: 0,
+          y: 0,
+          width: window.innerWidth,
+          height: window.innerHeight
+        };
+      }
+    };
+
+    return BackgroundLayer;
+  })(Layer);
+}).call(undefined);
+
+},{"./Layer":173}],152:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var CounterKey,
+      DefinedPropertiesKey,
+      DefinedPropertiesValuesKey,
+      EventEmitter,
+      Utils,
+      _,
+      capitalizeFirstLetter,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  EventEmitter = require("./EventEmitter").EventEmitter;
+
+  CounterKey = "_ObjectCounter";
+
+  DefinedPropertiesKey = "_DefinedPropertiesKey";
+
+  DefinedPropertiesValuesKey = "_DefinedPropertiesValuesKey";
+
+  capitalizeFirstLetter = function (string) {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  };
+
+  exports.BaseClass = (function (superClass) {
+    extend(BaseClass, superClass);
+
+    BaseClass.define = function (propertyName, descriptor) {
+      var getName, i, j, len, ref, setName;
+      ref = ["enumerable", "exportable", "importable"];
+      for (j = 0, len = ref.length; j < len; j++) {
+        i = ref[j];
+        if (descriptor.hasOwnProperty(i)) {
+          if (!_.isBoolean(descriptor[i])) {
+            throw Error("woops " + propertyName + " " + descriptor[i]);
+          }
+        }
+      }
+      if (this !== BaseClass) {
+        descriptor.propertyName = propertyName;
+        if (descriptor.enumerable == null) {
+          descriptor.enumerable = true;
+        }
+        if (descriptor.exportable == null) {
+          descriptor.exportable = true;
+        }
+        if (descriptor.importable == null) {
+          descriptor.importable = true;
+        }
+        descriptor.importable = descriptor.importable && descriptor.set;
+        if (descriptor.exportable || descriptor.importable) {
+          if (this[DefinedPropertiesKey] == null) {
+            this[DefinedPropertiesKey] = {};
+          }
+          this[DefinedPropertiesKey][propertyName] = descriptor;
+        }
+      }
+      getName = "get" + capitalizeFirstLetter(propertyName);
+      this.prototype[getName] = descriptor.get;
+      descriptor.get = this.prototype[getName];
+      if (descriptor.set) {
+        setName = "set" + capitalizeFirstLetter(propertyName);
+        this.prototype[setName] = descriptor.set;
+        descriptor.set = this.prototype[setName];
+      }
+      return Object.defineProperty(this.prototype, propertyName, descriptor);
+    };
+
+    BaseClass.simpleProperty = function (name, fallback, options) {
+      if (options == null) {
+        options = {};
+      }
+      return _.extend(options, {
+        "default": fallback,
+        get: function get() {
+          return this._getPropertyValue(name);
+        },
+        set: function set(value) {
+          return this._setPropertyValue(name, value);
+        }
+      });
+    };
+
+    BaseClass.proxyProperty = function (keyPath, options) {
+      var objectKey;
+      if (options == null) {
+        options = {};
+      }
+      objectKey = keyPath.split(".")[0];
+      return _.extend(options, {
+        get: function get() {
+          if (!_.isObject(this[objectKey])) {
+            return;
+          }
+          return Utils.getValueForKeyPath(this, keyPath);
+        },
+        set: function set(value) {
+          if (!_.isObject(this[objectKey])) {
+            return;
+          }
+          return Utils.setValueForKeyPath(this, keyPath, value);
+        }
+      });
+    };
+
+    BaseClass.prototype._setPropertyValue = function (k, v) {
+      return this[DefinedPropertiesValuesKey][k] = v;
+    };
+
+    BaseClass.prototype._getPropertyValue = function (k) {
+      return Utils.valueOrDefault(this[DefinedPropertiesValuesKey][k], this._getPropertyDefaultValue(k));
+    };
+
+    BaseClass.prototype._getPropertyDefaultValue = function (k) {
+      return this._propertyList()[k]["default"];
+    };
+
+    BaseClass.prototype._propertyList = function () {
+      return this.constructor[DefinedPropertiesKey];
+    };
+
+    BaseClass.prototype.keys = function () {
+      return _.keys(this.props);
+    };
+
+    BaseClass.define("props", {
+      importable: false,
+      exportable: false,
+      get: function get() {
+        var descriptor, key, keys, propertyList;
+        keys = [];
+        propertyList = this._propertyList();
+        for (key in propertyList) {
+          descriptor = propertyList[key];
+          if (descriptor.exportable) {
+            keys.push(key);
+          }
+        }
+        return _.pick(this, keys);
+      },
+      set: function set(value) {
+        var k, propertyList, ref, results, v;
+        propertyList = this._propertyList();
+        results = [];
+        for (k in value) {
+          v = value[k];
+          if ((ref = propertyList[k]) != null ? ref.importable : void 0) {
+            results.push(this[k] = v);
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+
+    BaseClass.define("id", {
+      get: function get() {
+        return this._id;
+      }
+    });
+
+    BaseClass.prototype.toInspect = function () {
+      return "<" + this.constructor.name + " id:" + (this.id || null) + ">";
+    };
+
+    function BaseClass(options) {
+      this.toInspect = bind(this.toInspect, this);
+      this._getPropertyValue = bind(this._getPropertyValue, this);
+      this._setPropertyValue = bind(this._setPropertyValue, this);
+      var base;
+      BaseClass.__super__.constructor.apply(this, arguments);
+      this._context = typeof Framer !== "undefined" && Framer !== null ? Framer.CurrentContext : void 0;
+      this[DefinedPropertiesValuesKey] = {};
+      if ((base = this.constructor)[CounterKey] == null) {
+        base[CounterKey] = 0;
+      }
+      this.constructor[CounterKey] += 1;
+      this._id = this.constructor[CounterKey];
+      this._applyOptionsAndDefaults(options);
+    }
+
+    BaseClass.prototype._applyOptionsAndDefaults = function (options) {
+      var descriptor, key, ref, results, value;
+      ref = this._propertyList();
+      results = [];
+      for (key in ref) {
+        descriptor = ref[key];
+        if (descriptor.set) {
+          value = Utils.valueOrDefault(descriptor.importable ? options != null ? options[key] : void 0 : void 0, this._getPropertyDefaultValue(key));
+          if (!(value === null || value === void 0)) {
+            results.push(this[key] = value);
+          } else {
+            results.push(void 0);
+          }
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    return BaseClass;
+  })(EventEmitter);
+}).call(undefined);
+
+},{"./EventEmitter":163,"./Underscore":184,"./Utils":185}],153:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      CanvasClass,
+      Events,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Events = require("./Events").Events;
+
+  CanvasClass = (function (superClass) {
+    extend(CanvasClass, superClass);
+
+    function CanvasClass() {
+      this.addListener = bind(this.addListener, this);
+      return CanvasClass.__super__.constructor.apply(this, arguments);
+    }
+
+    CanvasClass.define("width", {
+      get: function get() {
+        return window.innerWidth;
+      }
+    });
+
+    CanvasClass.define("height", {
+      get: function get() {
+        return window.innerHeight;
+      }
+    });
+
+    CanvasClass.define("size", {
+      get: function get() {
+        return {
+          width: this.width,
+          height: this.height
+        };
+      }
+    });
+
+    CanvasClass.define("frame", {
+      get: function get() {
+        return {
+          x: 0,
+          y: 0,
+          width: this.width,
+          height: this.height
+        };
+      }
+    });
+
+    CanvasClass.prototype.addListener = function (eventName, listener) {
+      if (eventName === "resize") {
+        Events.wrap(window).addEventListener("resize", (function (_this) {
+          return function () {
+            return _this.emit("resize");
+          };
+        })(this));
+      }
+      return CanvasClass.__super__.addListener.call(this, eventName, listener);
+    };
+
+    CanvasClass.prototype.on = CanvasClass.prototype.addListener;
+
+    return CanvasClass;
+  })(BaseClass);
+
+  exports.Canvas = new CanvasClass();
+}).call(undefined);
+
+},{"./BaseClass":152,"./Events":165}],154:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var AppleWatch38Device,
+      AppleWatch42Device,
+      BaseClass,
+      Defaults,
+      DeviceComponentDefaultDevice,
+      Devices,
+      Events,
+      Layer,
+      Nexus5BaseDevice,
+      Nexus5BaseDeviceHand,
+      Nexus9BaseDevice,
+      Utils,
+      _,
+      iPadAirBaseDevice,
+      iPadAirBaseDeviceHand,
+      iPadMiniBaseDevice,
+      iPadMiniBaseDeviceHand,
+      iPhone5BaseDevice,
+      iPhone5BaseDeviceHand,
+      iPhone5CBaseDevice,
+      iPhone5CBaseDeviceHand,
+      iPhone6BaseDevice,
+      iPhone6BaseDeviceHand,
+      iPhone6PlusBaseDevice,
+      iPhone6PlusBaseDeviceHand,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  _ = require("../Underscore")._;
+
+  DeviceComponentDefaultDevice = "iphone-6-silver";
+
+  BaseClass = require("../BaseClass").BaseClass;
+
+  Layer = require("../Layer").Layer;
+
+  Defaults = require("../Defaults").Defaults;
+
+  Events = require("../Events").Events;
+
+  /*
+  
+  Device._setup()
+  Device._update()
+  Device._setupContext()
+  
+  Device.fullScreen bool
+  Device.deviceType str
+  Device.padding int
+  
+  Device.orientation(orientation:float)
+  Device.orientationName landscape|portrait|unknown
+  Device.rotateLeft()
+  Device.rotateRight()
+  
+  Device.setDeviceScale(zoom:float, animate:bool)
+  Device.setContentScale(zoom:float, animate:bool)
+  
+  Device.keyboard bool
+  Device.setKeyboard(visible:bool, animate:bool)
+  Device.showKeyboard(animate:bool)
+  Device.hideKeyboard(animate:bool)
+  Device.toggleKeyboard(animate:bool)
+  
+  
+   * Events
+  Events.DeviceTypeDidChange
+  Events.DeviceFullScreenDidChange
+  Events.DeviceKeyboardWillShow
+  Events.DeviceKeyboardDidShow
+   */
+
+  exports.DeviceComponent = (function (superClass) {
+    extend(DeviceComponent, superClass);
+
+    DeviceComponent.define("context", {
+      get: function get() {
+        return this._context;
+      }
+    });
+
+    function DeviceComponent(options) {
+      var defaults;
+      if (options == null) {
+        options = {};
+      }
+      this._animateKeyboard = bind(this._animateKeyboard, this);
+      this._updateDeviceImage = bind(this._updateDeviceImage, this);
+      this._update = bind(this._update, this);
+      defaults = Defaults.getDefaults("DeviceComponent", options);
+      if (Framer.Defaults.hasOwnProperty("DeviceView")) {
+        defaults = _.extend(defaults, Framer.Defaults.DeviceView);
+      }
+      this._setup();
+      this.animationOptions = defaults.animationOptions;
+      this.deviceType = defaults.deviceType;
+      _.extend(this, _.defaults(options, defaults));
+    }
+
+    DeviceComponent.prototype._setup = function () {
+      var i, layer, len, ref;
+      if (this._setupDone) {
+        return;
+      }
+      this._setupDone = true;
+      this.background = new Layer();
+      this.background.clip = true;
+      this.background.backgroundColor = "transparent";
+      this.background.classList.add("DeviceBackground");
+      this.phone = new Layer();
+      this.screen = new Layer({
+        superLayer: this.phone
+      });
+      this.viewport = new Layer({
+        superLayer: this.screen
+      });
+      this.content = new Layer({
+        superLayer: this.viewport
+      });
+      this.phone.backgroundColor = "transparent";
+      this.phone.classList.add("DevicePhone");
+      this.screen.backgroundColor = "transparent";
+      this.screen.classList.add("DeviceScreen");
+      this.viewport.backgroundColor = "transparent";
+      this.viewport.classList.add("DeviceComponentPort");
+      this.content.backgroundColor = "transparent";
+      this.content.classList.add("DeviceContent");
+      this.content.originX = 0;
+      this.content.originY = 0;
+      this.keyboardLayer = new Layer({
+        superLayer: this.viewport
+      });
+      this.keyboardLayer.on("click", (function (_this) {
+        return function () {
+          return _this.toggleKeyboard();
+        };
+      })(this));
+      this.keyboardLayer.classList.add("DeviceKeyboard");
+      this.keyboardLayer.backgroundColor = "transparent";
+      Framer.CurrentContext.eventManager.wrap(window).addEventListener("resize", this._update);
+      ref = [this.background, this.phone, this.viewport, this.content, this.screen];
+      for (i = 0, len = ref.length; i < len; i++) {
+        layer = ref[i];
+        layer.on("touchmove", function (event) {
+          return event.preventDefault();
+        });
+      }
+      return this._context = new Framer.Context({
+        parentLayer: this.content,
+        name: "Device"
+      });
+    };
+
+    DeviceComponent.prototype._update = function () {
+      var backgroundOverlap, contentScaleFactor, height, i, layer, len, ref, ref1, width;
+      contentScaleFactor = this.contentScale;
+      if (contentScaleFactor > 1) {
+        contentScaleFactor = 1;
+      }
+      if (this._shouldRenderFullScreen()) {
+        ref = [this.background, this.phone, this.viewport, this.content, this.screen];
+        for (i = 0, len = ref.length; i < len; i++) {
+          layer = ref[i];
+          layer.x = layer.y = 0;
+          layer.width = window.innerWidth / contentScaleFactor;
+          layer.height = window.innerHeight / contentScaleFactor;
+          layer.scale = 1;
+        }
+        this.content.scale = contentScaleFactor;
+        return this._positionKeyboard();
+      } else {
+        backgroundOverlap = 100;
+        this.background.x = 0 - backgroundOverlap;
+        this.background.y = 0 - backgroundOverlap;
+        this.background.width = window.innerWidth + 2 * backgroundOverlap;
+        this.background.height = window.innerHeight + 2 * backgroundOverlap;
+        this.phone.scale = this._calculatePhoneScale();
+        this.phone.center();
+        ref1 = this._getOrientationDimensions(this._device.screenWidth / contentScaleFactor, this._device.screenHeight / contentScaleFactor), width = ref1[0], height = ref1[1];
+        this.screen.width = this._device.screenWidth;
+        this.screen.height = this._device.screenHeight;
+        this.viewport.width = this.content.width = width;
+        this.viewport.height = this.content.height = height;
+        return this.screen.center();
+      }
+    };
+
+    DeviceComponent.prototype._shouldRenderFullScreen = function () {
+      if (!this._device) {
+        return true;
+      }
+      if (this.fullScreen === true) {
+        return true;
+      }
+      if (this.deviceType === "fullscreen") {
+        return true;
+      }
+      if (Utils.deviceType() === "phone" && Utils.deviceType() === this._device.deviceType) {
+        return true;
+      }
+      if (Utils.deviceType() === "tablet" && Utils.deviceType() === this._device.deviceType) {
+        return true;
+      }
+      if (Utils.deviceType() === "phone" && this._device.deviceType === "tablet") {
+        return true;
+      }
+      return false;
+    };
+
+    DeviceComponent.prototype.setupContext = function () {
+      return Framer.CurrentContext = this._context;
+    };
+
+    DeviceComponent.define("fullScreen", {
+      get: function get() {
+        return this._fullScreen;
+      },
+      set: function set(fullScreen) {
+        return this._setFullScreen(fullScreen);
+      }
+    });
+
+    DeviceComponent.prototype._setFullScreen = function (fullScreen) {
+      if (this._deviceType === "fullscreen") {
+        return;
+      }
+      if (!_.isBoolean(fullScreen)) {
+        return;
+      }
+      if (fullScreen === this._fullScreen) {
+        return;
+      }
+      this._fullScreen = fullScreen;
+      if (fullScreen === true) {
+        this.phone.image = "";
+      } else {
+        this._updateDeviceImage();
+      }
+      this._update();
+      this.keyboard = false;
+      this._positionKeyboard();
+      return this.emit("change:fullScreen");
+    };
+
+    DeviceComponent.define("deviceType", {
+      get: function get() {
+        return this._deviceType;
+      },
+      set: function set(deviceType) {
+        var device, shouldZoomToFit;
+        if (deviceType === this._deviceType) {
+          return;
+        }
+        device = null;
+        if (_.isString(deviceType)) {
+          device = Devices[deviceType.toLowerCase()];
+        }
+        if (!device) {
+          throw Error("No device named " + deviceType + ". Options are: " + _.keys(Devices));
+        }
+        if (this._device === device) {
+          return;
+        }
+        shouldZoomToFit = this._deviceType === "fullscreen";
+        this._device = _.clone(device);
+        this._deviceType = deviceType;
+        this.fullscreen = false;
+        this._updateDeviceImage();
+        this._update();
+        this.keyboard = false;
+        this._positionKeyboard();
+        this.emit("change:deviceType");
+        if (shouldZoomToFit) {
+          return this.deviceScale = "fit";
+        }
+      }
+    });
+
+    DeviceComponent.prototype._updateDeviceImage = function () {
+      if (/PhantomJS/.test(navigator.userAgent)) {
+        return;
+      }
+      if (this._shouldRenderFullScreen()) {
+        return this.phone.image = "";
+      } else if (!this._deviceImageUrl(this._deviceImageName())) {
+        return this.phone.image = "";
+      } else {
+        this.phone._alwaysUseImageCache = true;
+        this.phone.image = this._deviceImageUrl(this._deviceImageName());
+        this.phone.width = this._device.deviceImageWidth;
+        return this.phone.height = this._device.deviceImageHeight;
+      }
+    };
+
+    DeviceComponent.prototype._deviceImageName = function () {
+      if (this._device.hasOwnProperty("deviceImage")) {
+        return this._device.deviceImage;
+      }
+      return this._deviceType + ".png";
+    };
+
+    DeviceComponent.prototype._deviceImageUrl = function (name) {
+      var resourceUrl;
+      if (!name) {
+        return null;
+      }
+      if (_.startsWith(name, "http://") || _.startsWith(name, "https://")) {
+        return name;
+      }
+      if (Utils.isFramerStudio() && window.FramerStudioInfo) {
+        resourceUrl = window.FramerStudioInfo.deviceImagesUrl;
+      } else {
+        resourceUrl = "//resources.framerjs.com/static/DeviceResources";
+      }
+      if (Utils.isJP2Supported() && this._device.deviceImageJP2 !== false) {
+        return resourceUrl + "/" + name.replace(".png", ".jp2");
+      } else {
+        return resourceUrl + "/" + name;
+      }
+    };
+
+    DeviceComponent.define("deviceScale", {
+      get: function get() {
+        if (this._shouldRenderFullScreen()) {
+          return 1;
+        }
+        return this._deviceScale || 1;
+      },
+      set: function set(deviceScale) {
+        return this.setDeviceScale(deviceScale, false);
+      }
+    });
+
+    DeviceComponent.prototype.setDeviceScale = function (deviceScale, animate) {
+      var phoneScale;
+      if (animate == null) {
+        animate = false;
+      }
+      if (deviceScale === "fit" || deviceScale < 0) {
+        deviceScale = "fit";
+      } else {
+        deviceScale = parseFloat(deviceScale);
+      }
+      if (deviceScale === this._deviceScale) {
+        return;
+      }
+      this._deviceScale = deviceScale;
+      if (this._shouldRenderFullScreen()) {
+        return;
+      }
+      if (deviceScale === "fit") {
+        phoneScale = this._calculatePhoneScale();
+      } else {
+        phoneScale = deviceScale;
+      }
+      this.phone.animateStop();
+      if (animate) {
+        this.phone.animate(_.extend(this.animationOptions, {
+          properties: {
+            scale: phoneScale
+          }
+        }));
+      } else {
+        this.phone.scale = phoneScale;
+        this.phone.center();
+      }
+      return this.emit("change:deviceScale");
+    };
+
+    DeviceComponent.prototype._calculatePhoneScale = function () {
+      var height, paddingOffset, phoneScale, ref, ref1, width;
+      if (this._deviceScale && this._deviceScale !== "fit") {
+        return this._deviceScale;
+      }
+      ref = this._getOrientationDimensions(this.phone.width, this.phone.height), width = ref[0], height = ref[1];
+      paddingOffset = ((ref1 = this._device) != null ? ref1.paddingOffset : void 0) || 0;
+      phoneScale = _.min([(window.innerWidth - (this.padding + paddingOffset) * 2) / width, (window.innerHeight - (this.padding + paddingOffset) * 2) / height]);
+      return phoneScale;
+    };
+
+    DeviceComponent.define("contentScale", {
+      get: function get() {
+        return this._contentScale || 1;
+      },
+      set: function set(contentScale) {
+        return this.setContentScale(contentScale, false);
+      }
+    });
+
+    DeviceComponent.prototype.setContentScale = function (contentScale, animate) {
+      if (animate == null) {
+        animate = false;
+      }
+      contentScale = parseFloat(contentScale);
+      if (contentScale <= 0) {
+        return;
+      }
+      if (contentScale === this._contentScale) {
+        return;
+      }
+      this._contentScale = contentScale;
+      if (animate) {
+        this.content.animate(_.extend(this.animationOptions, {
+          properties: {
+            scale: this._contentScale
+          }
+        }));
+      } else {
+        this.content.scale = this._contentScale;
+      }
+      this._update();
+      return this.emit("change:contentScale");
+    };
+
+    DeviceComponent.define("orientation", {
+      get: function get() {
+        return this._orientation || 0;
+      },
+      set: function set(orientation) {
+        return this.setOrientation(orientation, false);
+      }
+    });
+
+    DeviceComponent.prototype.setOrientation = function (orientation, animate) {
+      var _hadKeyboard, animation, contentProperties, height, phoneProperties, ref, ref1, width, x, y;
+      if (animate == null) {
+        animate = false;
+      }
+      if (orientation === "portrait") {
+        orientation = 0;
+      }
+      if (orientation === "landscape") {
+        orientation = 90;
+      }
+      if (this._shouldRenderFullScreen()) {
+        return;
+      }
+      orientation = parseInt(orientation);
+      if (orientation !== 0 && orientation !== 90 && orientation !== -90) {
+        return;
+      }
+      if (orientation === this._orientation) {
+        return;
+      }
+      this._orientation = orientation;
+      phoneProperties = {
+        rotationZ: this._orientation,
+        scale: this._calculatePhoneScale()
+      };
+      ref = this._getOrientationDimensions(this._device.screenWidth, this._device.screenHeight), width = ref[0], height = ref[1];
+      ref1 = [(this.screen.width - width) / 2, (this.screen.height - height) / 2], x = ref1[0], y = ref1[1];
+      contentProperties = {
+        rotationZ: -this._orientation,
+        width: width,
+        height: height,
+        x: x,
+        y: y
+      };
+      _hadKeyboard = this.keyboard;
+      if (_hadKeyboard) {
+        this.hideKeyboard(false);
+      }
+      this.phone.animateStop();
+      this.viewport.animateStop();
+      if (animate) {
+        animation = this.phone.animate(_.extend(this.animationOptions, {
+          properties: phoneProperties
+        }));
+        this.viewport.animate(_.extend(this.animationOptions, {
+          properties: contentProperties
+        }));
+        animation.on(Events.AnimationEnd, (function (_this) {
+          return function () {
+            return _this._update();
+          };
+        })(this));
+        if (_hadKeyboard) {
+          animation.on(Events.AnimationEnd, (function (_this) {
+            return function () {
+              return _this.showKeyboard(true);
+            };
+          })(this));
+        }
+      } else {
+        this.phone.props = phoneProperties;
+        this.viewport.props = contentProperties;
+        this._update();
+        if (_hadKeyboard) {
+          this.showKeyboard(true);
+        }
+      }
+      this._renderKeyboard();
+      return this.emit("change:orientation");
+    };
+
+    DeviceComponent.prototype.isPortrait = function () {
+      return Math.abs(this._orientation) !== 90;
+    };
+
+    DeviceComponent.prototype.isLandscape = function () {
+      return !this.isPortrait();
+    };
+
+    DeviceComponent.define("orientationName", {
+      get: function get() {
+        if (this.isPortrait()) {
+          return "portrait";
+        }
+        if (this.isLandscape()) {
+          return "landscape";
+        }
+      },
+      set: function set(orientationName) {
+        return this.setOrientation(orientationName, false);
+      }
+    });
+
+    DeviceComponent.prototype.rotateLeft = function (animate) {
+      if (animate == null) {
+        animate = true;
+      }
+      if (this.orientation === 90) {
+        return;
+      }
+      return this.setOrientation(this.orientation + 90, animate);
+    };
+
+    DeviceComponent.prototype.rotateRight = function (animate) {
+      if (animate == null) {
+        animate = true;
+      }
+      if (this.orientation === -90) {
+        return;
+      }
+      return this.setOrientation(this.orientation - 90, animate);
+    };
+
+    DeviceComponent.prototype._getOrientationDimensions = function (width, height) {
+      if (this.isLandscape()) {
+        return [height, width];
+      } else {
+        return [width, height];
+      }
+    };
+
+    DeviceComponent.define("keyboard", {
+      get: function get() {
+        return this._keyboard;
+      },
+      set: function set(keyboard) {
+        return this.setKeyboard(keyboard, false);
+      }
+    });
+
+    DeviceComponent.prototype.setKeyboard = function (keyboard, animate) {
+      var ref, ref1;
+      if (animate == null) {
+        animate = false;
+      }
+      if (!this._device.hasOwnProperty("keyboards")) {
+        return;
+      }
+      if (_.isString(keyboard)) {
+        if ((ref = keyboard.toLowerCase()) === "1" || ref === "true") {
+          keyboard = true;
+        } else if ((ref1 = keyboard.toLowerCase()) === "0" || ref1 === "false") {
+          keyboard = false;
+        } else {
+          return;
+        }
+      }
+      if (!_.isBoolean(keyboard)) {
+        return;
+      }
+      if (keyboard === this._keyboard) {
+        return;
+      }
+      this._keyboard = keyboard;
+      this.emit("change:keyboard");
+      if (keyboard === true) {
+        this.emit("keyboard:show:start");
+        return this._animateKeyboard(this._keyboardShowY(), animate, (function (_this) {
+          return function () {
+            return _this.emit("keyboard:show:end");
+          };
+        })(this));
+      } else {
+        this.emit("keyboard:hide:start");
+        return this._animateKeyboard(this._keyboardHideY(), animate, (function (_this) {
+          return function () {
+            return _this.emit("keyboard:hide:end");
+          };
+        })(this));
+      }
+    };
+
+    DeviceComponent.prototype.showKeyboard = function (animate) {
+      if (animate == null) {
+        animate = true;
+      }
+      return this.setKeyboard(true, animate);
+    };
+
+    DeviceComponent.prototype.hideKeyboard = function (animate) {
+      if (animate == null) {
+        animate = true;
+      }
+      return this.setKeyboard(false, animate);
+    };
+
+    DeviceComponent.prototype.toggleKeyboard = function (animate) {
+      if (animate == null) {
+        animate = true;
+      }
+      return this.setKeyboard(!this.keyboard, animate);
+    };
+
+    DeviceComponent.prototype._renderKeyboard = function () {
+      if (!this._device.keyboards) {
+        return;
+      }
+      this.keyboardLayer.image = this._deviceImageUrl(this._device.keyboards[this.orientationName].image);
+      this.keyboardLayer.width = this._device.keyboards[this.orientationName].width;
+      return this.keyboardLayer.height = this._device.keyboards[this.orientationName].height;
+    };
+
+    DeviceComponent.prototype._positionKeyboard = function () {
+      this.keyboardLayer.centerX();
+      if (this.keyboard) {
+        return this._animateKeyboard(this._keyboardShowY(), false);
+      } else {
+        return this._animateKeyboard(this._keyboardHideY(), false);
+      }
+    };
+
+    DeviceComponent.prototype._animateKeyboard = function (y, animate, callback) {
+      var animation;
+      this.keyboardLayer.bringToFront();
+      this.keyboardLayer.animateStop();
+      if (animate === false) {
+        this.keyboardLayer.y = y;
+        return typeof callback === "function" ? callback() : void 0;
+      } else {
+        animation = this.keyboardLayer.animate(_.extend(this.animationOptions, {
+          properties: {
+            y: y
+          }
+        }));
+        return animation.on(Events.AnimationEnd, callback);
+      }
+    };
+
+    DeviceComponent.prototype._keyboardShowY = function () {
+      return this.viewport.height - this.keyboardLayer.height;
+    };
+
+    DeviceComponent.prototype._keyboardHideY = function () {
+      return this.viewport.height;
+    };
+
+    return DeviceComponent;
+  })(BaseClass);
+
+  iPhone6BaseDevice = {
+    deviceImageWidth: 870,
+    deviceImageHeight: 1738,
+    deviceImageJP2: true,
+    screenWidth: 750,
+    screenHeight: 1334,
+    deviceType: "phone"
+  };
+
+  iPhone6BaseDeviceHand = _.extend({}, iPhone6BaseDevice, {
+    deviceImageWidth: 1988,
+    deviceImageHeight: 2368,
+    deviceImageJP2: true,
+    paddingOffset: -150
+  });
+
+  iPhone6PlusBaseDevice = {
+    deviceImageWidth: 1460,
+    deviceImageHeight: 2900,
+    deviceImageJP2: true,
+    screenWidth: 1242,
+    screenHeight: 2208,
+    deviceType: "phone"
+  };
+
+  iPhone6PlusBaseDeviceHand = _.extend({}, iPhone6PlusBaseDevice, {
+    deviceImageWidth: 3128,
+    deviceImageHeight: 3487,
+    deviceImageJP2: true,
+    paddingOffset: -150
+  });
+
+  iPhone5BaseDevice = {
+    deviceImageWidth: 780,
+    deviceImageHeight: 1608,
+    deviceImageJP2: true,
+    screenWidth: 640,
+    screenHeight: 1136,
+    deviceType: "phone"
+  };
+
+  iPhone5BaseDeviceHand = _.extend({}, iPhone5BaseDevice, {
+    deviceImageWidth: 1884,
+    deviceImageHeight: 2234,
+    deviceImageJP2: true,
+    paddingOffset: -200
+  });
+
+  iPhone5CBaseDevice = {
+    deviceImageWidth: 776,
+    deviceImageHeight: 1612,
+    deviceImageJP2: true,
+    screenWidth: 640,
+    screenHeight: 1136,
+    deviceType: "phone"
+  };
+
+  iPhone5CBaseDeviceHand = _.extend({}, iPhone5CBaseDevice, {
+    deviceImageWidth: 1894,
+    deviceImageHeight: 2244,
+    deviceImageJP2: true,
+    paddingOffset: -200
+  });
+
+  iPadMiniBaseDevice = {
+    deviceImageWidth: 872,
+    deviceImageHeight: 1292,
+    deviceImageJP2: true,
+    screenWidth: 768,
+    screenHeight: 1024,
+    deviceType: "tablet"
+  };
+
+  iPadMiniBaseDeviceHand = _.extend({}, iPadMiniBaseDevice, {
+    deviceImageWidth: 1380,
+    deviceImageHeight: 2072,
+    deviceImageJP2: true,
+    paddingOffset: -120
+  });
+
+  iPadAirBaseDevice = {
+    deviceImageWidth: 1769,
+    deviceImageHeight: 2509,
+    deviceImageJP2: true,
+    screenWidth: 1536,
+    screenHeight: 2048,
+    deviceType: "tablet"
+  };
+
+  iPadAirBaseDeviceHand = _.extend({}, iPadAirBaseDevice, {
+    deviceImageWidth: 4744,
+    deviceImageHeight: 4101,
+    deviceImageJP2: true,
+    paddingOffset: -120
+  });
+
+  Nexus5BaseDevice = {
+    deviceImageWidth: 1208,
+    deviceImageHeight: 2440,
+    deviceImageJP2: true,
+    screenWidth: 1080,
+    screenHeight: 1920,
+    deviceType: "phone"
+  };
+
+  Nexus5BaseDeviceHand = _.extend({}, Nexus5BaseDevice, {
+    deviceImageWidth: 2692,
+    deviceImageHeight: 2996,
+    deviceImageJP2: true,
+    paddingOffset: -120
+  });
+
+  Nexus9BaseDevice = {
+    deviceImageWidth: 1733,
+    deviceImageHeight: 2575,
+    deviceImageJP2: true,
+    screenWidth: 1536,
+    screenHeight: 2048,
+    deviceType: "tablet"
+  };
+
+  AppleWatch42Device = {
+    deviceImageWidth: 552,
+    deviceImageHeight: 938,
+    deviceImageJP2: true,
+    screenWidth: 312,
+    screenHeight: 390
+  };
+
+  AppleWatch38Device = {
+    deviceImageWidth: 508,
+    deviceImageHeight: 900,
+    deviceImageJP2: true,
+    screenWidth: 272,
+    screenHeight: 340
+  };
+
+  Devices = {
+    "fullscreen": {
+      name: "Fullscreen",
+      deviceType: "desktop"
+    },
+    "desktop-safari-1024-600": {
+      deviceType: "browser",
+      name: "Desktop Safari 1024 x 600",
+      screenWidth: 1024,
+      screenHeight: 600,
+      deviceImageWidth: 1136,
+      deviceImageHeight: 760,
+      deviceImageJP2: true
+    },
+    "desktop-safari-1280-800": {
+      deviceType: "browser",
+      name: "Desktop Safari 1280 x 800",
+      screenWidth: 1280,
+      screenHeight: 800,
+      deviceImageWidth: 1392,
+      deviceImageHeight: 960,
+      deviceImageJP2: true
+    },
+    "desktop-safari-1440-900": {
+      deviceType: "browser",
+      name: "Desktop Safari 1440 x 900",
+      screenWidth: 1440,
+      screenHeight: 900,
+      deviceImageWidth: 1552,
+      deviceImageHeight: 1060,
+      deviceImageJP2: true
+    },
+    "iphone-6-spacegray": _.clone(iPhone6BaseDevice),
+    "iphone-6-spacegray-hand": _.clone(iPhone6BaseDeviceHand),
+    "iphone-6-silver": _.clone(iPhone6BaseDevice),
+    "iphone-6-silver-hand": _.clone(iPhone6BaseDeviceHand),
+    "iphone-6-gold": _.clone(iPhone6BaseDevice),
+    "iphone-6-gold-hand": _.clone(iPhone6BaseDeviceHand),
+    "iphone-6plus-spacegray": _.clone(iPhone6PlusBaseDevice),
+    "iphone-6plus-spacegray-hand": _.clone(iPhone6PlusBaseDeviceHand),
+    "iphone-6plus-silver": _.clone(iPhone6PlusBaseDevice),
+    "iphone-6plus-silver-hand": _.clone(iPhone6PlusBaseDeviceHand),
+    "iphone-6plus-gold": _.clone(iPhone6PlusBaseDevice),
+    "iphone-6plus-gold-hand": _.clone(iPhone6PlusBaseDeviceHand),
+    "iphone-5s-spacegray": _.clone(iPhone5BaseDevice),
+    "iphone-5s-spacegray-hand": _.clone(iPhone5BaseDeviceHand),
+    "iphone-5s-silver": _.clone(iPhone5BaseDevice),
+    "iphone-5s-silver-hand": _.clone(iPhone5BaseDeviceHand),
+    "iphone-5s-gold": _.clone(iPhone5BaseDevice),
+    "iphone-5s-gold-hand": _.clone(iPhone5BaseDeviceHand),
+    "iphone-5c-green": _.clone(iPhone5CBaseDevice),
+    "iphone-5c-green-hand": _.clone(iPhone5CBaseDeviceHand),
+    "iphone-5c-blue": _.clone(iPhone5CBaseDevice),
+    "iphone-5c-blue-hand": _.clone(iPhone5CBaseDeviceHand),
+    "iphone-5c-pink": _.clone(iPhone5CBaseDevice),
+    "iphone-5c-pink-hand": _.clone(iPhone5CBaseDeviceHand),
+    "iphone-5c-white": _.clone(iPhone5CBaseDevice),
+    "iphone-5c-white-hand": _.clone(iPhone5CBaseDeviceHand),
+    "iphone-5c-yellow": _.clone(iPhone5CBaseDevice),
+    "iphone-5c-yellow-hand": _.clone(iPhone5CBaseDeviceHand),
+    "ipad-mini-spacegray": _.clone(iPadMiniBaseDevice),
+    "ipad-mini-spacegray-hand": _.clone(iPadMiniBaseDeviceHand),
+    "ipad-mini-silver": _.clone(iPadMiniBaseDevice),
+    "ipad-mini-silver-hand": _.clone(iPadMiniBaseDeviceHand),
+    "ipad-air-spacegray": _.clone(iPadAirBaseDevice),
+    "ipad-air-spacegray-hand": _.clone(iPadAirBaseDeviceHand),
+    "ipad-air-silver": _.clone(iPadAirBaseDevice),
+    "ipad-air-silver-hand": _.clone(iPadAirBaseDeviceHand),
+    "nexus-5-black": _.clone(Nexus5BaseDevice),
+    "nexus-5-black-hand": _.clone(Nexus5BaseDeviceHand),
+    "nexus-9": _.clone(Nexus9BaseDevice),
+    "applewatchsport-38-aluminum-sportband-black": _.clone(AppleWatch38Device),
+    "applewatchsport-38-aluminum-sportband-blue": _.clone(AppleWatch38Device),
+    "applewatchsport-38-aluminum-sportband-green": _.clone(AppleWatch38Device),
+    "applewatchsport-38-aluminum-sportband-pink": _.clone(AppleWatch38Device),
+    "applewatchsport-38-aluminum-sportband-white": _.clone(AppleWatch38Device),
+    "applewatch-38-black-bracelet": _.clone(AppleWatch38Device),
+    "applewatch-38-steel-bracelet": _.clone(AppleWatch38Device),
+    "applewatchedition-38-gold-buckle-blue": _.clone(AppleWatch38Device),
+    "applewatchedition-38-gold-buckle-gray": _.clone(AppleWatch38Device),
+    "applewatchedition-38-gold-buckle-red": _.clone(AppleWatch38Device),
+    "applewatchedition-38-gold-sportband-black": _.clone(AppleWatch38Device),
+    "applewatchedition-38-gold-sportband-white": _.clone(AppleWatch38Device),
+    "applewatchsport-42-aluminum-sportband-black": _.clone(AppleWatch42Device),
+    "applewatchsport-42-aluminum-sportband-blue": _.clone(AppleWatch42Device),
+    "applewatchsport-42-aluminum-sportband-green": _.clone(AppleWatch42Device),
+    "applewatchsport-42-aluminum-sportband-pink": _.clone(AppleWatch42Device),
+    "applewatchsport-42-aluminum-sportband-white": _.clone(AppleWatch42Device),
+    "applewatch-42-black-bracelet": _.clone(AppleWatch42Device),
+    "applewatch-42-steel-bracelet": _.clone(AppleWatch42Device),
+    "applewatchedition-42-gold-buckle-blue": _.clone(AppleWatch42Device),
+    "applewatchedition-42-gold-buckle-gray": _.clone(AppleWatch42Device),
+    "applewatchedition-42-gold-buckle-red": _.clone(AppleWatch42Device),
+    "applewatchedition-42-gold-sportband-black": _.clone(AppleWatch42Device),
+    "applewatchedition-42-gold-sportband-white": _.clone(AppleWatch42Device)
+  };
+
+  exports.DeviceComponent.Devices = Devices;
+}).call(undefined);
+
+},{"../BaseClass":152,"../Defaults":161,"../Events":165,"../Layer":173,"../Underscore":184,"../Utils":185}],155:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Events,
+      ScrollComponent,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  };
+
+  Events = require("../Events").Events;
+
+  ScrollComponent = require("./ScrollComponent").ScrollComponent;
+
+  "PageComponent\n\noriginX <number>\noriginY <number>\n\nvelocityThreshold <number>\nanimationOptions <animationOptions={}>\ncurrentPage <Layer>\nclosestPage(<originX:n, originY:n>) <Layer>\n\nnextPage(direction=\"\", currentPage)\nsnapToNextPage(direction=\"\", animate, animationOptions={})\n";
+
+  exports.PageComponent = (function (superClass) {
+    extend(PageComponent, superClass);
+
+    PageComponent.define("originX", PageComponent.simpleProperty("originX", .5));
+
+    PageComponent.define("originY", PageComponent.simpleProperty("originY", .5));
+
+    PageComponent.define("velocityThreshold", PageComponent.simpleProperty("velocityThreshold", 0.1));
+
+    PageComponent.define("animationOptions", PageComponent.simpleProperty("animationOptions", {
+      curve: "spring(500,50,0)"
+    }));
+
+    function PageComponent() {
+      this._resetHistory = bind(this._resetHistory, this);
+      this._scrollEnd = bind(this._scrollEnd, this);
+      this._onAminationEnd = bind(this._onAminationEnd, this);
+      this._onAminationStep = bind(this._onAminationStep, this);
+      this._onAminationStart = bind(this._onAminationStart, this);
+      this._scrollMove = bind(this._scrollMove, this);
+      this._scrollStart = bind(this._scrollStart, this);
+      PageComponent.__super__.constructor.apply(this, arguments);
+      this.content.draggable.momentum = false;
+      this.content.draggable.bounce = false;
+      this.on(Events.ScrollStart, this._scrollStart);
+      this.on(Events.ScrollEnd, this._scrollEnd);
+      this.content.on("change:frame", _.debounce(this._scrollMove, 16));
+      this.content.on("change:subLayers", this._resetHistory);
+      this._resetHistory();
+    }
+
+    PageComponent.define("closestPage", {
+      get: function get() {
+        return this.closestContentLayerForScrollPoint(this._originScrollPoint(), this.originX, this.originY);
+      }
+    });
+
+    PageComponent.define("currentPage", {
+      get: function get() {
+        return _.last(this._previousPages);
+      }
+    });
+
+    PageComponent.define("previousPage", {
+      get: function get() {
+        return this._previousPages[this._previousPages.length - 2];
+      }
+    });
+
+    PageComponent.prototype.nextPage = function (direction, currentPage, withoutCurrentPage) {
+      var layers, point;
+      if (direction == null) {
+        direction = "right";
+      }
+      if (currentPage == null) {
+        currentPage = null;
+      }
+      if (withoutCurrentPage == null) {
+        withoutCurrentPage = true;
+      }
+      if (currentPage == null) {
+        currentPage = this.currentPage;
+      }
+      point = {
+        x: 0,
+        y: 0
+      };
+      if (currentPage) {
+        point = Utils.framePointForOrigin(currentPage, this.originX, this.originY);
+      }
+      if (!withoutCurrentPage) {
+        point = {
+          x: this.scrollX + this.originX * this.width,
+          y: this.scrollY + this.originY * this.height
+        };
+      }
+      if (direction === "up" || direction === "top" || direction === "north") {
+        layers = this.content.subLayersAbove(point, this.originX, this.originY);
+      }
+      if (direction === "down" || direction === "bottom" || direction === "south") {
+        layers = this.content.subLayersBelow(point, this.originX, this.originY);
+      }
+      if (direction === "left" || direction === "west") {
+        layers = this.content.subLayersLeft(point, this.originX, this.originY);
+      }
+      if (direction === "right" || direction === "east") {
+        layers = this.content.subLayersRight(point, this.originX, this.originY);
+      }
+      if (withoutCurrentPage) {
+        layers = _.without(layers, currentPage);
+      }
+      layers = Utils.frameSortByAbsoluteDistance(point, layers, this.originX, this.originY);
+      return _.first(layers);
+    };
+
+    PageComponent.prototype.snapToPage = function (page, animate, animationOptions) {
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = null;
+      }
+      this.scrollToLayer(page, this.originX, this.originY, animate, animationOptions);
+      if (this.currentPage !== page) {
+        this._previousPages.push(page);
+        this.emit("change:previousPage", this.previousPage);
+        return this.emit("change:currentPage", this.currentPage);
+      }
+    };
+
+    PageComponent.prototype.snapToNextPage = function (direction, animate, animationOptions) {
+      var nextPage;
+      if (direction == null) {
+        direction = "right";
+      }
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = null;
+      }
+      if (animationOptions == null) {
+        animationOptions = this.animationOptions;
+      }
+      nextPage = this.nextPage(direction);
+      if (nextPage == null) {
+        nextPage = this.closestPage;
+      }
+      return this.snapToPage(nextPage, animate, animationOptions);
+    };
+
+    PageComponent.prototype.snapToPreviousPage = function () {
+      if (!this.previousPage) {
+        return;
+      }
+      this.snapToPage(this.previousPage);
+      return this._previousPages = this._previousPages.slice(0, +(this._previousPages.length - 3) + 1 || 9e9);
+    };
+
+    PageComponent.prototype.addPage = function (page, direction) {
+      var directions, point, ref;
+      if (direction == null) {
+        direction = "right";
+      }
+      directions = ["down", "bottom", "south"] + ["right", "east"];
+      if ((ref = !direction, indexOf.call(directions, ref) >= 0)) {
+        direction = "right";
+        throw new Error(direction + " should be in " + directions);
+      }
+      point = page.point;
+      if (this.content.subLayers.length) {
+        if (direction === "right" || direction === "east") {
+          point.x = Utils.frameGetMaxX(this.content.contentFrame());
+        }
+        if (direction === "down" || direction === "bottom" || direction === "south") {
+          point.y = Utils.frameGetMaxY(this.content.contentFrame());
+        }
+      }
+      page.point = point;
+      if (page.superLayer !== this.content) {
+        return page.superLayer = this.content;
+      } else {
+        return this.updateContent();
+      }
+    };
+
+    PageComponent.prototype.setContentLayer = function (contentLayer) {
+      if (this.content) {
+        this._onAminateStop();
+        this.content.off(Events.AnimationStart, this._onAminationStart);
+        this.content.off(Events.AnimationStop, this._onAminationEnd);
+      }
+      PageComponent.__super__.setContentLayer.call(this, contentLayer);
+      this.content.on(Events.AnimationStart, this._onAminationStart);
+      return this.content.on(Events.AnimationStop, this._onAminationEnd);
+    };
+
+    PageComponent.prototype.horizontalPageIndex = function (page) {
+      return _.sortBy(this.content.subLayers, function (l) {
+        return l.x;
+      }).indexOf(page);
+    };
+
+    PageComponent.prototype.verticalPageIndex = function (page) {
+      return _.sortBy(this.content.subLayers, function (l) {
+        return l.y;
+      }).indexOf(page);
+    };
+
+    PageComponent.prototype._scrollStart = function () {
+      return this._currentPage = this.currentPage;
+    };
+
+    PageComponent.prototype._scrollMove = function () {
+      var currentPage;
+      currentPage = this.currentPage;
+      if (currentPage !== _.last(this._previousPages) && currentPage !== void 0) {
+        this._previousPages.push(currentPage);
+        return this.emit("change:currentPage", {
+          old: this.previousPage,
+          "new": currentPage
+        });
+      }
+    };
+
+    PageComponent.prototype._onAminationStart = function () {
+      this._isMoving = true;
+      this._isAnimating = true;
+      return this.content.on("change:frame", this._onAminationStep);
+    };
+
+    PageComponent.prototype._onAminationStep = function () {
+      return this.emit(Events.Move, this.content.point);
+    };
+
+    PageComponent.prototype._onAminationEnd = function () {
+      this._isMoving = false;
+      this._isAnimating = false;
+      return this.content.off("change:frame", this._onAminationStep);
+    };
+
+    PageComponent.prototype._scrollEnd = function () {
+      var end, nextPage, start, velocity, xDisabled, xLock, yDisabled, yLock;
+      velocity = this.content.draggable.velocity;
+      xDisabled = !this.scrollHorizontal && (this.direction === "right" || this.direction === "left");
+      yDisabled = !this.scrollVertical && (this.direction === "down" || this.direction === "up");
+      xLock = this.content.draggable._directionLockEnabledX && (this.direction === "right" || this.direction === "left");
+      yLock = this.content.draggable._directionLockEnabledY && (this.direction === "down" || this.direction === "up");
+      if (Math.max(Math.abs(velocity.x), Math.abs(velocity.y)) < this.velocityThreshold || xLock || yLock || xDisabled || yDisabled) {
+        start = this.content.draggable._layerStartPoint;
+        end = this.content.draggable.layer.point;
+        if (start.x !== end.x || start.y !== end.y) {
+          this.snapToPage(this.closestPage, true, this.animationOptions);
+        }
+        return;
+      }
+      nextPage = this.nextPage(this.direction, this._currentPage, false);
+      if (nextPage == null) {
+        nextPage = this.closestPage;
+      }
+      return this.snapToPage(nextPage, true, this.animationOptions);
+    };
+
+    PageComponent.prototype._originScrollPoint = function () {
+      var scrollPoint;
+      scrollPoint = this.scrollPoint;
+      scrollPoint.x += this.width * this.originX;
+      scrollPoint.y += this.height * this.originY;
+      return scrollPoint;
+    };
+
+    PageComponent.prototype._resetHistory = function () {
+      this._currentPage = this.closestPage;
+      return this._previousPages = [this._currentPage];
+    };
+
+    return PageComponent;
+  })(ScrollComponent);
+}).call(undefined);
+
+},{"../Events":165,"./ScrollComponent":156}],156:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var EventMappers,
+      Events,
+      Layer,
+      Utils,
+      _,
+      wrapComponent,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      slice = [].slice,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  };
+
+  _ = require("../Underscore")._;
+
+  Utils = require("../Utils");
+
+  Layer = require("../Layer").Layer;
+
+  Events = require("../Events").Events;
+
+  "ScrollComponent\n\ncontent <Layer>\ncontentSize <{width:n, height:n}>\ncontentInset <{top:n, right:n, bottom:n, left:n}> TODO\ncontentOffset <{x:n, y:n}> TODO\nscrollFrame <{x:n, y:n, width:n, height:n}>\nscrollPoint <{x:n, y:n}>\nscrollHorizontal <bool>\nscrollVertical <bool>\nspeedX <number>\nspeedY <number>\ndelaysContentTouches <bool> TODO\nloadPreset(<\"ios\"|\"android\">) TODO\nscrollToPoint(<{x:n, y:n}>, animate=true, animationOptions={})\nscrollToLayer(contentLayer, originX=0, originY=0)\nscrollFrameForContentLayer(<x:n, y:n>) <{x:n, y:n, width:n, height:n}> TODO\nclosestContentLayer(<x:n, y:n>) <Layer> TODO\n\nScrollComponent Events\n\n(all of the draggable events)\nScrollStart -> DragStart\nScrollWillMove -> DragWillMove\nScrollDidMove -> DragDidMove\nscroll -> DragMove (html compat)\nScrollEnd -> DragEnd";
+
+  Events.ScrollStart = "scrollstart";
+
+  Events.Scroll = "scroll";
+
+  Events.ScrollMove = Events.Scroll;
+
+  Events.ScrollEnd = "scrollend";
+
+  Events.ScrollAnimationDidStart = "scrollanimationdidstart";
+
+  Events.ScrollAnimationDidEnd = "scrollanimationdidend";
+
+  EventMappers = {};
+
+  EventMappers[Events.Move] = Events.Move;
+
+  EventMappers[Events.ScrollStart] = Events.DragStart;
+
+  EventMappers[Events.ScrollMove] = Events.DragMove;
+
+  EventMappers[Events.ScrollEnd] = Events.DragEnd;
+
+  EventMappers[Events.ScrollAnimationDidStart] = Events.DragAnimationDidStart;
+
+  EventMappers[Events.ScrollAnimationDidEnd] = Events.DragAnimationDidEnd;
+
+  EventMappers[Events.DirectionLockDidStart] = Events.DirectionLockDidStart;
+
+  exports.ScrollComponent = (function (superClass) {
+    extend(ScrollComponent, superClass);
+
+    ScrollComponent.define("velocity", ScrollComponent.proxyProperty("content.draggable.velocity", {
+      importable: false
+    }));
+
+    ScrollComponent.define("scrollHorizontal", ScrollComponent.proxyProperty("content.draggable.horizontal"));
+
+    ScrollComponent.define("scrollVertical", ScrollComponent.proxyProperty("content.draggable.vertical"));
+
+    ScrollComponent.define("speedX", ScrollComponent.proxyProperty("content.draggable.speedX"));
+
+    ScrollComponent.define("speedY", ScrollComponent.proxyProperty("content.draggable.speedY"));
+
+    ScrollComponent.define("isDragging", ScrollComponent.proxyProperty("content.draggable.isDragging", {
+      importable: false
+    }));
+
+    ScrollComponent.define("isMoving", ScrollComponent.proxyProperty("content.draggable.isMoving", {
+      importable: false
+    }));
+
+    ScrollComponent.define("propagateEvents", ScrollComponent.proxyProperty("content.draggable.propagateEvents"));
+
+    ScrollComponent.define("directionLock", ScrollComponent.proxyProperty("content.draggable.directionLock"));
+
+    ScrollComponent.define("directionLockThreshold", ScrollComponent.proxyProperty("content.draggable.directionLockThreshold"));
+
+    ScrollComponent.define("content", {
+      importable: false,
+      exportable: false,
+      get: function get() {
+        return this._content;
+      }
+    });
+
+    ScrollComponent.define("mouseWheelSpeedMultiplier", ScrollComponent.simpleProperty("mouseWheelSpeedMultiplier", 1));
+
+    function ScrollComponent(options) {
+      if (options == null) {
+        options = {};
+      }
+      this._onMouseWheel = bind(this._onMouseWheel, this);
+      this.updateContent = bind(this.updateContent, this);
+      if (options.clip == null) {
+        options.clip = true;
+      }
+      if (options.mouseWheelEnabled == null) {
+        options.mouseWheelEnabled = false;
+      }
+      if (options.backgroundColor == null) {
+        options.backgroundColor = null;
+      }
+      ScrollComponent.__super__.constructor.call(this, options);
+      this._contentInset = options.contentInset || Utils.rectZero();
+      this.setContentLayer(new Layer());
+      this._applyOptionsAndDefaults(options);
+      this._enableMouseWheelHandling();
+      if (options.hasOwnProperty("wrap")) {
+        wrapComponent(this, options.wrap);
+      }
+    }
+
+    ScrollComponent.prototype.calculateContentFrame = function () {
+      var contentFrame, size;
+      contentFrame = this.content.contentFrame();
+      return size = {
+        x: 0,
+        y: 0,
+        width: Math.max(this.width, contentFrame.x + contentFrame.width),
+        height: Math.max(this.height, contentFrame.y + contentFrame.height)
+      };
+    };
+
+    ScrollComponent.prototype.setContentLayer = function (layer) {
+      if (this.content) {
+        this._content.destroy();
+      }
+      this._content = layer;
+      this._content.superLayer = this;
+      this._content.name = this.constructor.name.replace("Component", "") + "Content";
+      this._content.clip = false;
+      this._content.draggable.enabled = true;
+      this._content.draggable.momentum = true;
+      this._content.on("change:subLayers", this.updateContent);
+      this.on("change:width", this.updateContent);
+      this.on("change:height", this.updateContent);
+      this.updateContent();
+      this.scrollPoint = {
+        x: 0,
+        y: 0
+      };
+      return this._content;
+    };
+
+    ScrollComponent.prototype.updateContent = function () {
+      var constraintsFrame, contentFrame;
+      if (!this.content) {
+        return;
+      }
+      contentFrame = this.calculateContentFrame();
+      contentFrame.x = contentFrame.x + this._contentInset.left;
+      contentFrame.y = contentFrame.y + this._contentInset.top;
+      this.content.frame = contentFrame;
+      constraintsFrame = this.calculateContentFrame();
+      constraintsFrame = {
+        x: -constraintsFrame.width + this.width - this._contentInset.right,
+        y: -constraintsFrame.height + this.height - this._contentInset.bottom,
+        width: constraintsFrame.width + constraintsFrame.width - this.width + this._contentInset.left + this._contentInset.right,
+        height: constraintsFrame.height + constraintsFrame.height - this.height + this._contentInset.top + this._contentInset.bottom
+      };
+      this.content.draggable.constraints = constraintsFrame;
+      if (this.content.subLayers.length) {
+        if (this.content.backgroundColor === Framer.Defaults.Layer.backgroundColor) {
+          return this.content.backgroundColor = null;
+        }
+      }
+    };
+
+    ScrollComponent.define("scroll", {
+      exportable: false,
+      get: function get() {
+        return this.scrollHorizontal === true || this.scrollVertical === true;
+      },
+      set: function set(value) {
+        if (!this.content) {
+          return;
+        }
+        if (value === false) {
+          this.content.animateStop();
+        }
+        return this.scrollHorizontal = this.scrollVertical = value;
+      }
+    });
+
+    ScrollComponent.prototype._calculateContentPoint = function (scrollPoint) {
+      var point;
+      scrollPoint.x -= this.contentInset.left;
+      scrollPoint.y -= this.contentInset.top;
+      point = this._pointInConstraints(scrollPoint);
+      return Utils.pointInvert(point);
+    };
+
+    ScrollComponent.define("scrollX", {
+      get: function get() {
+        if (!this.content) {
+          return 0;
+        }
+        return 0 - this.content.x + this.contentInset.left;
+      },
+      set: function set(value) {
+        if (!this.content) {
+          return;
+        }
+        this.content.draggable.animateStop();
+        return this.content.x = this._calculateContentPoint({
+          x: value,
+          y: 0
+        }).x;
+      }
+    });
+
+    ScrollComponent.define("scrollY", {
+      get: function get() {
+        if (!this.content) {
+          return 0;
+        }
+        return 0 - this.content.y + this.contentInset.top;
+      },
+      set: function set(value) {
+        if (!this.content) {
+          return;
+        }
+        this.content.draggable.animateStop();
+        return this.content.y = this._calculateContentPoint({
+          x: 0,
+          y: value
+        }).y;
+      }
+    });
+
+    ScrollComponent.define("scrollPoint", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        var point;
+        return point = {
+          x: this.scrollX,
+          y: this.scrollY
+        };
+      },
+      set: function set(point) {
+        if (!this.content) {
+          return;
+        }
+        this.scrollX = point.x;
+        return this.scrollY = point.y;
+      }
+    });
+
+    ScrollComponent.define("scrollFrame", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        var rect;
+        rect = this.scrollPoint;
+        rect.width = this.width;
+        rect.height = this.height;
+        return rect;
+      },
+      set: function set(value) {
+        return this.scrollPoint = value;
+      }
+    });
+
+    ScrollComponent.define("contentInset", {
+      get: function get() {
+        return _.clone(this._contentInset);
+      },
+      set: function set(contentInset) {
+        this._contentInset = Utils.rectZero(Utils.parseRect(contentInset));
+        return this.updateContent();
+      }
+    });
+
+    ScrollComponent.define("direction", {
+      importable: false,
+      exportable: false,
+      get: function get() {
+        var direction;
+        direction = this.content.draggable.direction;
+        if (direction === "down") {
+          return "up";
+        }
+        if (direction === "up") {
+          return "down";
+        }
+        if (direction === "right") {
+          return "left";
+        }
+        if (direction === "left") {
+          return "right";
+        }
+        return direction;
+      }
+    });
+
+    ScrollComponent.define("angle", {
+      importable: false,
+      exportable: false,
+      get: function get() {
+        if (!this.content) {
+          return 0;
+        }
+        return -this.content.draggable.angle;
+      }
+    });
+
+    ScrollComponent.prototype.scrollToPoint = function (point, animate, animationOptions) {
+      var contentPoint;
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = {
+          curve: "spring(500,50,0)"
+        };
+      }
+      contentPoint = this._calculateContentPoint(point);
+      this.content.draggable.animateStop();
+      if (animate) {
+        point = {};
+        if (contentPoint.hasOwnProperty("x")) {
+          point.x = contentPoint.x;
+        }
+        if (contentPoint.hasOwnProperty("y")) {
+          point.y = contentPoint.y;
+        }
+        animationOptions.properties = point;
+        this.content.animateStop();
+        return this.content.animate(animationOptions);
+      } else {
+        return this.content.point = contentPoint;
+      }
+    };
+
+    ScrollComponent.prototype.scrollToTop = function (animate, animationOptions) {
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = {
+          curve: "spring(500,50,0)"
+        };
+      }
+      return this.scrollToPoint({
+        x: 0,
+        y: 0
+      }, animate, animationOptions);
+    };
+
+    ScrollComponent.prototype.scrollToLayer = function (contentLayer, originX, originY, animate, animationOptions) {
+      var scrollPoint;
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = {
+          curve: "spring(500,50,0)"
+        };
+      }
+      if (contentLayer && contentLayer.superLayer !== this.content) {
+        throw Error("This layer is not in the scroll component content");
+      }
+      if (!contentLayer || this.content.subLayers.length === 0) {
+        scrollPoint = {
+          x: 0,
+          y: 0
+        };
+      } else {
+        scrollPoint = this._scrollPointForLayer(contentLayer, originX, originY);
+        scrollPoint.x -= this.width * originX;
+        scrollPoint.y -= this.height * originY;
+      }
+      this.scrollToPoint(scrollPoint, animate, animationOptions);
+      return contentLayer;
+    };
+
+    ScrollComponent.prototype.scrollToClosestLayer = function (originX, originY, animate, animationOptions) {
+      var closestLayer;
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      if (animate == null) {
+        animate = true;
+      }
+      if (animationOptions == null) {
+        animationOptions = {
+          curve: "spring(500,50,0)"
+        };
+      }
+      closestLayer = this.closestContentLayer(originX, originY, animate, animationOptions);
+      if (closestLayer) {
+        this.scrollToLayer(closestLayer, originX, originY);
+        return closestLayer;
+      } else {
+        if (!closestLayer) {
+          this.scrollToPoint({
+            x: 0,
+            y: 0
+          });
+        }
+        return null;
+      }
+    };
+
+    ScrollComponent.prototype.closestContentLayer = function (originX, originY) {
+      var scrollPoint;
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      scrollPoint = Utils.framePointForOrigin(this.scrollFrame, originX, originY);
+      return this.closestContentLayerForScrollPoint(scrollPoint, originX, originY);
+    };
+
+    ScrollComponent.prototype.closestContentLayerForScrollPoint = function (scrollPoint, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return _.first(this._contentLayersSortedByDistanceForScrollPoint(scrollPoint, originX, originY));
+    };
+
+    ScrollComponent.prototype._scrollPointForLayer = function (layer, originX, originY, clamp) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      if (clamp == null) {
+        clamp = true;
+      }
+      return Utils.framePointForOrigin(layer, originX, originY);
+    };
+
+    ScrollComponent.prototype._contentLayersSortedByDistanceForScrollPoint = function (scrollPoint, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return Utils.frameSortByAbsoluteDistance(scrollPoint, this.content.subLayers, originX, originY);
+    };
+
+    ScrollComponent.prototype._pointInConstraints = function (point) {
+      var maxX, maxY, minX, minY, ref;
+      ref = this.content.draggable._calculateConstraints(this.content.draggable.constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+      point = {
+        x: -Utils.clamp(-point.x, minX, maxX),
+        y: -Utils.clamp(-point.y, minY, maxY)
+      };
+      return point;
+    };
+
+    ScrollComponent.prototype.addListener = function () {
+      var eventName, eventNames, i, j, len, listener, results;
+      eventNames = 2 <= arguments.length ? slice.call(arguments, 0, i = arguments.length - 1) : (i = 0, []), listener = arguments[i++];
+      ScrollComponent.__super__.addListener.apply(this, arguments);
+      results = [];
+      for (j = 0, len = eventNames.length; j < len; j++) {
+        eventName = eventNames[j];
+        if (indexOf.call(_.keys(EventMappers), eventName) >= 0) {
+          results.push(this.content.on(EventMappers[eventName], listener));
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    ScrollComponent.prototype.removeListener = function () {
+      var eventName, eventNames, i, j, len, listener, results;
+      eventNames = 2 <= arguments.length ? slice.call(arguments, 0, i = arguments.length - 1) : (i = 0, []), listener = arguments[i++];
+      ScrollComponent.__super__.removeListener.apply(this, arguments);
+      results = [];
+      for (j = 0, len = eventNames.length; j < len; j++) {
+        eventName = eventNames[j];
+        if (indexOf.call(_.keys(EventMappers), eventName) >= 0) {
+          results.push(this.content.off(EventMappers[eventName], listener));
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    };
+
+    ScrollComponent.prototype.on = ScrollComponent.prototype.addListener;
+
+    ScrollComponent.prototype.off = ScrollComponent.prototype.removeListener;
+
+    ScrollComponent.define("mouseWheelEnabled", {
+      get: function get() {
+        return this._mouseWheelEnabled;
+      },
+      set: function set(value) {
+        this._mouseWheelEnabled = value;
+        return this._enableMouseWheelHandling(value);
+      }
+    });
+
+    ScrollComponent.prototype._enableMouseWheelHandling = function (enable) {
+      if (enable) {
+        return this.on(Events.MouseWheel, this._onMouseWheel);
+      } else {
+        return this.off(Events.MouseWheel, this._onMouseWheel);
+      }
+    };
+
+    ScrollComponent.prototype._onMouseWheel = function (event) {
+      var maxX, maxY, minX, minY, point, ref;
+      if (!this._mouseWheelScrolling) {
+        this._mouseWheelScrolling = true;
+        this.emit(Events.ScrollStart, event);
+      }
+      this.content.animateStop();
+      ref = this.content.draggable._calculateConstraints(this.content.draggable.constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+      point = {
+        x: Utils.clamp(this.content.x + event.wheelDeltaX * this.mouseWheelSpeedMultiplier, minX, maxX),
+        y: Utils.clamp(this.content.y + event.wheelDeltaY * this.mouseWheelSpeedMultiplier, minY, maxY)
+      };
+      this.content.point = point;
+      this.emit(Events.Scroll, event);
+      return this._onMouseWheelEnd(event);
+    };
+
+    ScrollComponent.prototype._onMouseWheelEnd = Utils.debounce(0.3, function (event) {
+      this.emit(Events.ScrollEnd, event);
+      return this._mouseWheelScrolling = false;
+    });
+
+    ScrollComponent.prototype.copy = function () {
+      var contentLayer, copy;
+      copy = ScrollComponent.__super__.copy.apply(this, arguments);
+      contentLayer = _.first(_.without(copy.subLayers, copy.content));
+      copy.setContentLayer(contentLayer);
+      copy.props = this.props;
+      return copy;
+    };
+
+    ScrollComponent.wrap = function (layer, options) {
+      return wrapComponent(new this(options), layer, options);
+    };
+
+    return ScrollComponent;
+  })(Layer);
+
+  wrapComponent = function (instance, layer, options) {
+    var i, j, len, len1, propKey, ref, ref1, screenFrame, scroll, subLayer, subLayerIndex, wrapper;
+    if (options == null) {
+      options = {
+        correct: true
+      };
+    }
+    scroll = instance;
+    if (options.correct === true) {
+      if (layer.subLayers.length === 0) {
+        wrapper = new Layer();
+        wrapper.name = "ScrollComponent";
+        wrapper.frame = layer.frame;
+        layer.superLayer = wrapper;
+        layer.x = layer.y = 0;
+        layer = wrapper;
+        console.log("Corrected the scroll component without sub layers");
+      }
+    }
+    ref = ["frame", "image", "name"];
+    for (i = 0, len = ref.length; i < len; i++) {
+      propKey = ref[i];
+      scroll[propKey] = layer[propKey];
+    }
+    if (options.correct === true) {
+      screenFrame = scroll.screenFrame;
+      if (screenFrame.x < Screen.width) {
+        if (screenFrame.x + screenFrame.width > Screen.width) {
+          scroll.width = Screen.width - screenFrame.x;
+          console.log("Corrected the scroll width to " + scroll.width);
+        }
+      }
+      if (screenFrame.y < Screen.height) {
+        if (screenFrame.y + screenFrame.height > Screen.height) {
+          scroll.height = Screen.height - screenFrame.y;
+          console.log("Corrected the scroll height to " + scroll.height);
+        }
+      }
+    }
+    ref1 = layer.subLayers;
+    for (j = 0, len1 = ref1.length; j < len1; j++) {
+      subLayer = ref1[j];
+      subLayerIndex = subLayer.index;
+      subLayer.superLayer = scroll.content;
+      subLayer.index = subLayerIndex;
+    }
+    scroll.superLayer = layer.superLayer;
+    scroll.index = layer.index;
+    layer.destroy();
+    return scroll;
+  };
+}).call(undefined);
+
+},{"../Events":165,"../Layer":173,"../Underscore":184,"../Utils":185}],157:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Events,
+      Layer,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Layer = require("../Layer").Layer;
+
+  Events = require("../Events").Events;
+
+  "SliderComponent\n\nknob <layer>\nknobSize <width, height>\nfill <layer>\nmin <number>\nmax <number>\n\npointForValue(<n>)\nvalueForPoint(<n>)\n\nanimateToValue(value, animationOptions={})";
+
+  exports.SliderComponent = (function (superClass) {
+    extend(SliderComponent, superClass);
+
+    function SliderComponent(options) {
+      if (options == null) {
+        options = {};
+      }
+      this._updateValue = bind(this._updateValue, this);
+      this._setRadius = bind(this._setRadius, this);
+      this._updateFrame = bind(this._updateFrame, this);
+      this._updateKnob = bind(this._updateKnob, this);
+      this._updateFill = bind(this._updateFill, this);
+      this._touchDown = bind(this._touchDown, this);
+      if (options.backgroundColor == null) {
+        options.backgroundColor = "#ccc";
+      }
+      if (options.borderRadius == null) {
+        options.borderRadius = 50;
+      }
+      if (options.clip == null) {
+        options.clip = false;
+      }
+      if (options.width == null) {
+        options.width = 300;
+      }
+      if (options.height == null) {
+        options.height = 10;
+      }
+      if (options.value == null) {
+        options.value = 0;
+      }
+      this.knob = new Layer({
+        backgroundColor: "#fff",
+        shadowY: 1,
+        shadowBlur: 3,
+        shadowColor: "rgba(0,0,0,0.35)"
+      });
+      this.fill = new Layer({
+        backgroundColor: "#333",
+        width: 0,
+        force2d: true
+      });
+      SliderComponent.__super__.constructor.call(this, options);
+      this.knobSize = options.knobSize || 30;
+      this.knob.superLayer = this.fill.superLayer = this;
+      if (this.width > this.height) {
+        this.fill.height = this.height;
+      } else {
+        this.fill.width = this.width;
+      }
+      this.fill.borderRadius = this.borderRadius;
+      this.knob.draggable.enabled = true;
+      this.knob.draggable.overdrag = false;
+      this.knob.draggable.momentum = true;
+      this.knob.draggable.momentumOptions = {
+        friction: 5,
+        tolerance: 0.25
+      };
+      this.knob.draggable.bounce = false;
+      this.knob.draggable.propagateEvents = false;
+      this.knob.borderRadius = "50%";
+      this._updateFrame();
+      this._updateKnob();
+      this._updateFill();
+      this.on("change:size", this._updateFrame);
+      this.on("change:borderRadius", this._setRadius);
+      if (this.width > this.height) {
+        this.knob.draggable.speedY = 0;
+        this.knob.on("change:x", this._updateFill);
+      } else {
+        this.knob.draggable.speedX = 0;
+        this.knob.on("change:y", this._updateFill);
+      }
+      this.knob.on("change:size", this._updateKnob);
+      this.knob.on(Events.Move, (function (_this) {
+        return function () {
+          _this._updateFrame();
+          return _this._updateValue();
+        };
+      })(this));
+      this.on(Events.TouchStart, this._touchDown);
+    }
+
+    SliderComponent.prototype._touchDown = function (event) {
+      var offsetX, offsetY;
+      event.preventDefault();
+      event.stopPropagation();
+      offsetX = this.min / this.canvasScaleX() - this.min;
+      offsetY = this.min / this.canvasScaleY() - this.min;
+      if (this.width > this.height) {
+        this.value = this.valueForPoint(Events.touchEvent(event).clientX - this.screenScaledFrame().x) / this.canvasScaleX() - offsetX;
+      } else {
+        this.value = this.valueForPoint(Events.touchEvent(event).clientY - this.screenScaledFrame().y) / this.canvasScaleY() - offsetY;
+      }
+      this.knob.draggable._touchStart(event);
+      return this._updateValue();
+    };
+
+    SliderComponent.prototype._updateFill = function () {
+      if (this.width > this.height) {
+        return this.fill.width = this.knob.midX;
+      } else {
+        return this.fill.height = this.knob.midY;
+      }
+    };
+
+    SliderComponent.prototype._updateKnob = function () {
+      if (this.width > this.height) {
+        this.knob.midX = this.fill.width;
+        return this.knob.centerY();
+      } else {
+        this.knob.midY = this.fill.height;
+        return this.knob.centerX();
+      }
+    };
+
+    SliderComponent.prototype._updateFrame = function () {
+      this.knob.draggable.constraints = {
+        x: -this.knob.width / 2,
+        y: -this.knob.height / 2,
+        width: this.width + this.knob.width,
+        height: this.height + this.knob.height
+      };
+      if (this.width > this.height) {
+        this.fill.height = this.height;
+        return this.knob.centerY();
+      } else {
+        this.fill.width = this.width;
+        return this.knob.centerX();
+      }
+    };
+
+    SliderComponent.prototype._setRadius = function () {
+      var radius;
+      radius = this.borderRadius;
+      return this.fill.style.borderRadius = radius + "px 0 0 " + radius + "px";
+    };
+
+    SliderComponent.define("knobSize", {
+      get: function get() {
+        return this._knobSize;
+      },
+      set: function set(value) {
+        this._knobSize = value;
+        this.knob.width = this._knobSize;
+        this.knob.height = this._knobSize;
+        return this._updateFrame();
+      }
+    });
+
+    SliderComponent.define("min", {
+      get: function get() {
+        return this._min || 0;
+      },
+      set: function set(value) {
+        return this._min = value;
+      }
+    });
+
+    SliderComponent.define("max", {
+      get: function get() {
+        return this._max || 1;
+      },
+      set: function set(value) {
+        return this._max = value;
+      }
+    });
+
+    SliderComponent.define("value", {
+      get: function get() {
+        if (this.width > this.height) {
+          return this.valueForPoint(this.knob.midX);
+        } else {
+          return this.valueForPoint(this.knob.midY);
+        }
+      },
+      set: function set(value) {
+        if (this.width > this.height) {
+          this.knob.midX = this.pointForValue(value);
+          return this._updateFill();
+        } else {
+          this.knob.midY = this.pointForValue(value);
+          return this._updateFill();
+        }
+      }
+    });
+
+    SliderComponent.prototype._updateValue = function () {
+      return this.emit("change:value", this.value);
+    };
+
+    SliderComponent.prototype.pointForValue = function (value) {
+      if (this.width > this.height) {
+        return Utils.modulate(value, [this.min, this.max], [0, this.width], true);
+      } else {
+        return Utils.modulate(value, [this.min, this.max], [0, this.height], true);
+      }
+    };
+
+    SliderComponent.prototype.valueForPoint = function (value) {
+      if (this.width > this.height) {
+        return Utils.modulate(value, [0, this.width], [this.min, this.max], true);
+      } else {
+        return Utils.modulate(value, [0, this.height], [this.min, this.max], true);
+      }
+    };
+
+    SliderComponent.prototype.animateToValue = function (value, animationOptions) {
+      if (animationOptions == null) {
+        animationOptions = {
+          curve: "spring(300,25,0)"
+        };
+      }
+      if (this.width > this.height) {
+        animationOptions.properties = {
+          x: this.pointForValue(value) - this.knob.width / 2
+        };
+        this.knob.on("change:x", this._updateValue);
+      } else {
+        animationOptions.properties = {
+          y: this.pointForValue(value) - this.knob.height / 2
+        };
+        this.knob.on("change:y", this._updateValue);
+      }
+      return this.knob.animate(animationOptions);
+    };
+
+    return SliderComponent;
+  })(Layer);
+}).call(undefined);
+
+},{"../Events":165,"../Layer":173,"../Utils":185}],158:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var FramerCSS, Utils;
+
+  Utils = require("./Utils");
+
+  FramerCSS = "body {\n	margin: 0;\n}\n\n.framerContext {	\n	position: absolute;\n	left: 0;\n	top: 0;\n	right: 0;\n	bottom: 0;\n	pointer-events: none;\n	overflow: hidden;\n}\n\n.framerLayer {\n	display: block;\n	position: absolute;\n	left: 0;\n	top: 0;\n	background-repeat: no-repeat;\n	background-size: cover;\n	-webkit-overflow-scrolling: touch;\n	-webkit-box-sizing: border-box;\n	-webkit-user-select: none;\n}\n\n.framerLayer input,\n.framerLayer textarea,\n.framerLayer select,\n.framerLayer option,\n.framerLayer div[contenteditable=true]\n{\n	pointer-events: auto;\n	-webkit-user-select: auto;\n}\n\n.framerDebug {\n	padding: 6px;\n	color: #fff;\n	font: 10px/1em Monaco;\n}\n";
+
+  Utils.domComplete(function () {
+    return Utils.insertCSS(FramerCSS);
+  });
+}).call(undefined);
+
+},{"./Utils":185}],159:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Config,
+      Counter,
+      DOMElement,
+      Engine,
+      EventManager,
+      Node,
+      Utils,
+      _,
+      famous,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  };
+
+  Utils = require("./Utils");
+
+  _ = require("./Underscore")._;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Config = require("./Config").Config;
+
+  EventManager = require("./EventManager").EventManager;
+
+  Counter = 1;
+
+  famous = require("famous");
+
+  Engine = famous.core.FamousEngine;
+
+  Node = famous.core.Node;
+
+  DOMElement = famous.domRenderables.DOMElement;
+
+  exports.Context = (function (superClass) {
+    extend(Context, superClass);
+
+    function Context(options) {
+      if (options == null) {
+        options = {};
+      }
+      this._appendRootElement = bind(this._appendRootElement, this);
+      this._framerOriginal__appendRootElement = bind(this._framerOriginal__appendRootElement, this);
+      Context.__super__.constructor.apply(this, arguments);
+      Counter++;
+      options = _.defaults(options, {
+        contextName: null,
+        parentLayer: null,
+        name: null
+      });
+      if (!options.name) {
+        throw Error("Contexts need a name");
+      }
+      this._parentLayer = options.parentLayer;
+      this._name = options.name;
+      this.reset();
+    }
+
+    Context.prototype._framerOriginal_reset = function () {
+      var animation, i, len, ref, ref1, ref2, ref3;
+      if ((ref = this.eventManager) != null) {
+        ref.reset();
+      }
+      this.eventManager = new EventManager();
+      if (this._rootElement) {
+        if (this._rootElement.parentNode) {
+          this._rootElement.parentNode.removeChild(this._rootElement);
+        } else {
+          this._rootElement.__cancelAppendChild = true;
+        }
+      }
+      this._createRootElement();
+      if ((ref1 = this._delayTimers) != null) {
+        ref1.map(function (timer) {
+          return window.clearTimeout(timer);
+        });
+      }
+      if ((ref2 = this._delayIntervals) != null) {
+        ref2.map(function (timer) {
+          return window.clearInterval(timer);
+        });
+      }
+      if (this._animationList) {
+        ref3 = this._animationList;
+        for (i = 0, len = ref3.length; i < len; i++) {
+          animation = ref3[i];
+          animation.stop(false);
+        }
+      }
+      this._layerList = [];
+      this._animationList = [];
+      this._delayTimers = [];
+      this._delayIntervals = [];
+      this._layerIdCounter = 1;
+      return this.emit("reset", this);
+    };
+
+    Context.prototype.reset = function () {
+      var animation, i, len, ref, ref1, ref2, ref3;
+      if ((ref = this.eventManager) != null) {
+        ref.reset();
+      }
+      this.eventManager = new EventManager();
+      if (this._rootElement) {
+        if (this._rootElement._node.isMounted()) {
+          this._rootElement._node.dismount();
+        } else {
+          this._rootElement.__cancelAppendChild = true;
+        }
+      }
+      this._createRootElement();
+      if ((ref1 = this._delayTimers) != null) {
+        ref1.map(function (timer) {
+          return window.clearTimeout(timer);
+        });
+      }
+      if ((ref2 = this._delayIntervals) != null) {
+        ref2.map(function (timer) {
+          return window.clearInterval(timer);
+        });
+      }
+      if (this._animationList) {
+        ref3 = this._animationList;
+        for (i = 0, len = ref3.length; i < len; i++) {
+          animation = ref3[i];
+          animation.stop(false);
+        }
+      }
+      this._layerList = [];
+      this._animationList = [];
+      this._delayTimers = [];
+      this._delayIntervals = [];
+      this._layerIdCounter = 1;
+      return this.emit("reset", this);
+    };
+
+    Context.prototype.destroy = function () {
+      this.reset();
+      if (this._rootElement._node.isMounted()) {
+        this._rootElement._node.dismount();
+      }
+      return Utils.domCompleteCancel(this._appendRootElement);
+    };
+
+    Context.prototype.getRootElement = function () {
+      return this._rootElement;
+    };
+
+    Context.prototype.getLayers = function () {
+      return _.clone(this._layerList);
+    };
+
+    Context.prototype.addLayer = function (layer) {
+      if (indexOf.call(this._layerList, layer) >= 0) {
+        return;
+      }
+      this._layerList.push(layer);
+      return null;
+    };
+
+    Context.prototype.removeLayer = function (layer) {
+      this._layerList = _.without(this._layerList, layer);
+      return null;
+    };
+
+    Context.prototype.layerCount = function () {
+      return this._layerList.length;
+    };
+
+    Context.prototype.nextLayerId = function () {
+      return this._layerIdCounter++;
+    };
+
+    Context.prototype._framerOriginal__createRootElement = function () {
+      this._rootElement = document.createElement("div");
+      this._rootElement.id = "FramerContextRoot-" + this._name;
+      this._rootElement.classList.add("framerContext");
+      if (this._parentLayer) {
+        return this._appendRootElement();
+      } else {
+        return Utils.domComplete(this._appendRootElement);
+      }
+    };
+
+    Context.prototype._createRootElement = function () {
+      console.log("=== Context ===== ");
+      console.log("Assiging new Node() to @_rootNode");
+      this._rootNode = new Node();
+      console.log("Creating new DOMElement() and passing the @_rootNode");
+      this._rootElement = new DOMElement(this._rootNode, {
+        tagName: "div"
+      });
+      this._rootElement.id = "FramerContextRoot-" + this._name;
+      if (this._parentLayer) {
+        return this._appendRootElement();
+      } else {
+        return Utils.domComplete(this._appendRootElement);
+      }
+    };
+
+    Context.prototype._framerOriginal__appendRootElement = function () {
+      var parentElement, ref;
+      parentElement = (ref = this._parentLayer) != null ? ref._element : void 0;
+      if (parentElement == null) {
+        parentElement = document.body;
+      }
+      return parentElement.appendChild(this._rootElement);
+    };
+
+    Context.prototype._appendRootElement = function () {
+      var parentElement, ref;
+      console.log("=== Context ===== ");
+      parentElement = (ref = this._parentLayer) != null ? ref._element._node : void 0;
+      if (parentElement == null) {
+        console.log("Calls Engine.createScene()");
+        parentElement = Engine.createScene();
+      }
+      console.log("Calls parentElement.addChild passing @_rootElement._node");
+      return parentElement.addChild(this._rootElement._node);
+    };
+
+    Context.prototype.run = function (f) {
+      var previousContext;
+      previousContext = Framer.CurrentContext;
+      Framer.CurrentContext = this;
+      f();
+      return Framer.CurrentContext = previousContext;
+    };
+
+    Context.define("width", {
+      get: function get() {
+        if (this._parentLayer) {
+          return this._parentLayer.width;
+        }
+        return window.innerWidth;
+      }
+    });
+
+    Context.define("height", {
+      get: function get() {
+        if (this._parentLayer) {
+          return this._parentLayer.height;
+        }
+        return window.innerHeight;
+      }
+    });
+
+    return Context;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Config":158,"./EventManager":164,"./Underscore":184,"./Utils":185,"famous":47}],160:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Context, Utils, _errorContext, _errorShown, errorWarning;
+
+  Utils = require("./Utils");
+
+  Context = require("./Context").Context;
+
+  _errorContext = null;
+
+  _errorShown = false;
+
+  errorWarning = function (event) {
+    var _errorWarningLayer, layer;
+    if (!_errorContext) {
+      _errorContext = new Context({
+        name: "Error"
+      });
+    }
+    if (_errorShown) {
+      return;
+    }
+    _errorShown = true;
+    layer = new Layer({
+      x: 20,
+      y: -50,
+      width: 300,
+      height: 40
+    });
+    layer.states.add({
+      visible: {
+        x: 20,
+        y: 20,
+        width: 300,
+        height: 40
+      }
+    });
+    layer.html = "Javascript Error, see the console";
+    layer.style = {
+      font: "12px/1.35em Menlo",
+      color: "white",
+      textAlign: "center",
+      lineHeight: layer.height + "px",
+      borderRadius: "5px",
+      backgroundColor: "rgba(255,0,0,.8)"
+    };
+    layer.states.animationOptions = {
+      curve: "spring",
+      curveOptions: {
+        tension: 1000,
+        friction: 30
+      }
+    };
+    layer.states["switch"]("visible");
+    layer.on(Events.Click, function () {
+      return this.states["switch"]("default");
+    });
+    return _errorWarningLayer = layer;
+  };
+
+  window.error = errorWarning;
+}).call(undefined);
+
+},{"./Context":159,"./Utils":185}],161:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Originals, Utils, _;
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  Originals = {
+    Layer: {
+      backgroundColor: "rgba(0,124,255,.5)",
+      width: 100,
+      height: 100
+    },
+    Animation: {
+      curve: "ease",
+      time: 1
+    },
+    DeviceComponent: {
+      fullScreen: false,
+      padding: 50,
+      deviceType: "iphone-5s-spacegray",
+      deviceZoom: "fit",
+      contentZoom: 1,
+      orientation: "portrait",
+      keyboard: false,
+      animationOptions: {
+        curve: "spring(400,40,0)"
+      }
+    },
+    LayerDraggable: {
+      momentum: true,
+      momentumOptions: {
+        friction: 2.1,
+        tolerance: 1
+      },
+      bounce: true,
+      bounceOptions: {
+        friction: 40,
+        tension: 200,
+        tolerance: 1
+      },
+      directionLock: false,
+      directionLockThreshold: {
+        x: 10,
+        y: 10
+      },
+      overdrag: true,
+      overdragScale: 0.5,
+      pixelAlign: true,
+      velocityTimeout: 100,
+      velocityScale: 890
+    },
+    FrictionSimulator: {
+      friction: 2,
+      tolerance: 1 / 10
+    },
+    SpringSimulator: {
+      tension: 500,
+      friction: 10,
+      tolerance: 1 / 10000
+    },
+    MomentumBounceSimulator: {
+      momentum: {
+        friction: 2,
+        tolerance: 10
+      },
+      bounce: {
+        tension: 500,
+        friction: 10,
+        tolerance: 1
+      }
+    }
+  };
+
+  exports.Defaults = {
+    getDefaults: function getDefaults(className, options) {
+      var defaults, k, ref, v;
+      if (!Originals.hasOwnProperty(className)) {
+        return {};
+      }
+      if (!Framer.Defaults.hasOwnProperty(className)) {
+        return {};
+      }
+      defaults = _.clone(Originals[className]);
+      ref = Framer.Defaults[className];
+      for (k in ref) {
+        v = ref[k];
+        defaults[k] = _.isFunction(v) ? v() : v;
+      }
+      for (k in defaults) {
+        v = defaults[k];
+        if (!options.hasOwnProperty(k)) {
+          options[k] = v;
+        }
+      }
+      return options;
+    },
+    setup: function setup() {
+      var className, classValues, k, ref, v;
+      if (window.FramerDefaults) {
+        ref = window.FramerDefaults;
+        for (className in ref) {
+          classValues = ref[className];
+          for (k in classValues) {
+            v = classValues[k];
+            Originals[className][k] = v;
+          }
+        }
+      }
+      return exports.Defaults.reset();
+    },
+    reset: function reset() {
+      return window.Framer.Defaults = _.clone(Originals);
+    }
+  };
+}).call(undefined);
+
+},{"./Underscore":184,"./Utils":185}],162:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Events,
+      Utils,
+      _,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Events = require("./Events").Events;
+
+  Events.EventBufferReset = "eventbufferreset";
+
+  Events.EventBufferUpdated = "eventbufferupdated";
+
+  exports.EventBuffer = (function (superClass) {
+    extend(EventBuffer, superClass);
+
+    function EventBuffer(options) {
+      if (options == null) {
+        options = {};
+      }
+      this.options = _.defaults(options, {
+        velocityTimeout: 100
+      });
+      this._events = [];
+    }
+
+    EventBuffer.prototype.push = function (event) {
+      this._events.push(event);
+      return this.emit(Events.EventBufferUpdated, event);
+    };
+
+    EventBuffer.prototype.reset = function () {
+      this._events.length = 0;
+      return this.emit(Events.EventBufferReset);
+    };
+
+    EventBuffer.define("length", {
+      get: function get() {
+        return this._events.length;
+      }
+    });
+
+    EventBuffer.define("first", {
+      get: function get() {
+        return this._events[0];
+      }
+    });
+
+    EventBuffer.define("offset", {
+      get: function get() {
+        var current, first, offset;
+        if (events.length < 2) {
+          return {
+            x: 0,
+            y: 0
+          };
+        }
+        current = events[events.length - 1];
+        first = events[0];
+        return offset = {
+          x: current.x - first.x,
+          y: current.y - first.y
+        };
+      }
+    });
+
+    EventBuffer.define("events", {
+      get: function get() {
+        var timeout;
+        timeout = Date.now() - this.options.velocityTimeout;
+        return _.filter(this._events, (function (_this) {
+          return function (event) {
+            return event.t > timeout;
+          };
+        })(this));
+      }
+    });
+
+    EventBuffer.define("angle", {
+      get: function get() {
+        var events, p1, p2;
+        events = this.events;
+        if (events.length < 2) {
+          return 0;
+        }
+        p1 = events[0];
+        p2 = events[1];
+        return Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+      }
+    });
+
+    EventBuffer.define("velocity", {
+      get: function get() {
+        var current, events, first, time, velocity;
+        events = this.events;
+        if (events.length < 2) {
+          return {
+            x: 0,
+            y: 0
+          };
+        }
+        current = events[events.length - 1];
+        first = events[0];
+        time = current.t - first.t;
+        velocity = {
+          x: (current.x - first.x) / time,
+          y: (current.y - first.y) / time
+        };
+        if (velocity.x === Infinity) {
+          velocity.x = 0;
+        }
+        if (velocity.y === Infinity) {
+          velocity.y = 0;
+        }
+        return velocity;
+      }
+    });
+
+    return EventBuffer;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Events":165,"./Underscore":184,"./Utils":185}],163:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var EventEmitter;
+
+  EventEmitter = require("eventemitter3");
+
+  exports.EventEmitter = EventEmitter;
+}).call(undefined);
+
+},{"eventemitter3":1}],164:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var DOMElement,
+      EventManagerElement,
+      EventManagerIdCounter,
+      FamousEventMap,
+      Utils,
+      famous,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  };
+
+  Utils = require("./Utils");
+
+  EventManagerIdCounter = 0;
+
+  famous = require("famous");
+
+  DOMElement = famous.domRenderables.DOMElement;
+
+  FamousEventMap = famous.domRenderers.Events.EventMap;
+
+  EventManagerElement = (function () {
+    function EventManagerElement(element1) {
+      this.element = element1;
+      this._events = {};
+    }
+
+    EventManagerElement.prototype.addEventListener = function (eventName, listener) {
+      var base, base1;
+      if (this.element.constructor.name === "DOMElement") {
+        if (FamousEventMap[eventName]) {
+          if ((base = this._events)[eventName] == null) {
+            base[eventName] = [];
+          }
+          this._events[eventName].push(listener);
+          this.element._node.addUIEvent(eventName);
+          return this.element._node.onReceive = (function (_this) {
+            return function (event, payload) {
+              var handler, handlerArray, i, len, results;
+              handlerArray = _this._events[event];
+              if (handlerArray != null) {
+                results = [];
+                for (i = 0, len = handlerArray.length; i < len; i++) {
+                  handler = handlerArray[i];
+                  results.push(handler());
+                }
+                return results;
+              }
+            };
+          })(this);
+        }
+      } else {
+        if (!Utils.domValidEvent(this.element, eventName)) {
+          return;
+        }
+        if ((base1 = this._events)[eventName] == null) {
+          base1[eventName] = [];
+        }
+        this._events[eventName].push(listener);
+        return this.element.addEventListener(eventName, listener);
+      }
+    };
+
+    EventManagerElement.prototype.removeEventListener = function (eventName, listener) {
+      if (!this._events) {
+        return;
+      }
+      if (!this._events[eventName]) {
+        return;
+      }
+      this._events[eventName] = _.without(this._events[eventName], listener);
+      if (this.element.constructor.name === "DOMElement") {
+        this.element._node.removeUIEvent(eventName);
+      } else {
+        this.element.removeEventListener(eventName, listener);
+      }
+    };
+
+    EventManagerElement.prototype.removeAllEventListeners = function (eventName) {
+      var eventListener, events, i, j, len, len1, ref;
+      console.log("removeAllEventListeners called");
+      events = eventName ? [eventName] : _.keys(this._events);
+      for (i = 0, len = events.length; i < len; i++) {
+        eventName = events[i];
+        ref = this._events[eventName];
+        for (j = 0, len1 = ref.length; j < len1; j++) {
+          eventListener = ref[j];
+          this.removeEventListener(eventName, eventListener);
+        }
+      }
+    };
+
+    EventManagerElement.prototype.once = function (event, listener) {
+      var fn;
+      fn = (function (_this) {
+        return function () {
+          _this.removeListener(event, fn);
+          return listener.apply(null, arguments);
+        };
+      })(this);
+      return this.on(event, fn);
+    };
+
+    EventManagerElement.prototype.on = EventManagerElement.prototype.addEventListener;
+
+    EventManagerElement.prototype.off = EventManagerElement.prototype.removeEventListener;
+
+    return EventManagerElement;
+  })();
+
+  exports.EventManager = (function () {
+    function EventManager(element) {
+      this.wrap = bind(this.wrap, this);
+      this._elements = {};
+    }
+
+    EventManager.prototype.wrap = function (element) {
+      if (!element._eventManagerId) {
+        element._eventManagerId = EventManagerIdCounter++;
+      }
+      if (!this._elements[element._eventManagerId]) {
+        this._elements[element._eventManagerId] = new EventManagerElement(element);
+      }
+      return this._elements[element._eventManagerId];
+    };
+
+    EventManager.prototype.reset = function () {
+      var element, elementEventManager, ref, results;
+      ref = this._elements;
+      results = [];
+      for (element in ref) {
+        elementEventManager = ref[element];
+        results.push(elementEventManager.removeAllEventListeners());
+      }
+      return results;
+    };
+
+    return EventManager;
+  })();
+}).call(undefined);
+
+},{"./Utils":185,"famous":47}],165:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
@@ -40888,8 +45189,6 @@ module.exports = shaders;
 
   Events.Click = Events.TouchEnd;
 
-  console.log(Events);
-
   Events.AnimationStart = "start";
 
   Events.AnimationStop = "stop";
@@ -40924,1052 +45223,365 @@ module.exports = shaders;
     return Framer.CurrentContext.eventManager.wrap(element);
   };
 
-  module.exports = Events;
+  exports.Events = Events;
 }).call(undefined);
 
-},{"./Underscore":150,"./Utils":151}],146:[function(require,module,exports){
-// Generated by CoffeeScript 1.9.2
-'use strict';
-
-(function () {
-  var Engine,
-      FamousWindow,
-      Logger,
-      famous,
-      bind = function bind(fn, me) {
-    return function () {
-      return fn.apply(me, arguments);
-    };
-  };
-
-  famous = require("famous");
-
-  Engine = famous.core.FamousEngine;
-
-  Logger = require('./Logger');
-
-  FamousWindow = (function () {
-    function FamousWindow(options) {
-      this.createNode = bind(this.createNode, this);
-      options = options || {};
-      Logger.log('FamousWindow constructor called');
-      Logger.log('Creating scene...');
-      this.scene = Engine.createScene();
-      this.isRootWindow = options.isRootWindow || false;
-    }
-
-    FamousWindow.prototype.createNode = function () {
-      var newNode;
-      newNode = this.scene.addChild();
-      return newNode;
-    };
-
-    return FamousWindow;
-  })();
-
-  module.exports = FamousWindow;
-}).call(undefined);
-
-},{"./Logger":149,"famous":46}],147:[function(require,module,exports){
+},{"./Underscore":184,"./Utils":185}],166:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
 (function () {
-  var Application,
-      DOMElement,
-      Events,
-      FamousWindow,
-      Layer,
-      LayerId,
-      Logger,
-      Position,
-      Quaternion,
-      Rotation,
-      Transitionable,
-      _,
-      famous,
-      bind = function bind(fn, me) {
-    return function () {
-      return fn.apply(me, arguments);
-    };
-  };
+  exports.MobileScrollFix = require("./MobileScrollFix");
 
-  famous = require("famous");
-
-  FamousWindow = require("./FamousWindow");
-
-  Application = require("./Application");
-
-  LayerId = require("./LayerId");
-
-  Logger = require('./Logger');
-
-  DOMElement = famous.domRenderables.DOMElement;
-
-  Rotation = famous.components.Rotation;
-
-  Position = famous.components.Position;
-
-  Transitionable = famous.transitions.Transitionable;
-
-  Events = require("./Events");
-
-  Quaternion = famous.math.Quaternion;
-
-  _ = require('./Underscore');
-
-  Layer = (function () {
-    function Layer(options) {
-      this.on = bind(this.on, this);
-      this.animate = bind(this.animate, this);
-      this.startAnimation = bind(this.startAnimation, this);
-      this.retrieveCurveValue = bind(this.retrieveCurveValue, this);
-      this.applyOriginY = bind(this.applyOriginY, this);
-      this.applyOriginX = bind(this.applyOriginX, this);
-      this.applyIgnoreEvents = bind(this.applyIgnoreEvents, this);
-      this.applyClip = bind(this.applyClip, this);
-      this.applyVisible = bind(this.applyVisible, this);
-      this.applyImage = bind(this.applyImage, this);
-      this.applySuperlayer = bind(this.applySuperlayer, this);
-      this.getSize = bind(this.getSize, this);
-      this._centerUsingAlign = bind(this._centerUsingAlign, this);
-      this.center = bind(this.center, this);
-      this.centerY = bind(this.centerY, this);
-      this.centerX = bind(this.centerX, this);
-      this.centerAxis = bind(this.centerAxis, this);
-      this.siblingLayers = bind(this.siblingLayers, this);
-      this.removeSubLayer = bind(this.removeSubLayer, this);
-      this.addSubLayer = bind(this.addSubLayer, this);
-      this.subLayersByName = bind(this.subLayersByName, this);
-      this.applyHtml = bind(this.applyHtml, this);
-      this.applyRotationZ = bind(this.applyRotationZ, this);
-      this.applyRotationY = bind(this.applyRotationY, this);
-      this.applyRotationX = bind(this.applyRotationX, this);
-      this.applyRotation = bind(this.applyRotation, this);
-      this.radianToDegree = bind(this.radianToDegree, this);
-      this.degreeToRadian = bind(this.degreeToRadian, this);
-      this.applyOpacity = bind(this.applyOpacity, this);
-      this.applyScale = bind(this.applyScale, this);
-      this.applyScaleZ = bind(this.applyScaleZ, this);
-      this.applyScaleY = bind(this.applyScaleY, this);
-      this.applyScaleX = bind(this.applyScaleX, this);
-      this.applyZ = bind(this.applyZ, this);
-      this.applyY = bind(this.applyY, this);
-      this.applyX = bind(this.applyX, this);
-      this.applyBorderRadius = bind(this.applyBorderRadius, this);
-      this.applyBackgroundColor = bind(this.applyBackgroundColor, this);
-      this.applyWidth = bind(this.applyWidth, this);
-      this.applyHeight = bind(this.applyHeight, this);
-      var attributes, backgroundColor, borderRadius, height, image, width, x, y;
-      this._id = LayerId.generateNewId();
-      this._name = "";
-      this._window = options.window;
-      if (this._window == null) {
-        this._window = Application.getRootWindow();
-      }
-      this._layerNode = this._window.createNode();
-      this._layerNode.setOrigin(0.5, 0.5, 0.5);
-      this._rotationY = 0;
-      this._tagName = "div";
-      this._ignoreEvents = false;
-      image = options.image || null;
-      attributes = null;
-      if (image !== null) {
-        this._tagName = "img";
-      }
-      this._layerElement = new DOMElement(this._layerNode, {
-        tagName: this._tagName
-      });
-      if (image !== null) {
-        this._layerElement.setAttribute("src", image);
-      }
-      backgroundColor = options.backgroundColor || null;
-      if (backgroundColor !== null) {
-        this.applyBackgroundColor(backgroundColor);
-      }
-      borderRadius = options.borderRadius || null;
-      if (borderRadius !== null) {
-        this.applyBorderRadius(borderRadius);
-      }
-      width = options.width || 0;
-      height = options.height || 0;
-      if (width >= 0) {
-        this._layerNode.setSizeMode("absolute", "absolute", "absolute");
-        this.applyWidth(width);
-      }
-      if (height >= 0) {
-        this._layerNode.setSizeMode("absolute", "absolute", "absolute");
-        this.applyHeight(height);
-      }
-      x = options.x || 0;
-      y = options.y || 0;
-      this.applyX(x);
-      this.applyY(y);
-      this._superlayer = options.superLayer || null;
-      this.applySuperlayer(this._superlayer);
-      this.eventsHandlers = [];
-      this._layerNode.addUIEvent(Events.Click);
-      this._layerNode.onReceive = (function (_this) {
-        return function (event, payload) {
-          var handler;
-          if (!_this._ignoreEvents) {
-            handler = _this.eventsHandlers[event] || null;
-            if (handler !== null) {
-              return handler();
-            }
-          }
-        };
-      })(this);
-      this._layerNode.layer = this;
-      this._layerElement.layer = this;
-    }
-
-    Layer.prototype.applyHeight = function (val) {
-      var currentSize;
-      currentSize = this._layerNode.getAbsoluteSize();
-      return this._layerNode.setAbsoluteSize(currentSize[0], val, currentSize[2]);
-    };
-
-    Layer.property('height', {
-      get: function get() {
-        var currentSize;
-        currentSize = this._layerNode.getAbsoluteSize();
-        return currentSize[1];
-      },
-      set: function set(newVal) {
-        if (this.height !== newVal) {
-          return this.applyHeight(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyWidth = function (val) {
-      var currentSize;
-      currentSize = this._layerNode.getAbsoluteSize();
-      return this._layerNode.setAbsoluteSize(val, currentSize[1], currentSize[2]);
-    };
-
-    Layer.property('width', {
-      get: function get() {
-        var currentSize;
-        Logger.log("width property inside");
-        currentSize = this._layerNode.getAbsoluteSize();
-        Logger.log("width property, currentSize: " + currentSize);
-        return currentSize[0];
-      },
-      set: function set(newVal) {
-        if (this.width !== newVal) {
-          return this.applyWidth(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyBackgroundColor = function (bgColor) {
-      return this._layerElement.setProperty("background-color", bgColor);
-    };
-
-    Layer.property('backgroundColor', {
-      get: function get() {
-        var elementValue;
-        elementValue = this._layerElement.getValue();
-        return elementValue.styles['background-color'];
-      },
-      set: function set(newVal) {
-        if (this.backgroundColor !== newVal) {
-          return this.applyBackgroundColor(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyBorderRadius = function (borderRadius) {
-      var completeValueString;
-      completeValueString = "";
-      if (typeof borderRadius === 'string') {
-        completeValueString = borderRadius;
-      } else {
-        completeValueString = borderRadius + "px";
-      }
-      this._layerElement.setProperty('border-radius', "" + completeValueString);
-      return this._layerElement.setProperty('border', "1px solid " + this.backgroundColor);
-    };
-
-    Layer.property('borderRadius', {
-      get: function get() {
-        var elementValue, strValue;
-        elementValue = this._layerElement.getValue();
-        strValue = elementValue.styles['borderRadius'] || '';
-        if (strValue.length > 0) {
-          strValue = strValue.replace("px", "");
-          return parseInt(strValue, 10);
-        } else {
-          return 0;
-        }
-      },
-      set: function set(newVal) {
-        if (this.borderRadius !== newVal) {
-          return this.applyBorderRadius(newVal);
-        }
-      }
-    });
-
-    Layer.property('id', {
-      get: function get() {
-        return this._id;
-      }
-    });
-
-    Layer.property('name', {
-      get: function get() {
-        return this._name;
-      },
-      set: function set(newVal) {
-        return this._name = newVal;
-      }
-    });
-
-    Layer.prototype.applyX = function (newVal) {
-      var currentPos;
-      currentPos = this._layerNode.getPosition();
-      return this._layerNode.setPosition(newVal, currentPos[1], currentPos[2]);
-    };
-
-    Layer.property('x', {
-      get: function get() {
-        var currentPos;
-        currentPos = this._layerNode.getPosition();
-        return currentPos[0];
-      },
-      set: function set(newVal) {
-        if (this.x !== newVal) {
-          return this.applyX(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyY = function (newVal) {
-      var currentPos;
-      currentPos = this._layerNode.getPosition();
-      return this._layerNode.setPosition(currentPos[0], newVal, currentPos[2]);
-    };
-
-    Layer.property('y', {
-      get: function get() {
-        var currentPos;
-        currentPos = this._layerNode.getPosition();
-        return currentPos[1];
-      },
-      set: function set(newVal) {
-        if (this.y !== newVal) {
-          return this.applyY(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyZ = function (newVal) {
-      var currentPos;
-      currentPos = this._layerNode.getPosition();
-      return this._layerNode.setPosition(currentPos[0], currentPos[1], newVal);
-    };
-
-    Layer.property('z', {
-      get: function get() {
-        var currentPos;
-        currentPos = this._layerNode.getPosition();
-        return currentPos[2];
-      },
-      set: function set(newVal) {
-        if (this.y !== newVal) {
-          return this.applyZ(newVal);
-        }
-      }
-    });
-
-    Layer.property('point', {
-      get: function get() {
-        var point;
-        point = {
-          x: this.x,
-          y: this.y
-        };
-        return point;
-      },
-      set: function set(newVal) {
-        if (this.point !== newVal) {
-          if (newVal != null) {
-            if (this.point.x !== newVal.x || this.point.y !== newVal.y) {
-              this.x = newVal.x;
-              return this.y = newVal.y;
-            }
-          }
-        }
-      }
-    });
-
-    Layer.property('size', {
-      get: function get() {
-        var size;
-        size = {
-          width: this.width,
-          height: this.height
-        };
-        return size;
-      },
-      set: function set(newVal) {
-        if (this.size !== newVal) {
-          if (newVal != null) {
-            if (this.size.width !== newVal.width || this.size.height !== newVal.height) {
-              this.width = newVal.width;
-              return this.height = newVal.height;
-            }
-          }
-        }
-      }
-    });
-
-    Layer.property('frame', {
-      get: function get() {
-        var frame;
-        frame = {
-          x: this.x,
-          y: this.y,
-          width: this.width,
-          height: this.height
-        };
-        return frame;
-      },
-      set: function set(newVal) {
-        if (this.frame !== newVal) {
-          if (newVal != null) {
-            this.point = newVal;
-            return this.size = newVal;
-          }
-        }
-      }
-    });
-
-    Layer.property('minX', {
-      get: function get() {
-        return this.x;
-      }
-    });
-
-    Layer.property('maxX', {
-      get: function get() {
-        return this.x + this.width;
-      }
-    });
-
-    Layer.property('minY', {
-      get: function get() {
-        return this.y;
-      }
-    });
-
-    Layer.property('maxY', {
-      get: function get() {
-        return this.y + this.height;
-      }
-    });
-
-    Layer.property('midX', {
-      get: function get() {
-        return (this.minX + this.maxX) / 2;
-      }
-    });
-
-    Layer.property('midY', {
-      get: function get() {
-        return (this.minY + this.maxY) / 2;
-      }
-    });
-
-    Layer.prototype.applyScaleX = function (newVal) {
-      var currentScale;
-      currentScale = this._layerNode.getScale();
-      return this._layerNode.setScale(newVal, currentScale[1], currentScale[2]);
-    };
-
-    Layer.prototype.applyScaleY = function (newVal) {
-      var currentScale;
-      currentScale = this._layerNode.getScale();
-      return this._layerNode.setScale(currentScale[0], newVal, currentScale[2]);
-    };
-
-    Layer.prototype.applyScaleZ = function (newVal) {
-      var currentScale;
-      currentScale = this._layerNode.getScale();
-      return this._layerNode.setScale(currentScale[0], currentScale[1], newVal);
-    };
-
-    Layer.prototype.applyScale = function (newVal) {
-      this.applyScaleX(newVal);
-      return this.applyScaleY(newVal);
-    };
-
-    Layer.property('scale', {
-      get: function get() {
-        var currentScale;
-        currentScale = this._layerNode.getScale();
-        return currentScale[0];
-      },
-      set: function set(newVal) {
-        if (this.scale !== newVal) {
-          return this.applyScale(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyOpacity = function (newVal) {
-      return this._layerNode.setOpacity(newVal);
-    };
-
-    Layer.property('opacity', {
-      get: function get() {
-        return this._layerNode.getOpacity();
-      },
-      set: function set(newVal) {
-        if (this.opacity !== newVal) {
-          return this.applyOpacity(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.degreeToRadian = function (degree) {
-      var result;
-      result = degree * Math.PI / 180.0;
-      return result;
-    };
-
-    Layer.prototype.radianToDegree = function (radian) {
-      var result;
-      result = radian * 180.0 / Math.PI;
-      return result;
-    };
-
-    Layer.prototype.applyRotation = function (newVal) {
-      var currentRotation;
-      currentRotation = this._layerNode.getRotation();
-      return this._layerNode.setRotation(currentRotation[0], currentRotation[1], this.angleToFamousRotation(newVal));
-    };
-
-    Layer.property('rotation', {
-      get: function get() {
-        var currentRotation, eulerResult, q, thetaRadian;
-        currentRotation = this._layerNode.getRotation();
-        q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
-        eulerResult = {};
-        q.toEuler(eulerResult);
-        thetaRadian = Math.PI / 180.;
-        return eulerResult.z / thetaRadian;
-      },
-      set: function set(newVal) {
-        if (this.rotation !== newVal) {
-          return this.applyRotation(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyRotationX = function (newVal) {
-      var currentRotation;
-      currentRotation = this._layerNode.getRotation();
-      return this._layerNode.setRotation(this.degreeToRadian(newVal), currentRotation[1], currentRotation[2]);
-    };
-
-    Layer.property('rotationX', {
-      get: function get() {
-        var currentRotation, eulerResult, q;
-        currentRotation = this._layerNode.getRotation();
-        q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
-        eulerResult = {};
-        q.toEuler(eulerResult);
-        return this.radianToDegree(eulerResult.x);
-      },
-      set: function set(newVal) {
-        if (this.rotation !== newVal) {
-          return this.applyRotationX(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyRotationY = function (newVal) {
-      var currentRotation;
-      this._rotationY = newVal;
-      currentRotation = this._layerNode.getRotation();
-      return this._layerNode.setRotation(currentRotation[0], this.degreeToRadian(newVal), currentRotation[2]);
-    };
-
-    Layer.property('rotationY', {
-      get: function get() {
-        return this._rotationY;
-      },
-      set: function set(newVal) {
-        if (this.rotation !== newVal) {
-          return this.applyRotationY(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyRotationZ = function (newVal) {
-      var currentRotation;
-      currentRotation = this._layerNode.getRotation();
-      return this._layerNode.setRotation(currentRotation[0], currentRotation[1], this.angleToFamousRotation(newVal));
-    };
-
-    Layer.property('rotationZ', {
-      get: function get() {
-        var currentRotation, eulerResult, q, thetaRadian;
-        currentRotation = this._layerNode.getRotation();
-        q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2]);
-        eulerResult = {};
-        q.toEuler(eulerResult);
-        thetaRadian = Math.PI / 180.;
-        return eulerResult.z / thetaRadian;
-      },
-      set: function set(newVal) {
-        if (this.rotation !== newVal) {
-          return this.applyRotationZ(newVal);
-        }
-      }
-    });
-
-    Layer.property('subLayers', {
-      get: function get() {
-        var child, children, i, len, subLayers;
-        subLayers = [];
-        children = this._layerNode.getChildren() || [];
-        for (i = 0, len = children.length; i < len; i++) {
-          child = children[i];
-          if (child.layer != null) {
-            subLayers.push(child.layer);
-          }
-        }
-        return subLayers;
-      }
-    });
-
-    Layer.prototype.applyHtml = function (newVal) {
-      return this._layerElement.setContent(newVal);
-    };
-
-    Layer.property('html', {
-      get: function get() {
-        var values;
-        values = this._layerElement.getValue();
-        return values.content;
-      },
-      set: function set(newVal) {
-        if (this.html !== newVal) {
-          return this.applyHtml(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.subLayersByName = function (name) {
-      var i, len, result, subLayer, subLayers;
-      subLayers = this.subLayers;
-      result = [];
-      for (i = 0, len = subLayers.length; i < len; i++) {
-        subLayer = subLayers[i];
-        if (subLayer.name != null) {
-          if (subLayer.name === name) {
-            result.push(subLayer);
-          }
-        }
-      }
-      return result;
-    };
-
-    Layer.prototype.addSubLayer = function (layer) {
-      if (layer != null) {
-        return this._layerNode.addChild(layer._layerNode);
-      }
-    };
-
-    Layer.prototype.removeSubLayer = function (layer) {
-      if (layer != null && layer._layerNode != null) {
-        return this._layerNode.removeChild(layer._layerNode);
-      }
-    };
-
-    Layer.prototype.siblingLayers = function () {
-      var child, i, len, parentChildren, result;
-      result = [];
-      parentChildren = this._layerNode.getParent().getChildren();
-      for (i = 0, len = parentChildren.length; i < len; i++) {
-        child = parentChildren[i];
-        if (child.layer != null) {
-          result.push(child.layer);
-        }
-      }
-      return result;
-    };
-
-    Layer.prototype.centerAxis = function (isX, isY) {
-      var nodeParent, parentClassName, parentSize;
-      nodeParent = this._layerNode.getParent();
-      parentSize = nodeParent.getAbsoluteSize();
-      parentClassName = nodeParent.constructor.name;
-      if (parentClassName === 'Scene') {
-        parentSize = nodeParent.getUpdater().compositor.getContext('body')._size;
-      }
-      if (isX) {
-        this.x = parentSize[0] / 2 - this.width / 2;
-      }
-      if (isY) {
-        return this.y = parentSize[1] / 2 - this.height / 2;
-      }
-    };
-
-    Layer.prototype.centerX = function () {
-      return this.centerAxis(true, false);
-    };
-
-    Layer.prototype.centerY = function () {
-      return this.centerAxis(false, true);
-    };
-
-    Layer.prototype.center = function () {
-      this._layerNode.setAlign(0.5, 0.5);
-      this._layerNode.setMountPoint(0.5, 0.5);
-      return this._layerNode.setOrigin(0.5, 0.5);
-    };
-
-    Layer.prototype._centerUsingAlign = function () {
-      var originalMountPoint;
-      originalMountPoint = this._layerNode.getMountPoint();
-      this._layerNode.setMountPoint(0.5, 0.5, originalMountPoint[2]);
-      this._layerNode.setAlign(0.5, 0.5);
-      return this._layerNode.setMountPoint(originalMountPoint[0], originalMountPoint[1], originalMountPoint[2]);
-    };
-
-    Layer.prototype.getSize = function () {
-      return this._layerNode.getAbsoluteSize();
-    };
-
-    Layer.prototype.applySuperlayer = function (newVal) {
-      if (newVal !== null) {
-        this._layerNode.getParent().removeChild(this._layerNode);
-        return newVal._layerNode.addChild(this._layerNode);
-      }
-    };
-
-    Layer.property('superlayer', {
-      get: function get() {
-        return this._superlayer;
-      },
-      set: function set(newVal) {
-        if (this._superlayer !== newVal) {
-          this._superlayer = newVal;
-          return this.applySuperlayer(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyImage = function (imageUrl) {
-      return this._layerElement.setProperty('background-image', "url('" + newVal + "')");
-    };
-
-    Layer.property('image', {
-      get: function get() {
-        var elementValue;
-        elementValue = this._layerElement.getValue();
-        return elementValue.styles['background-image'];
-      },
-      set: function set(newVal) {
-        if (this.image !== newVal) {
-          return this.applyImage(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyVisible = function (newVal) {
-      if (newVal) {
-        return this._layerNode.show();
-      } else {
-        return this._layerNode.hide();
-      }
-    };
-
-    Layer.property('visible', {
-      get: function get() {
-        return this._layerNode.isShown();
-      },
-      set: function set(newVal) {
-        if (this.visible !== newVal) {
-          return this.applyVisible(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyClip = function (newVal) {
-      return this._layerElement.setProperty('overflow', newVal);
-    };
-
-    Layer.property('clip', {
-      get: function get() {
-        var elementValue;
-        elementValue = this._layerElement.getValue();
-        return elementValue.styles['overflow'];
-      },
-      set: function set(newVal) {
-        if (this.clip !== newVal) {
-          return this.applyClip(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyIgnoreEvents = function (newVal) {
-      return this._ignoreEvents = newVal;
-    };
-
-    Layer.property('ignoreEvents', {
-      get: function get() {
-        return this._ignoreEvents;
-      },
-      set: function set(newVal) {
-        if (this.ignoreEvents !== newVal) {
-          return this.applyIgnoreEvents(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyOriginX = function (newVal) {
-      var currentValues;
-      currentValues = this._layerNode.getOrigin();
-      return this._layerNode.setOrigin(newVal, currentValues[1], currentValues[2]);
-    };
-
-    Layer.property('originX', {
-      get: function get() {
-        var currentValues;
-        currentValues = this._layerNode.getOrigin();
-        return currentValues[0];
-      },
-      set: function set(newVal) {
-        if (this.originX !== newVal) {
-          return this.applyOriginX(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.applyOriginY = function (newVal) {
-      var currentValues;
-      currentValues = this._layerNode.getOrigin();
-      return this._layerNode.setOrigin(currentValues[0], newVal, currentValues[2]);
-    };
-
-    Layer.property('originY', {
-      get: function get() {
-        var currentValues;
-        currentValues = this._layerNode.getOrigin();
-        return currentValues[1];
-      },
-      set: function set(newVal) {
-        if (this.originY !== newVal) {
-          return this.applyOriginY(newVal);
-        }
-      }
-    });
-
-    Layer.prototype.retrieveCurveValue = function (str) {
-      var result;
-      result = {
-        name: "",
-        args: []
-      };
-      if (_.endsWith(str, ")")) {
-        result.name = str.split("(")[0];
-        result.args = str.split("(")[1].split(",").map(function (a) {
-          return _.trim(_.trimRight(a, ")"));
-        });
-      } else {
-        result.name = str;
-      }
-      return result;
-    };
-
-    Layer.prototype.startAnimation = function (animOptions) {
-      var borderRadiusTransition, borderRadiusValue, componentId, curveMaps, curveObject, curveValue, posXValue, posYValue, positionComponent, rotationComponent, rotationValue, rotationXValue, rotationYTransitionable, rotationYValue, rotationZValue, spinner, timeValue;
-      rotationXValue = animOptions.properties.rotationX || null;
-      rotationYValue = animOptions.properties.rotationY || null;
-      rotationZValue = animOptions.properties.rotationZ || null;
-      rotationValue = animOptions.properties.rotation || null;
-      borderRadiusValue = animOptions.properties.borderRadius || null;
-      posYValue = animOptions.properties.y || null;
-      posXValue = animOptions.properties.x || null;
-      timeValue = animOptions.time || 1;
-      timeValue = timeValue * 1000;
-      curveMaps = {
-        "ease": "easeInOut"
-      };
-      curveValue = animOptions.curve || '';
-      curveObject = this.retrieveCurveValue(curveValue);
-      curveValue = curveObject.name;
-      if (curveValue === "ease") {
-        curveValue = "easeInOut";
-      }
-      if (posXValue !== null) {
-        positionComponent = new Position(this._layerNode);
-        positionComponent.setX(posXValue, {
-          duration: timeValue,
-          curve: curveValue
-        });
-      }
-      if (posYValue !== null) {
-        positionComponent = new Position(this._layerNode);
-        positionComponent.setY(posYValue, {
-          duration: timeValue,
-          curve: curveValue
-        });
-      }
-      if (rotationXValue !== null) {
-        rotationComponent = new Rotation(this._layerNode);
-        rotationComponent.setX(this.degreeToRadian(rotationXValue), {
-          duration: timeValue,
-          curve: curveValue
-        });
-      }
-      if (rotationYValue !== null) {
-        rotationYTransitionable = new Transitionable(this.rotationY);
-        rotationYTransitionable.set(rotationYValue, {
-          duration: timeValue,
-          curve: curveValue
-        });
-        spinner = this._layerNode.addComponent({
-          onUpdate: (function (_this) {
-            return function (time) {
-              _this.rotationY = rotationYTransitionable.get();
-              if (rotationYTransitionable.isActive()) {
-                return _this._layerNode.requestUpdate(spinner);
-              }
-            };
-          })(this)
-        });
-        this._layerNode.requestUpdate(spinner);
-      }
-      if (rotationZValue !== null) {
-        rotationComponent = new Rotation(this._layerNode);
-        rotationComponent.setZ(this.degreeToRadian(rotationZValue), {
-          duration: timeValue,
-          curve: curveValue
-        });
-      }
-      if (rotationValue !== null) {
-        rotationComponent = new Rotation(this._layerNode);
-        rotationComponent.setZ(this.angleToFamousRotation(rotationValue), {
-          duration: timeValue,
-          curve: curveValue
-        });
-        this._layerNode.addComponent(rotationComponent);
-      }
-      if (borderRadiusValue !== null) {
-        Logger.log("borderRadius: " + this.borderRadius + ", borderRadiusValue: " + borderRadiusValue);
-        borderRadiusTransition = new Transitionable(this.borderRadius);
-        borderRadiusTransition.set(borderRadiusValue, {
-          duration: 1000
-        });
-        componentId = this._layerNode.addComponent({
-          onUpdate: (function (_this) {
-            return function (time) {
-              _this.borderRadius = borderRadiusTransition.get();
-              if (borderRadiusTransition.isActive()) {
-                return _this._layerNode.requestUpdate(componentId);
-              }
-            };
-          })(this)
-        });
-        return this._layerNode.requestUpdate(componentId);
-      }
-    };
-
-    Layer.prototype.animate = function (options) {
-      var animOptions, delayValue;
-      animOptions = options || {};
-      animOptions.properties = animOptions.properties || {};
-      delayValue = animOptions.delay || 0;
-      delayValue = delayValue * 1000;
-      return setTimeout((function (_this) {
-        return function () {
-          return _this.startAnimation(animOptions);
-        };
-      })(this), delayValue);
-    };
-
-    Layer.prototype.on = function (eventType, eventHandler) {
-      return this.eventsHandlers[eventType] = eventHandler;
-    };
-
-    return Layer;
-  })();
-
-  module.exports = Layer;
+  exports.OmitNew = require("./OmitNew");
 }).call(undefined);
 
-},{"./Application":142,"./Events":145,"./FamousWindow":146,"./LayerId":148,"./Logger":149,"./Underscore":150,"famous":46}],148:[function(require,module,exports){
-// Generated by CoffeeScript 1.9.2
-"use strict";
-
-(function () {
-  var LayerId;
-
-  LayerId = (function () {
-    function LayerId() {}
-
-    LayerId.currentId = 0;
-
-    LayerId.generateNewId = function () {
-      this.currentId += 1;
-      return this.currentId;
-    };
-
-    return LayerId;
-  })();
-
-  module.exports = LayerId;
-}).call(undefined);
-
-},{}],149:[function(require,module,exports){
-// Generated by CoffeeScript 1.9.2
-"use strict";
-
-(function () {
-  var Logger;
-
-  Logger = (function () {
-    function Logger() {}
-
-    Logger.log = function (msg) {
-      return console.log(msg);
-    };
-
-    return Logger;
-  })();
-
-  module.exports = Logger;
-}).call(undefined);
-
-},{}],150:[function(require,module,exports){
-// Generated by CoffeeScript 1.9.2
-"use strict";
-
-(function () {
-  var _;
-
-  _ = require("lodash");
-
-  module.exports = _;
-}).call(undefined);
-
-},{"lodash":141}],151:[function(require,module,exports){
+},{"./MobileScrollFix":167,"./OmitNew":168}],167:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
 (function () {
   var Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  exports.enable = function () {
+    var MobileScrollFixLayer, handleScrollingLayerTouchMove, handleScrollingLayerTouchStart;
+    document.ontouchmove = function (event) {
+      if (event.target === document.body) {
+        return event.preventDefault();
+      }
+    };
+    handleScrollingLayerTouchMove = function (event) {
+      return event.stopPropagation();
+    };
+    handleScrollingLayerTouchStart = function (event) {
+      var element, startTopScroll;
+      element = this._element;
+      startTopScroll = element.scrollTop;
+      if (startTopScroll <= 0) {
+        element.scrollTop = 1;
+      }
+      if (startTopScroll + element.offsetHeight >= element.scrollHeight) {
+        return element.scrollTop = element.scrollHeight - element.offsetHeight - 1;
+      }
+    };
+    MobileScrollFixLayer = (function (superClass) {
+      extend(MobileScrollFixLayer, superClass);
+
+      function MobileScrollFixLayer(options) {
+        this._updateScrollListeners = bind(this._updateScrollListeners, this);
+        MobileScrollFixLayer.__super__.constructor.call(this, options);
+        if (this.constructor.name === "Layer") {
+          this.on("change:scrollVertical", this._updateScrollListeners);
+          this._updateScrollListeners();
+        }
+      }
+
+      MobileScrollFixLayer.prototype._updateScrollListeners = function () {
+        if (this.scrollVertical === true) {
+          this.on("touchmove", handleScrollingLayerTouchMove);
+          return this.on("touchstart", handleScrollingLayerTouchStart);
+        } else {
+          this.off("touchmove", handleScrollingLayerTouchMove);
+          return this.off("touchstart", handleScrollingLayerTouchStart);
+        }
+      };
+
+      return MobileScrollFixLayer;
+    })(Framer.Layer);
+    return window.Layer = window.Framer.Layer = MobileScrollFixLayer;
+  };
+}).call(undefined);
+
+},{"../Utils":185}],168:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var slice = [].slice;
+
+  exports.enable = function (module) {
+    var ClassWrapper;
+    if (module == null) {
+      module = window;
+    }
+    ClassWrapper = function (Klass) {
+      return function () {
+        var args;
+        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+        return this.prototype = (function (func, args, ctor) {
+          ctor.prototype = func.prototype;
+          var child = new ctor(),
+              result = func.apply(child, args);
+          return Object(result) === result ? result : child;
+        })(Klass, args, function () {});
+      };
+    };
+    module.Frame = ClassWrapper(Framer.Frame);
+    module.Layer = ClassWrapper(Framer.Layer);
+    module.BackgroundLayer = ClassWrapper(Framer.BackgroundLayer);
+    module.VideoLayer = ClassWrapper(Framer.VideoLayer);
+    return module.Animation = ClassWrapper(Framer.Animation);
+  };
+}).call(undefined);
+
+},{}],169:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var FamousPropertySetter;
+
+  FamousPropertySetter = {
+    visible: function visible(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.visible;
+      if (propertyValue) {
+        return layer._element.setProperty("display", "block");
+      } else {
+        return layer._element.setProperty("display", "none");
+      }
+    },
+    ignoreEvents: function ignoreEvents(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.ignoreEvents;
+      if (propertyValue) {
+        return layer._element.setProperty("pointerEvents", "none");
+      } else {
+        return layer._element.setProperty("pointerEvents", "auto");
+      }
+    },
+    clip: function clip(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.clip;
+      if (layer._properties.scrollHorizontal === true || layer._properties.scrollVertical === true) {
+        layer._element.setProperty("overflow", "auto");
+      }
+      if (layer._properties.clip === true) {
+        layer._element.setProperty("overflow", "hidden");
+      }
+      return layer._element.setProperty("overflow", "visible");
+    },
+    borderRadius: function borderRadius(layer) {
+      if (!_.isNumber(layer._properties.borderRadius)) {
+        return layer._element.setProperty("borderRadius", layer._properties.borderRadius);
+      } else {
+        return layer._element.setProperty("borderRadius", layer._properties.borderRadius);
+      }
+    },
+    opacity: function opacity(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.opacity;
+      return layer._node.setOpacity(propertyValue);
+    },
+    index: function index(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.index;
+      return layer._element.setProperty("zIndex", propertyValue);
+    },
+    color: function color(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.color;
+      return layer._element.setProperty("color", propertyValue);
+    },
+    width: function width(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.width;
+      nodeValues = layer._node.getAbsoluteSize();
+      return layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
+    },
+    height: function height(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.height;
+      nodeValues = layer._node.getAbsoluteSize();
+      return layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
+    },
+    originX: function originX(layer) {
+      var originValues, propertyValue;
+      propertyValue = layer._properties.originX;
+      originValues = layer._node.getOrigin();
+      return layer._node.setOrigin(propertyValue, originValues[1], originValues[2]);
+    },
+    originY: function originY(layer) {
+      var originValues, propertyValue;
+      propertyValue = layer._properties.originY;
+      originValues = layer._node.getOrigin();
+      return layer._node.setOrigin(originValues[0], propertyValue, originValues[2]);
+    },
+    x: function x(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.x;
+      nodeValues = layer._node.getPosition();
+      return layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
+    },
+    y: function y(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.y;
+      nodeValues = layer._node.getPosition();
+      return layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
+    },
+    z: function z(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.z;
+      nodeValues = layer._node.getPosition();
+      return layer._node.setPosition(nodeValues[0], nodeValues[1], propertyValue);
+    },
+    scale: function scale(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.scale;
+      nodeValues = layer._node.getScale();
+      return layer._node.setScale(propertyValue, propertyValue, propertyValue);
+    },
+    rotationX: function rotationX(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.rotationX * Math.PI / 180;
+      nodeValues = layer._node.getRotation();
+      return layer._node.setRotation(propertyValue, nodeValues[1], nodeValues[2]);
+    },
+    rotationY: function rotationY(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.rotationY * Math.PI / 180;
+      nodeValues = layer._node.getRotation();
+      return layer._node.setRotation(nodeValues[0], propertyValue, nodeValues[2]);
+    },
+    rotationZ: function rotationZ(layer) {
+      var nodeValues, propertyValue;
+      propertyValue = layer._properties.rotationZ * Math.PI / 180;
+      nodeValues = layer._node.getRotation();
+      return layer._node.setRotation(nodeValues[0], nodeValues[1], propertyValue);
+    },
+    backgroundColor: function backgroundColor(layer) {
+      var propertyValue;
+      propertyValue = layer._properties.backgroundColor;
+      return layer._element.setProperty("background-color", propertyValue);
+    }
+  };
+
+  module.exports = FamousPropertySetter;
+}).call(undefined);
+
+},{}],170:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Defaults, Framer, _;
+
+  _ = require("./Underscore")._;
+
+  Framer = {};
+
+  Framer._ = _;
+
+  Framer.Utils = require("./Utils");
+
+  Framer.Layer = require("./Layer").Layer;
+
+  Framer.BackgroundLayer = require("./BackgroundLayer").BackgroundLayer;
+
+  Framer.VideoLayer = require("./VideoLayer").VideoLayer;
+
+  Framer.Events = require("./Events").Events;
+
+  Framer.Animation = require("./Animation").Animation;
+
+  Framer.AnimationGroup = require("./AnimationGroup").AnimationGroup;
+
+  Framer.Screen = require("./Screen").Screen;
+
+  Framer.Canvas = require("./Canvas").Canvas;
+
+  Framer.print = require("./Print").print;
+
+  Framer.ScrollComponent = require("./Components/ScrollComponent").ScrollComponent;
+
+  Framer.PageComponent = require("./Components/PageComponent").PageComponent;
+
+  Framer.SliderComponent = require("./Components/SliderComponent").SliderComponent;
+
+  Framer.DeviceComponent = require("./Components/DeviceComponent").DeviceComponent;
+
+  Framer.DeviceView = Framer.DeviceComponent;
+
+  if (window) {
+    _.extend(window, Framer);
+  }
+
+  Framer.Context = require("./Context").Context;
+
+  Framer.Config = require("./Config").Config;
+
+  Framer.EventEmitter = require("./EventEmitter").EventEmitter;
+
+  Framer.BaseClass = require("./BaseClass").BaseClass;
+
+  Framer.LayerStyle = require("./LayerStyle").LayerStyle;
+
+  Framer.AnimationLoop = require("./AnimationLoop").AnimationLoop;
+
+  Framer.LinearAnimator = require("./Animators/LinearAnimator").LinearAnimator;
+
+  Framer.BezierCurveAnimator = require("./Animators/BezierCurveAnimator").BezierCurveAnimator;
+
+  Framer.SpringDHOAnimator = require("./Animators/SpringDHOAnimator").SpringDHOAnimator;
+
+  Framer.SpringRK4Animator = require("./Animators/SpringRK4Animator").SpringRK4Animator;
+
+  Framer.LayerDraggable = require("./LayerDraggable").LayerDraggable;
+
+  Framer.Importer = require("./Importer").Importer;
+
+  Framer.Debug = require("./Debug").Debug;
+
+  Framer.Extras = require("./Extras/Extras");
+
+  Framer.Loop = new Framer.AnimationLoop();
+
+  Utils.domComplete(Framer.Loop.start);
+
+  if (window) {
+    window.Framer = Framer;
+  }
+
+  Framer.DefaultContext = new Framer.Context({
+    name: "Default"
+  });
+
+  Framer.CurrentContext = Framer.DefaultContext;
+
+  if (Utils.isMobile()) {
+    Framer.Extras.MobileScrollFix.enable();
+  }
+
+  Defaults = require("./Defaults").Defaults;
+
+  Defaults.setup();
+
+  Framer.resetDefaults = Defaults.reset;
+}).call(undefined);
+
+},{"./Animation":143,"./AnimationGroup":144,"./AnimationLoop":145,"./Animators/BezierCurveAnimator":147,"./Animators/LinearAnimator":148,"./Animators/SpringDHOAnimator":149,"./Animators/SpringRK4Animator":150,"./BackgroundLayer":151,"./BaseClass":152,"./Canvas":153,"./Components/DeviceComponent":154,"./Components/PageComponent":155,"./Components/ScrollComponent":156,"./Components/SliderComponent":157,"./Config":158,"./Context":159,"./Debug":160,"./Defaults":161,"./EventEmitter":163,"./Events":165,"./Extras/Extras":166,"./Importer":171,"./Layer":173,"./LayerDraggable":174,"./LayerStyle":176,"./Print":177,"./Screen":178,"./Underscore":184,"./Utils":185,"./VideoLayer":186}],171:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var ChromeAlert,
+      Utils,
       _,
-      __domComplete,
-      __domReady,
-      _textSizeNode,
       indexOf = [].indexOf || function (item) {
     for (var i = 0, l = this.length; i < l; i++) {
       if (i in this && this[i] === item) return i;
@@ -41978,7 +45590,3183 @@ module.exports = shaders;
 
   _ = require("./Underscore")._;
 
+  Utils = require("./Utils");
+
+  ChromeAlert = "Importing layers is currently only supported on Safari. If you really want it to work with Chrome quit it, open a terminal and run:\nopen -a Google\ Chrome -–allow-file-access-from-files";
+
+  exports.Importer = (function () {
+    function Importer(path1, extraLayerProperties) {
+      this.path = path1;
+      this.extraLayerProperties = extraLayerProperties != null ? extraLayerProperties : {};
+      this.paths = {
+        layerInfo: Utils.pathJoin(this.path, "layers.json"),
+        images: Utils.pathJoin(this.path, "images"),
+        documentName: this.path.split("/").pop()
+      };
+      this._createdLayers = [];
+      this._createdLayersByName = {};
+    }
+
+    Importer.prototype.load = function () {
+      var i, j, layer, layerInfo, layersByName, len, len1, ref, ref1;
+      layersByName = {};
+      layerInfo = this._loadlayerInfo();
+      layerInfo.map((function (_this) {
+        return function (layerItemInfo) {
+          return _this._createLayer(layerItemInfo);
+        };
+      })(this));
+      ref = this._createdLayers;
+      for (i = 0, len = ref.length; i < len; i++) {
+        layer = ref[i];
+        this._correctLayer(layer);
+      }
+      ref1 = this._createdLayers;
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        layer = ref1[j];
+        if (!layer.superLayer) {
+          layer.superLayer = null;
+        }
+      }
+      return this._createdLayersByName;
+    };
+
+    Importer.prototype._loadlayerInfo = function () {
+      var importedKey, ref;
+      importedKey = this.paths.documentName + "/layers.json.js";
+      if ((ref = window.__imported__) != null ? ref.hasOwnProperty(importedKey) : void 0) {
+        return window.__imported__[importedKey];
+      }
+      return Framer.Utils.domLoadJSONSync(this.paths.layerInfo);
+    };
+
+    Importer.prototype._createLayer = function (info, superLayer) {
+      var LayerClass, layer, layerInfo, ref;
+      LayerClass = Layer;
+      layerInfo = {
+        shadow: true,
+        name: info.name,
+        frame: info.layerFrame,
+        clip: false,
+        backgroundColor: null,
+        visible: (ref = info.visible) != null ? ref : true
+      };
+      _.extend(layerInfo, this.extraLayerProperties);
+      if (info.image) {
+        layerInfo.frame = info.image.frame;
+        layerInfo.image = Utils.pathJoin(this.path, info.image.path);
+      }
+      if (info.maskFrame) {
+        layerInfo.frame = info.maskFrame;
+        layerInfo.clip = true;
+      }
+      if (info.children.length === 0 && indexOf.call(_.pluck(superLayer != null ? superLayer.superLayers() : void 0, "clip"), true) >= 0) {
+        layerInfo.frame = info.image.frame;
+        layerInfo.clip = false;
+      }
+      if (superLayer != null ? superLayer.contentLayer : void 0) {
+        layerInfo.superLayer = superLayer.contentLayer;
+      } else if (superLayer) {
+        layerInfo.superLayer = superLayer;
+      }
+      layer = new LayerClass(layerInfo);
+      layer.name = layerInfo.name;
+      if (layerInfo.name.toLowerCase().indexOf("scroll") !== -1) {
+        layer.scroll = true;
+      }
+      if (layerInfo.name.toLowerCase().indexOf("draggable") !== -1) {
+        layer.draggable.enabled = true;
+      }
+      if (!layer.image && !info.children.length && !info.maskFrame) {
+        layer.frame = Utils.frameZero();
+      }
+      _.clone(info.children).reverse().map((function (_this) {
+        return function (info) {
+          return _this._createLayer(info, layer);
+        };
+      })(this));
+      if (!layer.image && !info.maskFrame) {
+        layer.frame = layer.contentFrame();
+      }
+      layer._info = info;
+      this._createdLayers.push(layer);
+      return this._createdLayersByName[layer.name] = layer;
+    };
+
+    Importer.prototype._correctLayer = function (layer) {
+      var traverse;
+      traverse = function (layer) {
+        var i, len, ref, results, subLayer;
+        if (layer.superLayer) {
+          layer.frame = Utils.convertPoint(layer.frame, null, layer.superLayer);
+        }
+        ref = layer.subLayers;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          subLayer = ref[i];
+          results.push(traverse(subLayer));
+        }
+        return results;
+      };
+      if (!layer.superLayer) {
+        return traverse(layer);
+      }
+    };
+
+    return Importer;
+  })();
+
+  exports.Importer.load = function (path) {
+    var importer;
+    importer = new exports.Importer(path);
+    return importer.load();
+  };
+}).call(undefined);
+
+},{"./Underscore":184,"./Utils":185}],172:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Config, Utils;
+
+  Utils = require("./Utils");
+
+  Config = require("./Config").Config;
+
+  exports.Integrator = (function () {
+    "Usage:\n	- Instantiate with a function that takes (state) -> acceleration\n	- Call integrateState with state={x, v} and delta";
+    function Integrator(_accelerationForState) {
+      this._accelerationForState = _accelerationForState;
+      if (!_.isFunction(this._accelerationForState)) {
+        console.warn("Integrator: an integrator must be constructed with an acceleration function");
+        this._accelerationForState = function () {
+          return 0;
+        };
+      }
+    }
+
+    Integrator.prototype.integrateState = function (state, dt) {
+      var a, b, c, d, dvdt, dxdt;
+      a = this._evaluateState(state);
+      b = this._evaluateStateWithDerivative(state, dt * 0.5, a);
+      c = this._evaluateStateWithDerivative(state, dt * 0.5, b);
+      d = this._evaluateStateWithDerivative(state, dt, c);
+      dxdt = 1.0 / 6.0 * (a.dx + 2.0 * (b.dx + c.dx) + d.dx);
+      dvdt = 1.0 / 6.0 * (a.dv + 2.0 * (b.dv + c.dv) + d.dv);
+      state.x = state.x + dxdt * dt;
+      state.v = state.v + dvdt * dt;
+      return state;
+    };
+
+    Integrator.prototype._evaluateState = function (initialState) {
+      var output;
+      output = {};
+      output.dx = initialState.v;
+      output.dv = this._accelerationForState(initialState);
+      return output;
+    };
+
+    Integrator.prototype._evaluateStateWithDerivative = function (initialState, dt, derivative) {
+      var output, state;
+      state = {};
+      state.x = initialState.x + derivative.dx * dt;
+      state.v = initialState.v + derivative.dv * dt;
+      output = {};
+      output.dx = state.v;
+      output.dv = this._accelerationForState(state);
+      return output;
+    };
+
+    return Integrator;
+  })();
+}).call(undefined);
+
+},{"./Config":158,"./Utils":185}],173:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Animation,
+      BaseClass,
+      Config,
+      DOMElement,
+      Defaults,
+      Engine,
+      EventEmitter,
+      Events,
+      FamousPropertySetter,
+      LayerDraggable,
+      LayerStates,
+      LayerStyle,
+      NoCacheDateKey,
+      Node,
+      Utils,
+      _,
+      famous,
+      layerProperty,
+      layerValueTypeError,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  },
+      slice = [].slice;
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  Config = require("./Config").Config;
+
+  Defaults = require("./Defaults").Defaults;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  EventEmitter = require("./EventEmitter").EventEmitter;
+
+  Animation = require("./Animation").Animation;
+
+  LayerStyle = require("./LayerStyle").LayerStyle;
+
+  LayerStates = require("./LayerStates").LayerStates;
+
+  LayerDraggable = require("./LayerDraggable").LayerDraggable;
+
+  Events = require("./Events").Events;
+
+  NoCacheDateKey = Date.now();
+
+  famous = require("famous");
+
+  Engine = famous.core.FamousEngine;
+
+  Node = famous.core.Node;
+
+  DOMElement = famous.domRenderables.DOMElement;
+
+  FamousPropertySetter = require("./FamousPropertySetter");
+
+  layerValueTypeError = function (name, value) {
+    throw new Error("Layer." + name + ": value '" + value + "' of type '" + typeof value + "'' is not valid");
+  };
+
+  layerProperty = function (obj, name, cssProperty, fallback, validator, options, _set) {
+    var result;
+    if (options == null) {
+      options = {};
+    }
+    result = {
+      "default": fallback,
+      get: function get() {
+        if (this._properties.hasOwnProperty(name)) {
+          return this._properties[name];
+        }
+        return fallback;
+      },
+      set: function set(value) {
+        if (this.name !== "refresh") {
+          console.log("Trying to set Layer " + this.name + "." + name + ".set " + value);
+        }
+        if (value && validator && !validator(value)) {
+          layerValueTypeError(name, value);
+        }
+        this._properties[name] = value;
+        if (typeof FamousPropertySetter[name] === "function") {
+          FamousPropertySetter[name](this);
+        }
+        if (typeof _set === "function") {
+          _set(this, value);
+        }
+        this.emit("change:" + name, value);
+        if (name === "x" || name === "y") {
+          this.emit("change:point", value);
+        }
+        if (name === "width" || name === "height") {
+          this.emit("change:size", value);
+        }
+        if (name === "x" || name === "y" || name === "width" || name === "height") {
+          this.emit("change:frame", value);
+        }
+        if (name === "rotationZ") {
+          return this.emit("change:rotation", value);
+        }
+      }
+    };
+    return result = _.extend(result, options);
+  };
+
+  exports.Layer = (function (superClass) {
+    extend(Layer, superClass);
+
+    function Layer(options) {
+      if (options == null) {
+        options = {};
+      }
+      this.addListener = bind(this.addListener, this);
+      this._properties = {};
+      this._style = {};
+      this._prefer2d = false;
+      this._alwaysUseImageCache = false;
+      this._createElement();
+      if (options.hasOwnProperty("frame")) {
+        options = _.extend(options, options.frame);
+      }
+      options = Defaults.getDefaults("Layer", options);
+      Layer.__super__.constructor.call(this, options);
+      this._context.addLayer(this);
+      this._id = this._context.nextLayerId();
+      console.log("@_id: " + this._id);
+      this._element.setId(this._id);
+      if (!options.superLayer) {
+        if (!options.shadow) {
+          this._insertElement();
+        }
+      } else {
+        this.superLayer = options.superLayer;
+      }
+      if (options.hasOwnProperty("index")) {
+        this.index = options.index;
+      }
+      this._subLayers = [];
+      this._context.emit("layer:create", this);
+    }
+
+    Layer.define("custom", Layer.simpleProperty("custom", void 0));
+
+    Layer.define("width", layerProperty(Layer, "width", "width", 100, _.isNumber));
+
+    Layer.define("height", layerProperty(Layer, "height", "height", 100, _.isNumber));
+
+    Layer.define("visible", layerProperty(Layer, "visible", "display", true, _.isBoolean));
+
+    Layer.define("opacity", layerProperty(Layer, "opacity", "opacity", 1, _.isNumber));
+
+    Layer.define("index", layerProperty(Layer, "index", "zIndex", 0, _.isNumber, {
+      importable: false,
+      exportable: false
+    }));
+
+    Layer.define("clip", layerProperty(Layer, "clip", "overflow", true, _.isBoolean));
+
+    Layer.define("scrollHorizontal", layerProperty(Layer, "scrollHorizontal", "overflowX", false, _.isBoolean, {}, function (layer, value) {
+      if (value === true) {
+        return layer.ignoreEvents = false;
+      }
+    }));
+
+    Layer.define("scrollVertical", layerProperty(Layer, "scrollVertical", "overflowY", false, _.isBoolean, {}, function (layer, value) {
+      if (value === true) {
+        return layer.ignoreEvents = false;
+      }
+    }));
+
+    Layer.define("scroll", {
+      get: function get() {
+        return this.scrollHorizontal === true || this.scrollVertical === true;
+      },
+      set: function set(value) {
+        return this.scrollHorizontal = this.scrollVertical = value;
+      }
+    });
+
+    Layer.define("ignoreEvents", layerProperty(Layer, "ignoreEvents", "pointerEvents", true, _.isBoolean));
+
+    Layer.define("x", layerProperty(Layer, "x", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("y", layerProperty(Layer, "y", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("z", layerProperty(Layer, "z", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("scaleX", layerProperty(Layer, "scaleX", "webkitTransform", 1, _.isNumber));
+
+    Layer.define("scaleY", layerProperty(Layer, "scaleY", "webkitTransform", 1, _.isNumber));
+
+    Layer.define("scaleZ", layerProperty(Layer, "scaleZ", "webkitTransform", 1, _.isNumber));
+
+    Layer.define("scale", layerProperty(Layer, "scale", "webkitTransform", 1, _.isNumber));
+
+    Layer.define("skewX", layerProperty(Layer, "skewX", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("skewY", layerProperty(Layer, "skewY", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("skew", layerProperty(Layer, "skew", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("originX", layerProperty(Layer, "originX", "webkitTransformOrigin", 0.5, _.isNumber));
+
+    Layer.define("originY", layerProperty(Layer, "originY", "webkitTransformOrigin", 0.5, _.isNumber));
+
+    Layer.define("perspective", layerProperty(Layer, "perspective", "webkitPerspective", 0, _.isNumber));
+
+    Layer.define("rotationX", layerProperty(Layer, "rotationX", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("rotationY", layerProperty(Layer, "rotationY", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("rotationZ", layerProperty(Layer, "rotationZ", "webkitTransform", 0, _.isNumber));
+
+    Layer.define("rotation", {
+      get: function get() {
+        return this.rotationZ;
+      },
+      set: function set(value) {
+        return this.rotationZ = value;
+      }
+    });
+
+    Layer.define("blur", layerProperty(Layer, "blur", "webkitFilter", 0, _.isNumber));
+
+    Layer.define("brightness", layerProperty(Layer, "brightness", "webkitFilter", 100, _.isNumber));
+
+    Layer.define("saturate", layerProperty(Layer, "saturate", "webkitFilter", 100, _.isNumber));
+
+    Layer.define("hueRotate", layerProperty(Layer, "hueRotate", "webkitFilter", 0, _.isNumber));
+
+    Layer.define("contrast", layerProperty(Layer, "contrast", "webkitFilter", 100, _.isNumber));
+
+    Layer.define("invert", layerProperty(Layer, "invert", "webkitFilter", 0, _.isNumber));
+
+    Layer.define("grayscale", layerProperty(Layer, "grayscale", "webkitFilter", 0, _.isNumber));
+
+    Layer.define("sepia", layerProperty(Layer, "sepia", "webkitFilter", 0, _.isNumber));
+
+    Layer.define("shadowX", layerProperty(Layer, "shadowX", "boxShadow", 0, _.isNumber));
+
+    Layer.define("shadowY", layerProperty(Layer, "shadowY", "boxShadow", 0, _.isNumber));
+
+    Layer.define("shadowBlur", layerProperty(Layer, "shadowBlur", "boxShadow", 0, _.isNumber));
+
+    Layer.define("shadowSpread", layerProperty(Layer, "shadowSpread", "boxShadow", 0, _.isNumber));
+
+    Layer.define("shadowColor", layerProperty(Layer, "shadowColor", "boxShadow", ""));
+
+    Layer.define("backgroundColor", layerProperty(Layer, "backgroundColor", "backgroundColor", null, _.isString));
+
+    Layer.define("color", layerProperty(Layer, "color", "color", null, _.isString));
+
+    Layer.define("borderColor", layerProperty(Layer, "borderColor", "border", null, _.isString));
+
+    Layer.define("borderWidth", layerProperty(Layer, "borderWidth", "border", 0, _.isNumber));
+
+    Layer.define("force2d", layerProperty(Layer, "force2d", "webkitTransform", false, _.isBoolean));
+
+    Layer.define("name", {
+      "default": "",
+      get: function get() {
+        return this._element._attributes["name"];
+      },
+      set: function set(value) {
+        this._setPropertyValue("name", value);
+        return this._element.setAttribute("name", value);
+      }
+    });
+
+    Layer.define("borderRadius", {
+      "default": 0,
+      get: function get() {
+        return this._properties["borderRadius"];
+      },
+      set: function set(value) {
+        this._properties["borderRadius"] = value;
+        this._element.setProperty("borderRadius", LayerStyle["borderRadius"](this));
+        return this.emit("change:borderRadius", value);
+      }
+    });
+
+    Layer.define("cornerRadius", {
+      importable: true,
+      get: function get() {
+        return this.borderRadius;
+      },
+      set: function set(value) {
+        return this.borderRadius = value;
+      }
+    });
+
+    Layer.define("point", {
+      get: function get() {
+        return _.pick(this, ["x", "y"]);
+      },
+      set: function set(point) {
+        var i, k, len, ref, results;
+        if (!point) {
+          return;
+        }
+        ref = ["x", "y"];
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          k = ref[i];
+          if (point.hasOwnProperty(k)) {
+            results.push(this[k] = point[k]);
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+
+    Layer.define("size", {
+      get: function get() {
+        return _.pick(this, ["width", "height"]);
+      },
+      set: function set(size) {
+        var i, k, len, ref, results;
+        if (!size) {
+          return;
+        }
+        ref = ["width", "height"];
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          k = ref[i];
+          if (size.hasOwnProperty(k)) {
+            results.push(this[k] = size[k]);
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+
+    Layer.define("frame", {
+      get: function get() {
+        return _.pick(this, ["x", "y", "width", "height"]);
+      },
+      set: function set(frame) {
+        var i, k, len, ref, results;
+        if (!frame) {
+          return;
+        }
+        ref = ["x", "y", "width", "height"];
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          k = ref[i];
+          if (frame.hasOwnProperty(k)) {
+            results.push(this[k] = frame[k]);
+          } else {
+            results.push(void 0);
+          }
+        }
+        return results;
+      }
+    });
+
+    Layer.define("minX", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return this.x;
+      },
+      set: function set(value) {
+        return this.x = value;
+      }
+    });
+
+    Layer.define("midX", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return Utils.frameGetMidX(this);
+      },
+      set: function set(value) {
+        return Utils.frameSetMidX(this, value);
+      }
+    });
+
+    Layer.define("maxX", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return Utils.frameGetMaxX(this);
+      },
+      set: function set(value) {
+        return Utils.frameSetMaxX(this, value);
+      }
+    });
+
+    Layer.define("minY", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return this.y;
+      },
+      set: function set(value) {
+        return this.y = value;
+      }
+    });
+
+    Layer.define("midY", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return Utils.frameGetMidY(this);
+      },
+      set: function set(value) {
+        return Utils.frameSetMidY(this, value);
+      }
+    });
+
+    Layer.define("maxY", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return Utils.frameGetMaxY(this);
+      },
+      set: function set(value) {
+        return Utils.frameSetMaxY(this, value);
+      }
+    });
+
+    Layer.prototype.convertPoint = function (point) {
+      return Utils.convertPoint(point, null, this);
+    };
+
+    Layer.define("canvasFrame", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        var context;
+        return Utils.convertPoint(this.frame, this, null, context = true);
+      },
+      set: function set(frame) {
+        var context;
+        if (!this.superLayer) {
+          return this.frame = frame;
+        } else {
+          return this.frame = Utils.convertPoint(frame, null, this.superLayer, context = true);
+        }
+      }
+    });
+
+    Layer.define("screenFrame", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        var context;
+        return Utils.convertPoint(this.frame, this, null, context = false);
+      },
+      set: function set(frame) {
+        var context;
+        if (!this.superLayer) {
+          return this.frame = frame;
+        } else {
+          return this.frame = Utils.convertPoint(frame, null, this.superLayer, context = false);
+        }
+      }
+    });
+
+    Layer.prototype.contentFrame = function () {
+      if (!this.subLayers.length) {
+        return {
+          x: 0,
+          y: 0,
+          width: 0,
+          height: 0
+        };
+      }
+      return Utils.frameMerge(_.pluck(this.subLayers, "frame"));
+    };
+
+    Layer.prototype.centerFrame = function () {
+      var frame;
+      if (this.superLayer) {
+        frame = this.frame;
+        Utils.frameSetMidX(frame, parseInt(this.superLayer.width / 2.0));
+        Utils.frameSetMidY(frame, parseInt(this.superLayer.height / 2.0));
+        return frame;
+      } else {
+        frame = this.frame;
+        Utils.frameSetMidX(frame, parseInt(this._context.width / 2.0));
+        Utils.frameSetMidY(frame, parseInt(this._context.height / 2.0));
+        return frame;
+      }
+    };
+
+    Layer.prototype.center = function () {
+      this.frame = this.centerFrame();
+      return this;
+    };
+
+    Layer.prototype.centerX = function (offset) {
+      if (offset == null) {
+        offset = 0;
+      }
+      this.x = this.centerFrame().x + offset;
+      return this;
+    };
+
+    Layer.prototype.centerY = function (offset) {
+      if (offset == null) {
+        offset = 0;
+      }
+      this.y = this.centerFrame().y + offset;
+      return this;
+    };
+
+    Layer.prototype.pixelAlign = function () {
+      this.x = parseInt(this.x);
+      return this.y = parseInt(this.y);
+    };
+
+    Layer.prototype.canvasScaleX = function () {
+      var context, i, len, ref, scale, superLayer;
+      scale = this.scale * this.scaleX;
+      ref = this.superLayers(context = true);
+      for (i = 0, len = ref.length; i < len; i++) {
+        superLayer = ref[i];
+        scale = scale * superLayer.scale * superLayer.scaleX;
+      }
+      return scale;
+    };
+
+    Layer.prototype.canvasScaleY = function () {
+      var context, i, len, ref, scale, superLayer;
+      scale = this.scale * this.scaleY;
+      ref = this.superLayers(context = true);
+      for (i = 0, len = ref.length; i < len; i++) {
+        superLayer = ref[i];
+        scale = scale * superLayer.scale * superLayer.scaleY;
+      }
+      return scale;
+    };
+
+    Layer.prototype.screenScaleX = function () {
+      var context, i, len, ref, scale, superLayer;
+      scale = this.scale * this.scaleX;
+      ref = this.superLayers(context = false);
+      for (i = 0, len = ref.length; i < len; i++) {
+        superLayer = ref[i];
+        scale = scale * superLayer.scale * superLayer.scaleX;
+      }
+      return scale;
+    };
+
+    Layer.prototype.screenScaleY = function () {
+      var context, i, len, ref, scale, superLayer;
+      scale = this.scale * this.scaleY;
+      ref = this.superLayers(context = false);
+      for (i = 0, len = ref.length; i < len; i++) {
+        superLayer = ref[i];
+        scale = scale * superLayer.scale * superLayer.scaleY;
+      }
+      return scale;
+    };
+
+    Layer.prototype.screenScaledFrame = function () {
+      var context, factorX, factorY, frame, i, layerScaledFrame, layers, len, superLayer;
+      frame = {
+        x: 0,
+        y: 0,
+        width: this.width * this.screenScaleX(),
+        height: this.height * this.screenScaleY()
+      };
+      layers = this.superLayers(context = true);
+      layers.push(this);
+      layers.reverse();
+      for (i = 0, len = layers.length; i < len; i++) {
+        superLayer = layers[i];
+        factorX = superLayer._superOrParentLayer() ? superLayer._superOrParentLayer().screenScaleX() : 1;
+        factorY = superLayer._superOrParentLayer() ? superLayer._superOrParentLayer().screenScaleY() : 1;
+        layerScaledFrame = superLayer.scaledFrame();
+        frame.x += layerScaledFrame.x * factorX;
+        frame.y += layerScaledFrame.y * factorY;
+      }
+      return frame;
+    };
+
+    Layer.prototype.scaledFrame = function () {
+      var frame, scaleX, scaleY;
+      frame = this.frame;
+      scaleX = this.scale * this.scaleX;
+      scaleY = this.scale * this.scaleY;
+      frame.width *= scaleX;
+      frame.height *= scaleY;
+      frame.x += (1 - scaleX) * this.originX * this.width;
+      frame.y += (1 - scaleY) * this.originY * this.height;
+      return frame;
+    };
+
+    Layer.define("style", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return this._element._styles;
+      },
+      set: function set(value) {
+        var key, val;
+        _.extend(this._element.style, value);
+        for (key in value) {
+          val = value[key];
+          this._properties[key] = val;
+          this._element.setProperty(key, val);
+        }
+        return this.emit("change:style");
+      }
+    });
+
+    Layer.prototype.computedStyle = function () {
+      var getComputedStyle;
+      getComputedStyle = document.defaultView.getComputedStyle;
+      if (getComputedStyle == null) {
+        getComputedStyle = window.getComputedStyle;
+      }
+      return getComputedStyle(this._element);
+    };
+
+    Layer.define("classList", {
+      importable: true,
+      exportable: false,
+      get: function get() {
+        return this._element.classList;
+      }
+    });
+
+    Layer.prototype._framerOriginal__createElement = function () {
+      if (this._element != null) {
+        return;
+      }
+      this._element = document.createElement("div");
+      return this._element.classList.add("framerLayer");
+    };
+
+    Layer.prototype._createElement = function () {
+      if (this._element != null) {
+        return;
+      }
+      this._node = new Node();
+      this._node.setSizeMode("absolute", "absolute", "absolute");
+      this._node.setAbsoluteSize(250, 250);
+      this._node.setOrigin(0.5, 0.5);
+      this._node.onReceive = (function (_this) {
+        return function (event, payLoad) {
+          return console.log("Node: " + _this.name + " on receive: " + event);
+        };
+      })(this);
+      this._element = new DOMElement(this._node, {
+        tagName: "div"
+      });
+      console.log("@_element.setId to @_id: " + this._id);
+      this._element._layer = this;
+      return this._element;
+    };
+
+    Layer.prototype._framerOriginal__insertElement = function () {
+      this.bringToFront();
+      return this._context.getRootElement().appendChild(this._element);
+    };
+
+    Layer.prototype._insertElement = function () {
+      this.bringToFront();
+      return this._context.getRootElement()._node.addChild(this._element._node);
+    };
+
+    Layer.define("html", {
+      get: function get() {
+        var ref;
+        return ((ref = this._element) != null ? ref._content : void 0) || "";
+      },
+      set: function set(value) {
+        this._element.setContent(value);
+        return this.emit("change:html");
+      }
+    });
+
+    Layer.prototype.querySelector = function (query) {
+      return this._element.querySelector(query);
+    };
+
+    Layer.prototype.querySelectorAll = function (query) {
+      return this._element.querySelectorAll(query);
+    };
+
+    Layer.prototype.destroy = function () {
+      var ref;
+      if (this.superLayer) {
+        this.superLayer._subLayers = _.without(this.superLayer._subLayers, this);
+      }
+      if ((ref = this._element.parentNode) != null) {
+        ref.removeChild(this._element);
+      }
+      this.removeAllListeners();
+      this._context.removeLayer(this);
+      return this._context.emit("layer:destroy", this);
+    };
+
+    Layer.prototype.copy = function () {
+      var copiedSublayer, i, layer, len, ref, subLayer;
+      layer = this.copySingle();
+      ref = this.subLayers;
+      for (i = 0, len = ref.length; i < len; i++) {
+        subLayer = ref[i];
+        copiedSublayer = subLayer.copy();
+        copiedSublayer.superLayer = layer;
+      }
+      return layer;
+    };
+
+    Layer.prototype.copySingle = function () {
+      return new this.constructor(this.props);
+    };
+
+    Layer.define("image", {
+      "default": "",
+      get: function get() {
+        return this._getPropertyValue("image");
+      },
+      set: function set(value) {
+        var currentValue, imageUrl, loader, ref, ref1;
+        if (!(_.isString(value) || value === null)) {
+          layerValueTypeError("image", value);
+        }
+        currentValue = this._getPropertyValue("image");
+        if (currentValue === value) {
+          return this.emit("load");
+        }
+        this.backgroundColor = null;
+        this._setPropertyValue("image", value);
+        if (value === null || value === "") {
+          this._element.setProperty("background-image", null);
+          return;
+        }
+        imageUrl = value;
+        if (this._alwaysUseImageCache === false && Utils.isLocalAssetUrl(imageUrl)) {
+          imageUrl += "?nocache=" + NoCacheDateKey;
+        }
+        if ((ref = this._eventListeners) != null ? ref.hasOwnProperty("load" || ((ref1 = this._eventListeners) != null ? ref1.hasOwnProperty("error") : void 0)) : void 0) {
+          loader = new Image();
+          loader.name = imageUrl;
+          loader.src = imageUrl;
+          loader.onload = (function (_this) {
+            return function () {
+              _this._element.setProperty("background-image", "url('" + imageUrl + "')");
+              return _this.emit("load", loader);
+            };
+          })(this);
+          return loader.onerror = (function (_this) {
+            return function () {
+              return _this.emit("error", loader);
+            };
+          })(this);
+        } else {
+          return this._element.setProperty("background-image", "url('" + imageUrl + "')");
+        }
+      }
+    });
+
+    Layer.define("superLayer", {
+      enumerable: false,
+      exportable: false,
+      importable: true,
+      get: function get() {
+        return this._superLayer || null;
+      },
+      set: function set(layer) {
+        if (layer === this._superLayer) {
+          return;
+        }
+        if (!layer instanceof Layer) {
+          throw Error("Layer.superLayer needs to be a Layer object");
+        }
+        Utils.domCompleteCancel(this._insertElement);
+        this._context.getRootElement()._node.removeChild(this._element._node);
+        if (this._superLayer) {
+          this._superLayer._subLayers = _.without(this._superLayer._subLayers, this);
+          this._element._node.dismount();
+          this._superLayer.emit("change:subLayers", {
+            added: [],
+            removed: [this]
+          });
+        }
+        if (layer) {
+          if (this._element._node.getParent() != null) {
+            this._element._node.dismount();
+          }
+          layer._element._node.addChild(this._element._node);
+          layer._subLayers.push(this);
+          layer.emit("change:subLayers", {
+            added: [this],
+            removed: []
+          });
+        } else {
+          this._insertElement();
+        }
+        this._superLayer = layer;
+        this.bringToFront();
+        return this.emit("change:superLayer");
+      }
+    });
+
+    Layer.define("subLayers", {
+      enumerable: false,
+      exportable: false,
+      importable: false,
+      get: function get() {
+        return _.clone(this._subLayers);
+      }
+    });
+
+    Layer.define("siblingLayers", {
+      enumerable: false,
+      exportable: false,
+      importable: false,
+      get: function get() {
+        if (this.superLayer === null) {
+          return _.filter(this._context.getLayers(), (function (_this) {
+            return function (layer) {
+              return layer !== _this && layer.superLayer === null;
+            };
+          })(this));
+        }
+        return _.without(this.superLayer.subLayers, this);
+      }
+    });
+
+    Layer.prototype.addSubLayer = function (layer) {
+      return layer.superLayer = this;
+    };
+
+    Layer.prototype.removeSubLayer = function (layer) {
+      if (indexOf.call(this.subLayers, layer) < 0) {
+        return;
+      }
+      return layer.superLayer = null;
+    };
+
+    Layer.prototype.subLayersByName = function (name) {
+      return _.filter(this.subLayers, function (layer) {
+        return layer.name === name;
+      });
+    };
+
+    Layer.prototype.siblingLayersByName = function (name) {
+      return _.filter(this.siblingLayers, function (layer) {
+        return layer.name === name;
+      });
+    };
+
+    Layer.prototype.superLayers = function (context) {
+      var currentLayer, superLayers;
+      if (context == null) {
+        context = false;
+      }
+      superLayers = [];
+      currentLayer = this;
+      if (context === false) {
+        while (currentLayer.superLayer) {
+          superLayers.push(currentLayer.superLayer);
+          currentLayer = currentLayer.superLayer;
+        }
+      } else {
+        while (currentLayer._superOrParentLayer()) {
+          superLayers.push(currentLayer._superOrParentLayer());
+          currentLayer = currentLayer._superOrParentLayer();
+        }
+      }
+      return superLayers;
+    };
+
+    Layer.prototype._superOrParentLayer = function () {
+      if (this.superLayer) {
+        return this.superLayer;
+      }
+      if (this._context._parentLayer) {
+        return this._context._parentLayer;
+      }
+    };
+
+    Layer.prototype.subLayersAbove = function (point, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return _.filter(this.subLayers, function (layer) {
+        return Utils.framePointForOrigin(layer.frame, originX, originY).y < point.y;
+      });
+    };
+
+    Layer.prototype.subLayersBelow = function (point, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return _.filter(this.subLayers, function (layer) {
+        return Utils.framePointForOrigin(layer.frame, originX, originY).y > point.y;
+      });
+    };
+
+    Layer.prototype.subLayersLeft = function (point, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return _.filter(this.subLayers, function (layer) {
+        return Utils.framePointForOrigin(layer.frame, originX, originY).x < point.x;
+      });
+    };
+
+    Layer.prototype.subLayersRight = function (point, originX, originY) {
+      if (originX == null) {
+        originX = 0;
+      }
+      if (originY == null) {
+        originY = 0;
+      }
+      return _.filter(this.subLayers, function (layer) {
+        return Utils.framePointForOrigin(layer.frame, originX, originY).x > point.x;
+      });
+    };
+
+    Layer.prototype.animate = function (options) {
+      var animation, start;
+      start = options.start;
+      if (start == null) {
+        start = true;
+      }
+      delete options.start;
+      options.layer = this;
+      animation = new Animation(options);
+      if (start) {
+        animation.start();
+      }
+      return animation;
+    };
+
+    Layer.prototype.animations = function () {
+      return _.filter(this._context._animationList, (function (_this) {
+        return function (animation) {
+          return animation.options.layer === _this;
+        };
+      })(this));
+    };
+
+    Layer.prototype.animatingProperties = function () {
+      var animation, i, j, len, len1, properties, propertyName, ref, ref1;
+      properties = {};
+      ref = this.animations();
+      for (i = 0, len = ref.length; i < len; i++) {
+        animation = ref[i];
+        ref1 = animation.animatingProperties();
+        for (j = 0, len1 = ref1.length; j < len1; j++) {
+          propertyName = ref1[j];
+          properties[propertyName] = animation;
+        }
+      }
+      return properties;
+    };
+
+    Layer.define("isAnimating", {
+      enumerable: false,
+      exportable: false,
+      get: function get() {
+        return this.animations().length !== 0;
+      }
+    });
+
+    Layer.prototype.animateStop = function () {
+      var ref;
+      _.invoke(this.animations(), "stop");
+      return (ref = this._draggable) != null ? ref.animateStop() : void 0;
+    };
+
+    Layer.prototype.bringToFront = function () {
+      return this.index = _.max(_.union([0], this.siblingLayers.map(function (layer) {
+        return layer.index;
+      }))) + 1;
+    };
+
+    Layer.prototype.sendToBack = function () {
+      return this.index = _.min(_.union([0], this.siblingLayers.map(function (layer) {
+        return layer.index;
+      }))) - 1;
+    };
+
+    Layer.prototype.placeBefore = function (layer) {
+      var i, l, len, ref;
+      if (indexOf.call(this.siblingLayers, layer) < 0) {
+        return;
+      }
+      ref = this.siblingLayers;
+      for (i = 0, len = ref.length; i < len; i++) {
+        l = ref[i];
+        if (l.index <= layer.index) {
+          l.index -= 1;
+        }
+      }
+      return this.index = layer.index + 1;
+    };
+
+    Layer.prototype.placeBehind = function (layer) {
+      var i, l, len, ref;
+      if (indexOf.call(this.siblingLayers, layer) < 0) {
+        return;
+      }
+      ref = this.siblingLayers;
+      for (i = 0, len = ref.length; i < len; i++) {
+        l = ref[i];
+        if (l.index >= layer.index) {
+          l.index += 1;
+        }
+      }
+      return this.index = layer.index - 1;
+    };
+
+    Layer.define("states", {
+      enumerable: false,
+      exportable: false,
+      importable: false,
+      get: function get() {
+        return this._states != null ? this._states : this._states = new LayerStates(this);
+      }
+    });
+
+    Layer.define("draggable", {
+      importable: false,
+      exportable: false,
+      get: function get() {
+        return this._draggable != null ? this._draggable : this._draggable = new LayerDraggable(this);
+      },
+      set: function set(value) {
+        if (_.isBoolean(value)) {
+          return this.draggable.enabled = value;
+        }
+      }
+    });
+
+    Layer.define("scrollFrame", {
+      importable: false,
+      get: function get() {
+        var frame;
+        return frame = {
+          x: this.scrollX,
+          y: this.scrollY,
+          width: this.width,
+          height: this.height
+        };
+      },
+      set: function set(frame) {
+        this.scrollX = frame.x;
+        return this.scrollY = frame.y;
+      }
+    });
+
+    Layer.define("scrollX", {
+      get: function get() {
+        return this._element._styles['scrollLeft'];
+      },
+      set: function set(value) {
+        if (!_.isNumber(value)) {
+          layerValueTypeError("scrollX", value);
+        }
+        return this._element.setProperty("scrollLeft", value);
+      }
+    });
+
+    Layer.define("scrollY", {
+      get: function get() {
+        return this._element._styles["scrollTop"];
+      },
+      set: function set(value) {
+        if (!_.isNumber(value)) {
+          layerValueTypeError("scrollY", value);
+        }
+        return this._element.setProperty("scrollTop", value);
+      }
+    });
+
+    Layer.prototype.addListener = function () {
+      var eventName, eventNames, i, j, len, listener, originalListener, results;
+      eventNames = 2 <= arguments.length ? slice.call(arguments, 0, i = arguments.length - 1) : (i = 0, []), originalListener = arguments[i++];
+      if (!originalListener) {
+        return;
+      }
+      listener = (function (_this) {
+        return function () {
+          var args;
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          return originalListener.call.apply(originalListener, [_this].concat(slice.call(args), [_this]));
+        };
+      })(this);
+      originalListener.modifiedListener = listener;
+      if (typeof eventNames === 'string') {
+        eventNames = [eventNames];
+      }
+      results = [];
+      for (j = 0, len = eventNames.length; j < len; j++) {
+        eventName = eventNames[j];
+        results.push((function (_this) {
+          return function (eventName) {
+            var base;
+            Layer.__super__.addListener.call(_this, eventName, listener);
+            _this._context.eventManager.wrap(_this._element).addEventListener(eventName, listener);
+            if (_this._eventListeners == null) {
+              _this._eventListeners = {};
+            }
+            if ((base = _this._eventListeners)[eventName] == null) {
+              base[eventName] = [];
+            }
+            _this._eventListeners[eventName].push(listener);
+            if (!_.startsWith(eventName, "change:")) {
+              return _this.ignoreEvents = false;
+            }
+          };
+        })(this)(eventName));
+      }
+      return results;
+    };
+
+    Layer.prototype.removeListener = function () {
+      var eventName, eventNames, i, j, len, listener, results;
+      eventNames = 2 <= arguments.length ? slice.call(arguments, 0, i = arguments.length - 1) : (i = 0, []), listener = arguments[i++];
+      if (listener.modifiedListener) {
+        listener = listener.modifiedListener;
+      }
+      if (typeof eventNames === 'string') {
+        eventNames = [eventNames];
+      }
+      results = [];
+      for (j = 0, len = eventNames.length; j < len; j++) {
+        eventName = eventNames[j];
+        results.push((function (_this) {
+          return function (eventName) {
+            Layer.__super__.removeListener.call(_this, eventName, listener);
+            _this._context.eventManager.wrap(_this._element).removeEventListener(eventName, listener);
+            if (_this._eventListeners) {
+              return _this._eventListeners[eventName] = _.without(_this._eventListeners[eventName], listener);
+            }
+          };
+        })(this)(eventName));
+      }
+      return results;
+    };
+
+    Layer.prototype.once = function (eventName, listener) {
+      var originalListener;
+      originalListener = listener;
+      listener = (function (_this) {
+        return function () {
+          var args;
+          args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+          originalListener.call.apply(originalListener, [_this].concat(slice.call(args), [_this]));
+          return _this.removeListener(eventName, listener);
+        };
+      })(this);
+      return this.addListener(eventName, listener);
+    };
+
+    Layer.prototype.removeAllListeners = function () {
+      var eventName, listener, listeners, ref, results;
+      if (!this._eventListeners) {
+        return;
+      }
+      ref = this._eventListeners;
+      results = [];
+      for (eventName in ref) {
+        listeners = ref[eventName];
+        results.push((function () {
+          var i, len, results1;
+          results1 = [];
+          for (i = 0, len = listeners.length; i < len; i++) {
+            listener = listeners[i];
+            results1.push(this.removeListener(eventName, listener));
+          }
+          return results1;
+        }).call(this));
+      }
+      return results;
+    };
+
+    Layer.prototype.on = Layer.prototype.addListener;
+
+    Layer.prototype.off = Layer.prototype.removeListener;
+
+    Layer.prototype.toInspect = function () {
+      var round;
+      round = function (value) {
+        if (parseInt(value) === value) {
+          return parseInt(value);
+        }
+        return Utils.round(value, 1);
+      };
+      if (this.name) {
+        return "<" + this.constructor.name + " id:" + this.id + " name:" + this.name + " (" + round(this.x) + "," + round(this.y) + ") " + round(this.width) + "x" + round(this.height) + ">";
+      }
+      return "<" + this.constructor.name + " id:" + this.id + " (" + round(this.x) + "," + round(this.y) + ") " + round(this.width) + "x" + round(this.height) + ">";
+    };
+
+    return Layer;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./Animation":143,"./BaseClass":152,"./Config":158,"./Defaults":161,"./EventEmitter":163,"./Events":165,"./FamousPropertySetter":169,"./LayerDraggable":174,"./LayerStates":175,"./LayerStyle":176,"./Underscore":184,"./Utils":185,"famous":47}],174:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Defaults,
+      EventBuffer,
+      Events,
+      Simulation,
+      Utils,
+      _,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Events = require("./Events").Events;
+
+  Simulation = require("./Simulation").Simulation;
+
+  Defaults = require("./Defaults").Defaults;
+
+  EventBuffer = require("./EventBuffer").EventBuffer;
+
+  Events.Move = "move";
+
+  Events.DragStart = "dragstart";
+
+  Events.DragWillMove = "dragwillmove";
+
+  Events.DragMove = "dragmove";
+
+  Events.DragDidMove = "dragmove";
+
+  Events.Drag = "dragmove";
+
+  Events.DragEnd = "dragend";
+
+  Events.DragAnimationDidStart = "draganimationdidstart";
+
+  Events.DragAnimationDidEnd = "draganimationdidend";
+
+  Events.DirectionLockDidStart = "directionlockdidstart";
+
+  "         \n┌──────┐                   │         \n│      │                             \n│      │  ───────────────▶ │ ◀────▶  \n│      │                             \n└──────┘                   │         \n                                     \n════════  ═════════════════ ═══════  \n                                     \n  Drag         Momentum      Bounce  \n                                         ";
+
+  exports.LayerDraggable = (function (superClass) {
+    extend(LayerDraggable, superClass);
+
+    LayerDraggable.define("speedX", LayerDraggable.simpleProperty("speedX", 1));
+
+    LayerDraggable.define("speedY", LayerDraggable.simpleProperty("speedY", 1));
+
+    LayerDraggable.define("horizontal", LayerDraggable.simpleProperty("horizontal", true));
+
+    LayerDraggable.define("vertical", LayerDraggable.simpleProperty("vertical", true));
+
+    LayerDraggable.define("momentumVelocityMultiplier", LayerDraggable.simpleProperty("momentumVelocityMultiplier", 800));
+
+    LayerDraggable.define("directionLock", LayerDraggable.simpleProperty("directionLock", true));
+
+    LayerDraggable.define("directionLockThreshold", LayerDraggable.simpleProperty("directionLockThreshold", {
+      x: 10,
+      y: 10
+    }));
+
+    LayerDraggable.define("propagateEvents", LayerDraggable.simpleProperty("propagateEvents", true));
+
+    LayerDraggable.define("constraints", {
+      get: function get() {
+        return this._constraints;
+      },
+      set: function set(value) {
+        if (value && _.isObject(value)) {
+          this._constraints = _.defaults(value, {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+          });
+        } else {
+          this._constraints = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+          };
+        }
+        if (this._constraints) {
+          return this._updateSimulationConstraints(this._constraints);
+        }
+      }
+    });
+
+    LayerDraggable.define("isDragging", {
+      get: function get() {
+        return this._isDragging || false;
+      }
+    });
+
+    LayerDraggable.define("isAnimating", {
+      get: function get() {
+        return this._isAnimating || false;
+      }
+    });
+
+    LayerDraggable.define("isMoving", {
+      get: function get() {
+        return this._isMoving || false;
+      }
+    });
+
+    LayerDraggable.define("layerStartPoint", {
+      get: function get() {
+        return this._layerStartPoint || this.layer.point;
+      }
+    });
+
+    LayerDraggable.define("cursorStartPoint", {
+      get: function get() {
+        return this._cursorStartPoint || {
+          x: 0,
+          y: 0
+        };
+      }
+    });
+
+    LayerDraggable.define("layerCursorOffset", {
+      get: function get() {
+        return this._layerCursorOffset || {
+          x: 0,
+          y: 0
+        };
+      }
+    });
+
+    LayerDraggable.define("offset", {
+      get: function get() {
+        var offset;
+        if (!this._correctedLayerStartPoint) {
+          return {
+            x: 0,
+            y: 0
+          };
+        }
+        return offset = {
+          x: this.layer.x - this._correctedLayerStartPoint.x,
+          y: this.layer.y - this._correctedLayerStartPoint.y
+        };
+      }
+    });
+
+    function LayerDraggable(layer) {
+      var options;
+      this.layer = layer;
+      this._stopSimulation = bind(this._stopSimulation, this);
+      this._onSimulationStop = bind(this._onSimulationStop, this);
+      this._onSimulationStep = bind(this._onSimulationStep, this);
+      this._touchEnd = bind(this._touchEnd, this);
+      this._touchMove = bind(this._touchMove, this);
+      this._touchStart = bind(this._touchStart, this);
+      this.touchStart = bind(this.touchStart, this);
+      options = Defaults.getDefaults("LayerDraggable", {});
+      LayerDraggable.__super__.constructor.call(this, options);
+      _.extend(this, options);
+      this.enabled = true;
+      this._eventBuffer = new EventBuffer();
+      this._constraints = null;
+      this.attach();
+    }
+
+    LayerDraggable.prototype.attach = function () {
+      return this.layer.on(Events.TouchStart, this._touchStart);
+    };
+
+    LayerDraggable.prototype.remove = function () {
+      return this.layer.off(Events.TouchStart, this._touchStart);
+    };
+
+    LayerDraggable.prototype.updatePosition = function (point) {
+      return point;
+    };
+
+    LayerDraggable.prototype.touchStart = function (event) {
+      return this._touchStart(event);
+    };
+
+    LayerDraggable.prototype._touchStart = function (event) {
+      var touchEvent;
+      console.log("Receivint _touchStart event on draggable");
+      console.log(event);
+      this._isMoving = this.isAnimating;
+      this.layer.animateStop();
+      this._stopSimulation();
+      this._resetdirectionLock();
+      event.preventDefault();
+      if (!this.propagateEvents) {
+        event.stopPropagation();
+      }
+      touchEvent = Events.touchEvent(event);
+      this._eventBuffer.push({
+        x: touchEvent.clientX,
+        y: touchEvent.clientY,
+        t: Date.now()
+      });
+      this._layerStartPoint = this.layer.point;
+      this._correctedLayerStartPoint = this.layer.point;
+      if (this.constraints && this.bounce) {
+        this._correctedLayerStartPoint = this._constrainPosition(this._correctedLayerStartPoint, this.constraints, 1 / this.overdragScale);
+      }
+      this._cursorStartPoint = {
+        x: touchEvent.clientX,
+        y: touchEvent.clientY
+      };
+      this._layerCursorOffset = {
+        x: touchEvent.clientX - this._correctedLayerStartPoint.x,
+        y: touchEvent.clientY - this._correctedLayerStartPoint.y
+      };
+      document.addEventListener(Events.TouchMove, this._touchMove);
+      document.addEventListener(Events.TouchEnd, this._touchEnd);
+      return this.emit(Events.DragStart, event);
+    };
+
+    LayerDraggable.prototype._touchMove = function (event) {
+      var offset, point, touchEvent;
+      if (!this.enabled) {
+        return;
+      }
+      event.preventDefault();
+      if (!this.propagateEvents) {
+        event.stopPropagation();
+      }
+      touchEvent = Events.touchEvent(event);
+      this._eventBuffer.push({
+        x: touchEvent.clientX,
+        y: touchEvent.clientY,
+        t: Date.now()
+      });
+      offset = {
+        x: touchEvent.clientX - this._correctedLayerStartPoint.x - this._layerCursorOffset.x,
+        y: touchEvent.clientY - this._correctedLayerStartPoint.y - this._layerCursorOffset.y
+      };
+      offset.x = offset.x * this.speedX * (1 / this.layer.canvasScaleX()) * this.layer.scaleX * this.layer.scale;
+      offset.y = offset.y * this.speedY * (1 / this.layer.canvasScaleY()) * this.layer.scaleY * this.layer.scale;
+      point = this.layer.point;
+      if (this.horizontal) {
+        point.x = this._correctedLayerStartPoint.x + offset.x;
+      }
+      if (this.vertical) {
+        point.y = this._correctedLayerStartPoint.y + offset.y;
+      }
+      if (this._constraints) {
+        point = this._constrainPosition(point, this._constraints, this.overdragScale);
+      }
+      if (this.directionLock) {
+        if (!this._directionLockEnabledX && !this._directionLockEnabledY) {
+          this._updatedirectionLock(offset);
+          return;
+        } else {
+          if (this._directionLockEnabledX) {
+            point.x = this._layerStartPoint.x;
+          }
+          if (this._directionLockEnabledY) {
+            point.y = this._layerStartPoint.y;
+          }
+        }
+      }
+      if (this.pixelAlign) {
+        point.x = parseInt(point.x);
+        point.y = parseInt(point.y);
+      }
+      if (point.x !== this._layerStartPoint.x || point.y !== this._layerStartPoint.y) {
+        this._isDragging = true;
+        this._isMoving = true;
+      }
+      if (this.isDragging) {
+        this.emit(Events.DragWillMove, event);
+      }
+      this.layer.point = this.updatePosition(point);
+      if (this.isDragging) {
+        this.emit(Events.Move, this.layer.point);
+        return this.emit(Events.DragDidMove, event);
+      }
+    };
+
+    LayerDraggable.prototype._touchEnd = function (event) {
+      if (!this.propagateEvents) {
+        event.stopPropagation();
+      }
+      document.removeEventListener(Events.TouchMove, this._touchMove);
+      document.removeEventListener(Events.TouchEnd, this._touchEnd);
+      this._startSimulation();
+      this.emit(Events.DragEnd, event);
+      return this._isDragging = false;
+    };
+
+    LayerDraggable.define("constraintsOffset", {
+      get: function get() {
+        var constrainedPoint, maxX, maxY, minX, minY, offset, point, ref;
+        if (!this.constraints) {
+          return {
+            x: 0,
+            y: 0
+          };
+        }
+        ref = this._calculateConstraints(this.constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+        point = this.layer.point;
+        constrainedPoint = {
+          x: Utils.clamp(point.x, minX, maxX),
+          y: Utils.clamp(point.y, minY, maxY)
+        };
+        offset = {
+          x: point.x - constrainedPoint.x,
+          y: point.y - constrainedPoint.y
+        };
+        return offset;
+      }
+    });
+
+    LayerDraggable.define("isBeyondConstraints", {
+      get: function get() {
+        var constraintsOffset;
+        constraintsOffset = this.constraintsOffset;
+        if (constraintsOffset.x !== 0) {
+          return true;
+        }
+        if (constraintsOffset.y !== 0) {
+          return true;
+        }
+        return false;
+      }
+    });
+
+    LayerDraggable.prototype._clampAndScale = function (value, min, max, scale) {
+      if (value < min) {
+        value = min + (value - min) * scale;
+      }
+      if (value > max) {
+        value = max + (value - max) * scale;
+      }
+      return value;
+    };
+
+    LayerDraggable.prototype._calculateConstraints = function (bounds) {
+      var constraints;
+      if (!bounds) {
+        return constraints = {
+          minX: Infinity,
+          maxX: Infinity,
+          minY: Infinity,
+          maxY: Infinity
+        };
+      }
+      constraints = {
+        minX: Utils.frameGetMinX(bounds),
+        maxX: Utils.frameGetMaxX(bounds),
+        minY: Utils.frameGetMinY(bounds),
+        maxY: Utils.frameGetMaxY(bounds)
+      };
+      constraints.maxX -= this.layer.width;
+      constraints.maxY -= this.layer.height;
+      return constraints;
+    };
+
+    LayerDraggable.prototype._constrainPosition = function (proposedPoint, bounds, scale) {
+      var maxX, maxY, minX, minY, point, ref;
+      ref = this._calculateConstraints(this._constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+      if (this.overdrag) {
+        point = {
+          x: this._clampAndScale(proposedPoint.x, minX, maxX, scale),
+          y: this._clampAndScale(proposedPoint.y, minY, maxY, scale)
+        };
+      } else {
+        point = {
+          x: Utils.clamp(proposedPoint.x, minX, maxX),
+          y: Utils.clamp(proposedPoint.y, minY, maxY)
+        };
+      }
+      if (this.speedX === 0 || this.horizontal === false) {
+        point.x = proposedPoint.x;
+      }
+      if (this.speedY === 0 || this.vertical === false) {
+        point.y = proposedPoint.y;
+      }
+      return point;
+    };
+
+    LayerDraggable.define("velocity", {
+      get: function get() {
+        if (this.isAnimating) {
+          return this._calculateSimulationVelocity();
+        }
+        return this._eventBuffer.velocity;
+        return {
+          x: 0,
+          y: 0
+        };
+      }
+    });
+
+    LayerDraggable.define("angle", {
+      get: function get() {
+        return this._eventBuffer.angle;
+      }
+    });
+
+    LayerDraggable.define("direction", {
+      get: function get() {
+        var velocity;
+        velocity = this.velocity;
+        if (Math.abs(velocity.x) > Math.abs(velocity.y)) {
+          if (velocity.x > 0) {
+            return "right";
+          }
+          return "left";
+        } else {
+          if (velocity.y > 0) {
+            return "down";
+          }
+          return "up";
+        }
+      }
+    });
+
+    LayerDraggable.prototype.calculateVelocity = function () {
+      return this.velocity;
+    };
+
+    LayerDraggable.prototype._calculateSimulationVelocity = function () {
+      var velocity, xFinished, yFinished;
+      xFinished = this._simulation.x.finished();
+      yFinished = this._simulation.y.finished();
+      velocity = {
+        x: 0,
+        y: 0
+      };
+      if (!xFinished) {
+        velocity.x = this._simulation.x.simulator.state.v / this.momentumVelocityMultiplier;
+      }
+      if (!yFinished) {
+        velocity.y = this._simulation.y.simulator.state.v / this.momentumVelocityMultiplier;
+      }
+      return velocity;
+    };
+
+    LayerDraggable.prototype.emit = function (eventName, event) {
+      this.layer.emit(eventName, event, this);
+      return LayerDraggable.__super__.emit.call(this, eventName, event, this);
+    };
+
+    LayerDraggable.prototype._updatedirectionLock = function (correctedDelta) {
+      this._directionLockEnabledX = Math.abs(correctedDelta.y) > this.directionLockThreshold.y;
+      this._directionLockEnabledY = Math.abs(correctedDelta.x) > this.directionLockThreshold.x;
+      if (this._directionLockEnabledX || this._directionLockEnabledY) {
+        return this.emit(Events.DirectionLockDidStart, {
+          x: this._directionLockEnabledX,
+          y: this._directionLockEnabledY
+        });
+      }
+    };
+
+    LayerDraggable.prototype._resetdirectionLock = function () {
+      this._directionLockEnabledX = false;
+      return this._directionLockEnabledY = false;
+    };
+
+    LayerDraggable.prototype._setupSimulation = function () {
+      if (this._simulation) {
+        return;
+      }
+      this._simulation = {
+        x: this._setupSimulationForAxis("x"),
+        y: this._setupSimulationForAxis("y")
+      };
+      return this._updateSimulationConstraints(this.constraints);
+    };
+
+    LayerDraggable.prototype._setupSimulationForAxis = function (axis) {
+      var properties, simulation;
+      properties = {};
+      properties[axis] = true;
+      simulation = new Simulation({
+        layer: this.layer,
+        properties: properties,
+        model: "inertial-scroll",
+        modelOptions: {
+          momentum: this.momentumOptions,
+          bounce: this.bounceOptions
+        }
+      });
+      simulation.on(Events.SimulationStep, (function (_this) {
+        return function (state) {
+          return _this._onSimulationStep(axis, state);
+        };
+      })(this));
+      simulation.on(Events.SimulationStop, (function (_this) {
+        return function (state) {
+          return _this._onSimulationStop(axis, state);
+        };
+      })(this));
+      return simulation;
+    };
+
+    LayerDraggable.prototype._updateSimulationConstraints = function (constraints) {
+      var maxX, maxY, minX, minY, ref;
+      if (!this._simulation) {
+        return;
+      }
+      if (constraints) {
+        ref = this._calculateConstraints(this._constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+        this._simulation.x.simulator.options = {
+          min: minX,
+          max: maxX
+        };
+        return this._simulation.y.simulator.options = {
+          min: minY,
+          max: maxY
+        };
+      } else {
+        this._simulation.x.simulator.options = {
+          min: -Infinity,
+          max: +Infinity
+        };
+        return this._simulation.y.simulator.options = {
+          min: -Infinity,
+          max: +Infinity
+        };
+      }
+    };
+
+    LayerDraggable.prototype._onSimulationStep = function (axis, state) {
+      var delta, maxX, maxY, minX, minY, ref, updatePoint;
+      if (axis === "x" && this.horizontal === false) {
+        return;
+      }
+      if (axis === "y" && this.vertical === false) {
+        return;
+      }
+      if (this.constraints) {
+        if (this.bounce) {
+          delta = state.x - this.layer[axis];
+        } else {
+          ref = this._calculateConstraints(this._constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+          if (axis === "x") {
+            delta = Utils.clamp(state.x, minX, maxX) - this.layer[axis];
+          }
+          if (axis === "y") {
+            delta = Utils.clamp(state.x, minY, maxY) - this.layer[axis];
+          }
+        }
+      } else {
+        delta = state.x - this.layer[axis];
+      }
+      updatePoint = this.layer.point;
+      if (axis === "x") {
+        updatePoint[axis] = updatePoint[axis] + delta * this.speedX;
+      }
+      if (axis === "y") {
+        updatePoint[axis] = updatePoint[axis] + delta * this.speedY;
+      }
+      this.updatePosition(updatePoint);
+      this.layer[axis] = this.updatePosition(updatePoint)[axis];
+      return this.emit(Events.Move, this.layer.point);
+    };
+
+    LayerDraggable.prototype._onSimulationStop = function (axis, state) {
+      if (!this._simulation) {
+        return;
+      }
+      if (this.pixelAlign) {
+        this.layer[axis] = parseInt(this.layer[axis]);
+      }
+      if (this._simulation.x.finished() && this._simulation.y.finished()) {
+        return this._stopSimulation();
+      }
+    };
+
+    LayerDraggable.prototype._startSimulation = function () {
+      var maxX, maxY, minX, minY, ref, startSimulationX, startSimulationY, velocity, velocityX, velocityY;
+      if (!(this.momentum || this.bounce)) {
+        return;
+      }
+      if (this.isBeyondConstraints === false && this.momentum === false) {
+        return;
+      }
+      if (this.isBeyondConstraints === false && this.isDragging === false) {
+        return;
+      }
+      ref = this._calculateConstraints(this._constraints), minX = ref.minX, maxX = ref.maxX, minY = ref.minY, maxY = ref.maxY;
+      startSimulationX = this.overdrag === true || this.layer.x > minX && this.layer.x < maxX;
+      startSimulationY = this.overdrag === true || this.layer.y > minY && this.layer.y < maxY;
+      if (startSimulationX === startSimulationY && startSimulationY === false) {
+        return;
+      }
+      velocity = this.velocity;
+      velocityX = velocity.x * this.momentumVelocityMultiplier * this.speedX * (1 / this.layer.canvasScaleX()) * this.layer.scaleX * this.layer.scale;
+      velocityY = velocity.y * this.momentumVelocityMultiplier * this.speedY * (1 / this.layer.canvasScaleY()) * this.layer.scaleY * this.layer.scale;
+      this._setupSimulation();
+      this._isAnimating = true;
+      this._isMoving = true;
+      this._simulation.x.simulator.setState({
+        x: this.layer.x,
+        v: velocityX
+      });
+      if (startSimulationX) {
+        this._simulation.x.start();
+      }
+      this._simulation.y.simulator.setState({
+        x: this.layer.y,
+        v: velocityY
+      });
+      if (startSimulationY) {
+        this._simulation.y.start();
+      }
+      return this.emit(Events.DragAnimationDidStart);
+    };
+
+    LayerDraggable.prototype._stopSimulation = function () {
+      var ref, ref1;
+      this._isAnimating = false;
+      if (!this._simulation) {
+        return;
+      }
+      if ((ref = this._simulation) != null) {
+        ref.x.stop();
+      }
+      if ((ref1 = this._simulation) != null) {
+        ref1.y.stop();
+      }
+      this._simulation = null;
+      this.emit(Events.Move, this.layer.point);
+      return this.emit(Events.DragAnimationDidEnd);
+    };
+
+    LayerDraggable.prototype.animateStop = function () {
+      return this._stopSimulation();
+    };
+
+    return LayerDraggable;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Defaults":161,"./EventBuffer":162,"./Events":165,"./Simulation":179,"./Underscore":184,"./Utils":185}],175:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Defaults,
+      Events,
+      LayerStatesIgnoredKeys,
+      _,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  },
+      slice = [].slice;
+
+  _ = require("./Underscore")._;
+
+  Events = require("./Events").Events;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Defaults = require("./Defaults").Defaults;
+
+  LayerStatesIgnoredKeys = ["ignoreEvents"];
+
+  Events.StateWillSwitch = "willSwitch";
+
+  Events.StateDidSwitch = "didSwitch";
+
+  exports.LayerStates = (function (superClass) {
+    extend(LayerStates, superClass);
+
+    function LayerStates(layer) {
+      this.layer = layer;
+      this._states = {};
+      this._orderedStates = [];
+      this.animationOptions = {};
+      this.add("default", this.layer.props);
+      console.log("layer: " + this.layer.name + " props:");
+      console.log(this.layer.props);
+      this._currentState = "default";
+      this._previousStates = [];
+      LayerStates.__super__.constructor.apply(this, arguments);
+    }
+
+    LayerStates.prototype.add = function (stateName, properties) {
+      var error, k, v;
+      if (_.isObject(stateName)) {
+        for (k in stateName) {
+          v = stateName[k];
+          this.add(k, v);
+        }
+        return;
+      }
+      error = function () {
+        throw Error("Usage example: layer.states.add(\"someName\", {x:500})");
+      };
+      if (!_.isString(stateName)) {
+        error();
+      }
+      if (!_.isObject(properties)) {
+        error();
+      }
+      this._orderedStates.push(stateName);
+      return this._states[stateName] = LayerStates.filterStateProperties(properties);
+    };
+
+    LayerStates.prototype.remove = function (stateName) {
+      if (!this._states.hasOwnProperty(stateName)) {
+        return;
+      }
+      delete this._states[stateName];
+      return this._orderedStates = _.without(this._orderedStates, stateName);
+    };
+
+    LayerStates.prototype["switch"] = function (stateName, animationOptions, instant) {
+      var animatablePropertyKeys, animatingKeys, k, properties, propertyName, ref, ref1, v, value;
+      if (instant == null) {
+        instant = false;
+      }
+      if (!this._states.hasOwnProperty(stateName)) {
+        throw Error("No such state: '" + stateName + "'");
+      }
+      this.emit(Events.StateWillSwitch, this._currentState, stateName, this);
+      this._previousStates.push(this._currentState);
+      this._currentState = stateName;
+      properties = {};
+      animatingKeys = this.animatingKeys();
+      ref = this._states[stateName];
+      for (propertyName in ref) {
+        value = ref[propertyName];
+        if (indexOf.call(LayerStatesIgnoredKeys, propertyName) >= 0) {
+          continue;
+        }
+        if (indexOf.call(animatingKeys, propertyName) < 0) {
+          continue;
+        }
+        if (_.isFunction(value)) {
+          value = value.call(this.layer, this.layer, stateName);
+        }
+        properties[propertyName] = value;
+      }
+      animatablePropertyKeys = [];
+      for (k in properties) {
+        v = properties[k];
+        if (_.isNumber(v)) {
+          animatablePropertyKeys.push(k);
+        }
+      }
+      if (animatablePropertyKeys.length === 0) {
+        instant = true;
+      }
+      if (instant === true) {
+        this.layer.props = properties;
+        return this.emit(Events.StateDidSwitch, _.last(this._previousStates), stateName, this);
+      } else {
+        if (animationOptions == null) {
+          animationOptions = this.animationOptions;
+        }
+        animationOptions.properties = properties;
+        if ((ref1 = this._animation) != null) {
+          ref1.stop();
+        }
+        this._animation = this.layer.animate(animationOptions);
+        return this._animation.on("stop", (function (_this) {
+          return function () {
+            for (k in properties) {
+              v = properties[k];
+              if (!_.isNumber(v)) {
+                _this.layer[k] = v;
+              }
+            }
+            return _this.emit(Events.StateDidSwitch, _.last(_this._previousStates), stateName, _this);
+          };
+        })(this));
+      }
+    };
+
+    LayerStates.prototype.switchInstant = function (stateName) {
+      return this["switch"](stateName, null, true);
+    };
+
+    LayerStates.define("state", {
+      get: function get() {
+        return this._currentState;
+      }
+    });
+
+    LayerStates.define("current", {
+      get: function get() {
+        return this._currentState;
+      }
+    });
+
+    LayerStates.prototype.states = function () {
+      return _.clone(this._orderedStates);
+    };
+
+    LayerStates.prototype.animatingKeys = function () {
+      var keys, ref, state, stateName;
+      keys = [];
+      ref = this._states;
+      for (stateName in ref) {
+        state = ref[stateName];
+        keys = _.union(keys, _.keys(state));
+      }
+      return keys;
+    };
+
+    LayerStates.prototype.previous = function (states, animationOptions) {
+      if (states == null) {
+        states = this.states();
+      }
+      return this["switch"](Utils.arrayPrev(states, this._currentState), animationOptions);
+    };
+
+    LayerStates.prototype.next = function () {
+      var states;
+      states = Utils.arrayFromArguments(arguments);
+      if (!states.length) {
+        states = this.states();
+      }
+      return this["switch"](Utils.arrayNext(states, this._currentState));
+    };
+
+    LayerStates.prototype.last = function (animationOptions) {
+      return this["switch"](_.last(this._previousStates), animationOptions);
+    };
+
+    LayerStates.prototype.emit = function () {
+      var args, ref;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      LayerStates.__super__.emit.apply(this, arguments);
+      return (ref = this.layer).emit.apply(ref, args);
+    };
+
+    LayerStates.filterStateProperties = function (properties) {
+      var k, stateProperties, v;
+      stateProperties = {};
+      for (k in properties) {
+        v = properties[k];
+        if (_.isNumber(v) || _.isFunction(v) || _.isBoolean(v) || _.isString(v)) {
+          stateProperties[k] = v;
+        }
+      }
+      return stateProperties;
+    };
+
+    return LayerStates;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Defaults":161,"./Events":165,"./Underscore":184}],176:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var _Force2DProperties, _WebkitProperties, filterFormat;
+
+  filterFormat = function (value, unit) {
+    return "" + Utils.round(value, 2) + unit;
+  };
+
+  _WebkitProperties = [["blur", "blur", 0, "px"], ["brightness", "brightness", 100, "%"], ["saturate", "saturate", 100, "%"], ["hue-rotate", "hueRotate", 0, "deg"], ["contrast", "contrast", 100, "%"], ["invert", "invert", 0, "%"], ["grayscale", "grayscale", 0, "%"], ["sepia", "sepia", 0, "%"]];
+
+  _Force2DProperties = {
+    "z": 0,
+    "scaleX": 1,
+    "scaleY": 1,
+    "scaleZ": 1,
+    "skewX": 0,
+    "skewY": 0,
+    "rotationX": 0,
+    "rotationY": 0
+  };
+
+  exports.LayerStyle = {
+    width: function width(layer) {
+      return layer._properties.width + "px";
+    },
+    height: function height(layer) {
+      return layer._properties.height + "px";
+    },
+    display: function display(layer) {
+      if (layer._properties.visible === true) {
+        return "block";
+      }
+      return "none";
+    },
+    opacity: function opacity(layer) {
+      return layer._properties.opacity;
+    },
+    overflow: function overflow(layer) {
+      if (layer._properties.scrollHorizontal === true || layer._properties.scrollVertical === true) {
+        return "auto";
+      }
+      if (layer._properties.clip === true) {
+        return "hidden";
+      }
+      return "visible";
+    },
+    overflowX: function overflowX(layer) {
+      if (layer._properties.scrollHorizontal === true) {
+        return "scroll";
+      }
+      if (layer._properties.clip === true) {
+        return "hidden";
+      }
+      return "visible";
+    },
+    overflowY: function overflowY(layer) {
+      if (layer._properties.scrollVertical === true) {
+        return "scroll";
+      }
+      if (layer._properties.clip === true) {
+        return "hidden";
+      }
+      return "visible";
+    },
+    zIndex: function zIndex(layer) {
+      return layer._properties.index;
+    },
+    webkitFilter: function webkitFilter(layer) {
+      var css, cssName, fallback, i, layerName, len, ref, unit;
+      css = [];
+      for (i = 0, len = _WebkitProperties.length; i < len; i++) {
+        ref = _WebkitProperties[i], cssName = ref[0], layerName = ref[1], fallback = ref[2], unit = ref[3];
+        if (layer._properties.hasOwnProperty(layerName) && layer[layerName] !== fallback) {
+          css.push(cssName + "(" + filterFormat(layer[layerName], unit) + ")");
+        }
+      }
+      return css.join(" ");
+    },
+    webkitTransform: function webkitTransform(layer) {
+      if (layer._prefer2d || layer._properties.force2d) {
+        return exports.LayerStyle.webkitTransformForce2d(layer);
+      }
+      return "translate3d(" + layer._properties.x + "px," + layer._properties.y + "px," + layer._properties.z + "px) scale(" + layer._properties.scale + ") scale3d(" + layer._properties.scaleX + "," + layer._properties.scaleY + "," + layer._properties.scaleZ + ") skew(" + layer._properties.skew + "deg," + layer._properties.skew + "deg) skewX(" + layer._properties.skewX + "deg) skewY(" + layer._properties.skewY + "deg) rotateX(" + layer._properties.rotationX + "deg) rotateY(" + layer._properties.rotationY + "deg) rotateZ(" + layer._properties.rotationZ + "deg)";
+    },
+    webkitTransformForce2d: function webkitTransformForce2d(layer) {
+      var css, p, v;
+      css = [];
+      for (p in _Force2DProperties) {
+        v = _Force2DProperties[p];
+        if (layer._properties[p] !== v) {
+          console.warn("Layer property '" + p + "'' will be ignored with force2d enabled");
+        }
+      }
+      css.push("translate(" + layer._properties.x + "px," + layer._properties.y + "px)");
+      css.push("scale(" + layer._properties.scale + ")");
+      css.push("skew(" + layer._properties.skew + "deg," + layer._properties.skew + "deg)");
+      css.push("rotate(" + layer._properties.rotationZ + "deg)");
+      return css.join(" ");
+    },
+    webkitTransformOrigin: function webkitTransformOrigin(layer) {
+      return layer._properties.originX * 100 + "% " + layer._properties.originY * 100 + "%";
+    },
+    webkitPerspective: function webkitPerspective(layer) {
+      return "" + layer._properties.perspective;
+    },
+    pointerEvents: function pointerEvents(layer) {
+      if (layer._properties.ignoreEvents) {
+        return "none";
+      } else {
+        return "auto";
+      }
+    },
+    boxShadow: function boxShadow(layer) {
+      if (!layer._properties.shadowColor) {
+        return "";
+      }
+      return layer._properties.shadowX + "px " + layer._properties.shadowY + "px " + layer._properties.shadowBlur + "px " + layer._properties.shadowSpread + "px " + layer._properties.shadowColor;
+    },
+    backgroundColor: function backgroundColor(layer) {
+      return layer._properties.backgroundColor;
+    },
+    color: function color(layer) {
+      return layer._properties.color;
+    },
+    borderRadius: function borderRadius(layer) {
+      if (!_.isNumber(layer._properties.borderRadius)) {
+        return layer._properties.borderRadius;
+      }
+      return layer._properties.borderRadius + "px";
+    },
+    border: function border(layer) {
+      return layer._properties.borderWidth + "px solid " + layer._properties.borderColor;
+    }
+  };
+}).call(undefined);
+
+},{}],177:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Context,
+      Utils,
+      printContext,
+      printLayer,
+      slice = [].slice;
+
+  Utils = require("./Utils");
+
+  Context = require("./Context").Context;
+
+  "\nTodo:\n- Better looks\n- Resizable\n- Live in own space on top of all Framer stuff\n";
+
+  printContext = null;
+
+  printLayer = null;
+
+  exports.print = function () {
+    var args;
+    args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+    if (!printContext) {
+      printContext = new Context({
+        name: "Print"
+      });
+    }
+    printContext.run(function () {
+      var printNode, printPrefix, update;
+      if (!printLayer) {
+        printLayer = new Layer();
+        printLayer.scrollVertical = true;
+        printLayer.ignoreEvents = false;
+        printLayer.html = "";
+        printLayer.style = {
+          "font": "12px/1.35em Menlo",
+          "color": "rgba(0,0,0,.7)",
+          "padding": "8px",
+          "padding-bottom": "30px",
+          "border-top": "1px solid #d9d9d9"
+        };
+        printLayer.opacity = 0.9;
+        printLayer.style.zIndex = 999;
+        printLayer.visible = true;
+        printLayer.backgroundColor = "white";
+        update = function () {
+          printLayer.width = window.innerWidth;
+          printLayer.height = 160;
+          return printLayer.maxY = window.innerHeight;
+        };
+        update();
+        printContext.eventManager.wrap(window).addEventListener("resize", update);
+      }
+      printPrefix = "» ";
+      printNode = document.createElement("div");
+      printNode.innerHTML = _.escape(printPrefix + args.map(Utils.inspect).join(", ")) + "<br>";
+      printNode.style["-webkit-user-select"] = "text";
+      printNode.style["cursor"] = "auto";
+      return printLayer._element.appendChild(printNode);
+    });
+    return Utils.delay(0, function () {
+      return printLayer._element.scrollTop = printLayer._element.scrollHeight;
+    });
+  };
+}).call(undefined);
+
+},{"./Context":159,"./Utils":185}],178:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      ScreenClass,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  ScreenClass = (function (superClass) {
+    extend(ScreenClass, superClass);
+
+    function ScreenClass() {
+      return ScreenClass.__super__.constructor.apply(this, arguments);
+    }
+
+    ScreenClass.define("width", {
+      get: function get() {
+        return Framer.CurrentContext.width;
+      }
+    });
+
+    ScreenClass.define("height", {
+      get: function get() {
+        return Framer.CurrentContext.height;
+      }
+    });
+
+    ScreenClass.define("size", {
+      get: function get() {
+        return {
+          width: this.width,
+          height: this.height
+        };
+      }
+    });
+
+    ScreenClass.define("frame", {
+      get: function get() {
+        return {
+          x: 0,
+          y: 0,
+          width: this.width,
+          height: this.height
+        };
+      }
+    });
+
+    return ScreenClass;
+  })(BaseClass);
+
+  exports.Screen = new ScreenClass();
+}).call(undefined);
+
+},{"./BaseClass":152}],179:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Config,
+      Defaults,
+      Events,
+      FrictionSimulator,
+      MomentumBounceSimulator,
+      SimulatorClasses,
+      SpringSimulator,
+      Utils,
+      _,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  };
+
+  _ = require("./Underscore")._;
+
+  Utils = require("./Utils");
+
+  Config = require("./Config").Config;
+
+  Defaults = require("./Defaults").Defaults;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  Events = require("./Events").Events;
+
+  SpringSimulator = require("./Simulators/SpringSimulator").SpringSimulator;
+
+  FrictionSimulator = require("./Simulators/FrictionSimulator").FrictionSimulator;
+
+  MomentumBounceSimulator = require("./Simulators/MomentumBounceSimulator").MomentumBounceSimulator;
+
+  Events.SimulationStart = 'simulationStart';
+
+  Events.SimulationStep = 'simulationStep';
+
+  Events.SimulationStop = 'simulationStop';
+
+  SimulatorClasses = {
+    "spring": SpringSimulator,
+    "friction": FrictionSimulator,
+    "inertial-scroll": MomentumBounceSimulator
+  };
+
+  exports.Simulation = (function (superClass) {
+    extend(Simulation, superClass);
+
+    function Simulation(options) {
+      var SimulatorClass;
+      if (options == null) {
+        options = {};
+      }
+      this._update = bind(this._update, this);
+      this._start = bind(this._start, this);
+      this.start = bind(this.start, this);
+      Simulation.__super__.constructor.call(this, options);
+      this.options = _.defaults(options, {
+        layer: null,
+        properties: {},
+        model: "spring",
+        modelOptions: {},
+        delay: 0,
+        debug: false
+      });
+      this._running = false;
+      SimulatorClass = SimulatorClasses[this.options.model] || SpringSimulator;
+      this._simulator = new SimulatorClass(this.options.modelOptions);
+    }
+
+    Simulation.prototype.animatingProperties = function () {
+      return _.keys(this.options.properties);
+    };
+
+    Simulation.prototype.start = function () {
+      var animatingProperties, animation, property, ref;
+      if (this.options.layer === null) {
+        console.error("Simulation: missing layer");
+      }
+      if (this.options.debug) {
+        console.log("Simulation.start " + this._simulator.constructor.name, this.options.modelOptions);
+      }
+      animatingProperties = this.animatingProperties();
+      ref = this.options.layer.animatingProperties();
+      for (property in ref) {
+        animation = ref[property];
+        if (indexOf.call(animatingProperties, property) >= 0) {
+          animation.stop();
+        }
+      }
+      if (this.options.delay) {
+        Utils.delay(this.options.delay, this._start);
+      } else {
+        this._start();
+      }
+      return true;
+    };
+
+    Simulation.prototype.stop = function (emit) {
+      if (emit == null) {
+        emit = true;
+      }
+      if (!this._running) {
+        return;
+      }
+      this._running = false;
+      this.options.layer._context._animationList = _.without(this.options.layer._context._animationList, this);
+      if (emit) {
+        this.emit(Events.SimulationStop);
+      }
+      return Framer.Loop.off("update", this._update);
+    };
+
+    Simulation.prototype.emit = function (event) {
+      Simulation.__super__.emit.apply(this, arguments);
+      return this.options.layer.emit(event, this);
+    };
+
+    Simulation.prototype._start = function () {
+      if (this._running) {
+        return;
+      }
+      this._running = true;
+      this.options.layer._context._animationList.push(this);
+      this.emit(Events.SimulationStart);
+      return Framer.Loop.on("update", this._update);
+    };
+
+    Simulation.prototype._update = function (delta) {
+      var emit, result;
+      if (this._simulator.finished()) {
+        this.stop(emit = false);
+        this.emit("end");
+        return this.emit(Events.SimulationStop);
+      } else {
+        result = this._simulator.next(delta);
+        return this.emit(Events.SimulationStep, result, delta);
+      }
+    };
+
+    Simulation.define("simulator", {
+      get: function get() {
+        return this._simulator;
+      }
+    });
+
+    Simulation.prototype.finished = function () {
+      return this._simulator.finished();
+    };
+
+    return Simulation;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Config":158,"./Defaults":161,"./Events":165,"./Simulators/FrictionSimulator":181,"./Simulators/MomentumBounceSimulator":182,"./Simulators/SpringSimulator":183,"./Underscore":184,"./Utils":185}],180:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var BaseClass,
+      Config,
+      Utils,
+      _,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("./Utils");
+
+  _ = require("./Underscore")._;
+
+  Config = require("./Config").Config;
+
+  BaseClass = require("./BaseClass").BaseClass;
+
+  exports.Simulator = (function (superClass) {
+    "The simulator class runs a physics simulation based on a set of input values \nat setup({input values}), and emits an output state {x, v}";
+    extend(Simulator, superClass);
+
+    Simulator.define("state", {
+      get: function get() {
+        return _.clone(this._state);
+      },
+      set: function set(state) {
+        return this._state = _.clone(state);
+      }
+    });
+
+    function Simulator(options) {
+      if (options == null) {
+        options = {};
+      }
+      this._state = {
+        x: 0,
+        v: 0
+      };
+      this.options = null;
+      this.setup(options);
+    }
+
+    Simulator.prototype.setup = function (options) {
+      throw Error("Not implemented");
+    };
+
+    Simulator.prototype.next = function (delta) {
+      throw Error("Not implemented");
+    };
+
+    Simulator.prototype.finished = function () {
+      throw Error("Not implemented");
+    };
+
+    return Simulator;
+  })(BaseClass);
+}).call(undefined);
+
+},{"./BaseClass":152,"./Config":158,"./Underscore":184,"./Utils":185}],181:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Defaults,
+      Integrator,
+      Simulator,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Defaults = require("../Defaults").Defaults;
+
+  Simulator = require("../Simulator").Simulator;
+
+  Integrator = require("../Integrator").Integrator;
+
+  exports.FrictionSimulator = (function (superClass) {
+    extend(FrictionSimulator, superClass);
+
+    function FrictionSimulator() {
+      this.finished = bind(this.finished, this);
+      return FrictionSimulator.__super__.constructor.apply(this, arguments);
+    }
+
+    FrictionSimulator.prototype.setup = function (options) {
+      this.options = Defaults.getDefaults("FrictionSimulator", options);
+      this.options = _.defaults(options, {
+        velocity: 0,
+        position: 0
+      });
+      this._state = {
+        x: this.options.position,
+        v: this.options.velocity
+      };
+      return this._integrator = new Integrator((function (_this) {
+        return function (state) {
+          return -(_this.options.friction * state.v);
+        };
+      })(this));
+    };
+
+    FrictionSimulator.prototype.next = function (delta) {
+      this._state = this._integrator.integrateState(this._state, delta);
+      return this._state;
+    };
+
+    FrictionSimulator.prototype.finished = function () {
+      return Math.abs(this._state.v) < this.options.tolerance;
+    };
+
+    return FrictionSimulator;
+  })(Simulator);
+}).call(undefined);
+
+},{"../Defaults":161,"../Integrator":172,"../Simulator":180,"../Utils":185}],182:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Defaults,
+      FrictionSimulator,
+      Simulator,
+      SpringSimulator,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Defaults = require("../Defaults").Defaults;
+
+  Simulator = require("../Simulator").Simulator;
+
+  SpringSimulator = require("./SpringSimulator").SpringSimulator;
+
+  FrictionSimulator = require("./FrictionSimulator").FrictionSimulator;
+
+  exports.MomentumBounceSimulator = (function (superClass) {
+    extend(MomentumBounceSimulator, superClass);
+
+    function MomentumBounceSimulator() {
+      this.finished = bind(this.finished, this);
+      return MomentumBounceSimulator.__super__.constructor.apply(this, arguments);
+    }
+
+    MomentumBounceSimulator.prototype.setup = function (options) {
+      this.options = Defaults.getDefaults("MomentumBounceSimulator", options);
+      this.options = _.defaults(options, {
+        velocity: 0,
+        position: 0,
+        min: 0,
+        max: 0
+      });
+      this._frictionSimulator = new FrictionSimulator({
+        friction: this.options.momentum.friction,
+        tolerance: this.options.momentum.tolerance,
+        velocity: this.options.velocity,
+        position: this.options.position
+      });
+      this._springSimulator = new SpringSimulator({
+        tension: this.options.bounce.tension,
+        friction: this.options.bounce.friction,
+        tolerance: this.options.bounce.tolerance,
+        velocity: this.options.velocity,
+        position: this.options.position
+      });
+      this._state = {
+        x: this.options.position,
+        v: this.options.velocity
+      };
+      return this._useSpring = false;
+    };
+
+    MomentumBounceSimulator.prototype.next = function (delta) {
+      if (this._useSpring) {
+        this._state = this._springSimulator.next(delta);
+      } else {
+        this._state = this._frictionSimulator.next(delta);
+        this._tryTransitionToSpring(this._state);
+      }
+      return this._state;
+    };
+
+    MomentumBounceSimulator.prototype.finished = function () {
+      if (this._useSpring) {
+        return this._springSimulator.finished();
+      }
+      return this._frictionSimulator.finished();
+    };
+
+    MomentumBounceSimulator.prototype.setState = function (state) {
+      var bound;
+      this._state = {
+        x: state.x,
+        v: state.v
+      };
+      this._frictionSimulator.setState(this._state);
+      if (this._isValidState()) {
+        return this._tryTransitionToSpring();
+      } else {
+        if (this._state.x <= this.options.min) {
+          bound = this.options.min;
+        }
+        if (this._state.x >= this.options.max) {
+          bound = this.options.max;
+        }
+        return this._transitionToSpring(bound);
+      }
+    };
+
+    MomentumBounceSimulator.prototype._tryTransitionToSpring = function (force) {
+      var aboveMaxWithVelocity, belowMinWithVelocity, bound;
+      belowMinWithVelocity = this._state.x < this.options.min && this._state.v <= 0;
+      aboveMaxWithVelocity = this._state.x > this.options.max && this._state.v >= 0;
+      if (belowMinWithVelocity || aboveMaxWithVelocity) {
+        if (belowMinWithVelocity) {
+          bound = this.options.min;
+        }
+        if (aboveMaxWithVelocity) {
+          bound = this.options.max;
+        }
+        return this._transitionToSpring(bound);
+      } else {
+        return this._useSpring = false;
+      }
+    };
+
+    MomentumBounceSimulator.prototype._transitionToSpring = function (bound) {
+      this._useSpring = true;
+      this._springSimulator.options.offset = bound;
+      return this._springSimulator.setState(this._state);
+    };
+
+    MomentumBounceSimulator.prototype._isValidState = function () {
+      var aboveMaxTravelingBack, belowMinTravelingBack, bound, check, friction, solution;
+      belowMinTravelingBack = this._state.x < this.options.min && this._state.v > 0;
+      aboveMaxTravelingBack = this._state.x > this.options.max && this._state.v < 0;
+      check = false;
+      if (belowMinTravelingBack) {
+        bound = this.options.min;
+        check = true;
+      } else if (aboveMaxTravelingBack) {
+        bound = this.options.max;
+        check = true;
+      }
+      if (check) {
+        friction = this._frictionSimulator.options.friction;
+        solution = 1 - friction * (bound - this._state.x) / this._state.v;
+        return solution > 0;
+      }
+      return true;
+    };
+
+    return MomentumBounceSimulator;
+  })(Simulator);
+}).call(undefined);
+
+},{"../Defaults":161,"../Simulator":180,"../Utils":185,"./FrictionSimulator":181,"./SpringSimulator":183}],183:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Defaults,
+      Integrator,
+      Simulator,
+      Utils,
+      bind = function bind(fn, me) {
+    return function () {
+      return fn.apply(me, arguments);
+    };
+  },
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
+
+  Utils = require("../Utils");
+
+  Defaults = require("../Defaults").Defaults;
+
+  Simulator = require("../Simulator").Simulator;
+
+  Integrator = require("../Integrator").Integrator;
+
+  exports.SpringSimulator = (function (superClass) {
+    extend(SpringSimulator, superClass);
+
+    function SpringSimulator() {
+      this.finished = bind(this.finished, this);
+      return SpringSimulator.__super__.constructor.apply(this, arguments);
+    }
+
+    SpringSimulator.prototype.setup = function (options) {
+      this.options = Defaults.getDefaults("SpringSimulator", options);
+      this.options = _.defaults(options, {
+        velocity: 0,
+        position: 0,
+        offset: 0
+      });
+      this._state = {
+        x: this.options.position,
+        v: this.options.velocity
+      };
+      return this._integrator = new Integrator((function (_this) {
+        return function (state) {
+          return -_this.options.tension * state.x - _this.options.friction * state.v;
+        };
+      })(this));
+    };
+
+    SpringSimulator.prototype.next = function (delta) {
+      this._state = this._integrator.integrateState(this._state, delta);
+      return this.getState();
+    };
+
+    SpringSimulator.prototype.finished = function () {
+      var positionNearZero, velocityNearZero;
+      positionNearZero = Math.abs(this._state.x) < this.options.tolerance;
+      velocityNearZero = Math.abs(this._state.v) < this.options.tolerance;
+      return positionNearZero && velocityNearZero;
+    };
+
+    SpringSimulator.prototype.setState = function (state) {
+      return this._state = {
+        x: state.x - this.options.offset,
+        v: state.v
+      };
+    };
+
+    SpringSimulator.prototype.getState = function () {
+      var state;
+      return state = {
+        x: this._state.x + this.options.offset,
+        v: this._state.v
+      };
+    };
+
+    return SpringSimulator;
+  })(Simulator);
+}).call(undefined);
+
+},{"../Defaults":161,"../Integrator":172,"../Simulator":180,"../Utils":185}],184:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  exports._ = require("lodash");
+}).call(undefined);
+
+},{"lodash":142}],185:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
+
+(function () {
+  var Clock,
+      Engine,
+      Screen,
+      Utils,
+      _,
+      __domComplete,
+      __domReady,
+      _textSizeNode,
+      famous,
+      setInterval,
+      setTimeout,
+      indexOf = [].indexOf || function (item) {
+    for (var i = 0, l = this.length; i < l; i++) {
+      if (i in this && this[i] === item) return i;
+    }return -1;
+  },
+      slice = [].slice;
+
+  _ = require("./Underscore")._;
+
+  Screen = require("./Screen").Screen;
+
   Utils = {};
+
+  famous = require("famous");
+
+  Engine = famous.core.FamousEngine;
+
+  Clock = Engine.getClock();
+
+  setTimeout = function (callback, delay) {
+    return Clock.setTimeout(callback, delay);
+  };
+
+  setInterval = function (callback, delay) {
+    return Clock.setInterval(callback, delay);
+  };
 
   Utils.reset = function () {
     return Framer.CurrentContext.reset();
@@ -42065,6 +48853,87 @@ module.exports = shaders;
     } else {
       return (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2;
     }
+  };
+
+  if (window.requestAnimationFrame == null) {
+    window.requestAnimationFrame = window.webkitRequestAnimationFrame;
+  }
+
+  if (window.requestAnimationFrame == null) {
+    window.requestAnimationFrame = function (f) {
+      return Utils.delay(1 / 60, f);
+    };
+  }
+
+  if (window.performance) {
+    Utils.getTime = function () {
+      return window.performance.now() / 1000;
+    };
+  } else {
+    Utils.getTime = function () {
+      return Date.now() / 1000;
+    };
+  }
+
+  Utils.delay = function (time, f) {
+    var timer;
+    timer = setTimeout(f, time * 1000);
+    Framer.CurrentContext._delayTimers.push(timer);
+    return timer;
+  };
+
+  Utils.interval = function (time, f) {
+    var timer;
+    timer = setInterval(f, time * 1000);
+    Framer.CurrentContext._delayIntervals.push(timer);
+    return timer;
+  };
+
+  Utils.debounce = function (threshold, fn, immediate) {
+    var timeout;
+    if (threshold == null) {
+      threshold = 0.1;
+    }
+    timeout = null;
+    threshold *= 1000;
+    return function () {
+      var args, delayed, obj;
+      args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+      obj = this;
+      delayed = function () {
+        if (!immediate) {
+          fn.apply(obj, args);
+        }
+        return timeout = null;
+      };
+      if (timeout) {
+        clearTimeout(timeout);
+      } else if (immediate) {
+        fn.apply(obj, args);
+      }
+      return timeout = setTimeout(delayed, threshold);
+    };
+  };
+
+  Utils.throttle = function (delay, fn) {
+    var timer;
+    if (delay === 0) {
+      return fn;
+    }
+    delay *= 1000;
+    timer = false;
+    return function () {
+      if (timer) {
+        return;
+      }
+      timer = true;
+      if (delay !== -1) {
+        setTimeout(function () {
+          return timer = false;
+        }, delay);
+      }
+      return fn.apply(null, arguments);
+    };
   };
 
   Utils.memoize = function (fn) {
@@ -43014,77 +49883,791 @@ module.exports = shaders;
     };
   };
 
-  module.exports = Utils;
+  _.extend(exports, Utils);
 }).call(undefined);
 
-},{"./Underscore":150}],152:[function(require,module,exports){
+},{"./Screen":178,"./Underscore":184,"famous":47}],186:[function(require,module,exports){
 // Generated by CoffeeScript 1.9.2
 "use strict";
 
 (function () {
-  var Application, BackgroundLayer, Clock, Events, Layer, Logger;
+  var Layer,
+      extend = function extend(child, parent) {
+    for (var key in parent) {
+      if (hasProp.call(parent, key)) child[key] = parent[key];
+    }function ctor() {
+      this.constructor = child;
+    }ctor.prototype = parent.prototype;child.prototype = new ctor();child.__super__ = parent.prototype;return child;
+  },
+      hasProp = ({}).hasOwnProperty;
 
-  Logger = require('./Logger');
+  Layer = require("./Layer").Layer;
 
-  Layer = require("./Layer");
+  exports.VideoLayer = (function (superClass) {
+    extend(VideoLayer, superClass);
 
-  BackgroundLayer = require("./BackgroundLayer");
+    function VideoLayer(options) {
+      if (options == null) {
+        options = {};
+      }
+      this.player = document.createElement("video");
+      this.player.setAttribute("webkit-playsinline", "true");
+      this.player.style.width = "100%";
+      this.player.style.height = "100%";
+      VideoLayer.__super__.constructor.call(this, options);
+      this.player.on = this.player.addEventListener;
+      this.player.off = this.player.removeEventListener;
+      this.video = options.video;
+      this._element.appendChild(this.player);
+    }
 
-  Application = require('./Application');
+    VideoLayer.define("video", {
+      get: function get() {
+        return this.player.src;
+      },
+      set: function set(video) {
+        return this.player.src = video;
+      }
+    });
 
-  Events = require('./Events');
+    return VideoLayer;
+  })(Layer);
+}).call(undefined);
 
-  Clock = require("./Clock");
+},{"./Layer":173}],187:[function(require,module,exports){
+// Generated by CoffeeScript 1.9.2
+"use strict";
 
-  Application.run(function () {
-    var startGame;
-    startGame = function () {
-      var layerA, layerB, layerC;
-      layerA = new Layer({
-        width: 80,
-        height: 80,
-        backgroundColor: "#7ed6ff",
-        borderRadius: "4px"
-      });
-      layerA.animate({
+(function () {
+  var animSpeed, arrow, bg, cancelSearch, cancelStickySearch, closePhoto, codePlaceholder, container, containerMask, defaultAnimCurve, endRefresh, header, initRedeem, initScan, initSearch, initStickySearch, limit, logo, logoDefaultAnim, logoReturningAnim, margin, noAnim, opacity, photoArea, ptr, ptrBorder, qr, qrButton, redeemText, refresh, reset, resetView, searchBar, searchPlaceholder, smallBounce, spin, startRefresh, startY, sticky, store, storeStartY, useCode;
+
+  require("./Framer");
+
+  bg = new BackgroundLayer({
+    backgroundColor: "#439FD8",
+    name: "BackgroundLayer"
+  });
+
+  console.log(bg);
+
+  animSpeed = .25;
+
+  defaultAnimCurve = "spring(250,25,5)";
+
+  smallBounce = "spring(250,25,2)";
+
+  margin = 20;
+
+  noAnim = {
+    curve: "ease",
+    time: 0,
+    delay: 0
+  };
+
+  logoDefaultAnim = {
+    curve: "ease",
+    time: .2,
+    delay: 0
+  };
+
+  logoReturningAnim = {
+    curve: defaultAnimCurve,
+    time: .3,
+    delay: .1
+  };
+
+  Framer.Defaults.Animation = {
+    curve: defaultAnimCurve,
+    time: animSpeed
+  };
+
+  photoArea = new Layer({
+    x: 0,
+    y: 0,
+    width: 640,
+    height: 640,
+    image: "images/photo-area.png",
+    scale: .86,
+    opacity: 0,
+    name: "photoArea"
+  });
+
+  closePhoto = new Layer({
+    x: 560,
+    y: 40,
+    width: 50,
+    height: 50,
+    backgroundColor: "transparent",
+    name: "closePhoto"
+  });
+
+  container = new Layer({
+    x: 0,
+    y: 0,
+    width: 640,
+    height: 1136,
+    backgroundColor: "transparent",
+    name: "container"
+  });
+
+  container.clip = false;
+
+  container.scroll = true;
+
+  container.states.animationOptions = {
+    curve: smallBounce
+  };
+
+  containerMask = new Layer({
+    x: 0,
+    y: -50,
+    width: 640,
+    height: 1963 + 50,
+    backgroundColor: "rgba(0,0,0,.8)",
+    opacity: 0,
+    name: "containerMask"
+  });
+
+  header = new Layer({
+    x: 0,
+    y: 0,
+    width: 640,
+    height: 413,
+    backgroundColor: "#439FD8",
+    name: "header"
+  });
+
+  logo = new Layer({
+    x: 0,
+    y: 114,
+    width: 328,
+    height: 70,
+    image: "images/guidebook_logo_dark.png",
+    name: "logo"
+  });
+
+  store = new Layer({
+    x: 0,
+    y: 413,
+    width: 640,
+    height: 1963,
+    image: "images/store.png",
+    name: "store"
+  });
+
+  codePlaceholder = new Layer({
+    x: 20,
+    y: 22,
+    width: 171,
+    height: 34,
+    image: "images/code-placeholder.png",
+    opacity: 0,
+    name: "codePlaceholder"
+  });
+
+  searchBar = new Layer({
+    x: 30,
+    y: 304,
+    width: 580,
+    height: 79,
+    backgroundColor: "white",
+    borderRadius: "8px",
+    name: "searchBar"
+  });
+
+  searchBar.shadowX = 0;
+
+  searchPlaceholder = new Layer({
+    x: 20,
+    y: 22,
+    width: 171,
+    height: 37,
+    image: "images/search-placeholder.png",
+    name: "searchPlaceholder"
+  });
+
+  reset = new Layer({
+    x: 0,
+    y: 413,
+    width: 640,
+    height: 2376,
+    backgroundColor: "rgba(255,255,255,.6)",
+    opacity: 0,
+    name: "reset"
+  });
+
+  redeemText = new Layer({
+    x: 0,
+    y: 114,
+    width: 362,
+    height: 65,
+    image: "images/redeem-text.png",
+    opacity: 0,
+    name: "redeemText"
+  });
+
+  cancelSearch = new Layer({
+    x: 525,
+    y: 20,
+    width: 40,
+    height: 40,
+    image: "images/cancel-search.png",
+    opacity: 0,
+    index: 0,
+    name: "cancelSearch"
+  });
+
+  useCode = new Layer({
+    x: 0,
+    y: searchBar.y - 30 - 43,
+    width: 180,
+    height: 43,
+    image: "images/use-code.png",
+    name: "useCode"
+  });
+
+  useCode.centerX();
+
+  qrButton = new Layer({
+    x: searchBar.width - 200,
+    y: 0,
+    width: 200,
+    height: searchBar.height,
+    backgroundColor: "transparent",
+    name: "qrButton"
+  });
+
+  qr = new Layer({
+    x: 150,
+    y: 0,
+    width: 34,
+    height: 34,
+    image: "images/qr.png",
+    name: "qr"
+  });
+
+  ptr = new Layer({
+    x: 0,
+    y: header.height - 100,
+    height: 100,
+    width: 640,
+    backgroundColor: "transparent",
+    name: "ptr"
+  });
+
+  ptrBorder = new Layer({
+    x: 0,
+    y: ptr.height - 2,
+    height: 2,
+    width: 640,
+    backgroundColor: "#D7E1E9",
+    name: "ptrBorder"
+  });
+
+  arrow = new Layer({
+    x: 0,
+    y: 0,
+    width: 33,
+    height: 44,
+    image: "images/pull-arrow.png",
+    name: "arrow"
+  });
+
+  refresh = new Layer({
+    x: 0,
+    y: 0,
+    width: 44,
+    height: 44,
+    image: "images/refresh.png",
+    opacity: 0,
+    name: "refresh"
+  });
+
+  ptr.addSubLayer(arrow);
+
+  ptr.addSubLayer(ptrBorder);
+
+  ptr.addSubLayer(refresh);
+
+  arrow.center();
+
+  refresh.center();
+
+  ptr.index = 0;
+
+  qrButton.addSubLayer(qr);
+
+  container.addSubLayer(store);
+
+  container.addSubLayer(header);
+
+  container.addSubLayer(containerMask);
+
+  container.addSubLayer(reset);
+
+  header.addSubLayer(useCode);
+
+  header.addSubLayer(redeemText);
+
+  header.addSubLayer(logo);
+
+  header.addSubLayer(searchBar);
+
+  searchBar.addSubLayer(searchPlaceholder);
+
+  searchBar.addSubLayer(codePlaceholder);
+
+  codePlaceholder.centerY();
+
+  searchBar.addSubLayer(qrButton);
+
+  qr.centerY();
+
+  searchBar.addSubLayer(cancelSearch);
+
+  redeemText.centerX();
+
+  logo.centerX();
+
+  qrButton.states.add({
+    hidden: {
+      opacity: 0
+    }
+  });
+
+  container.states.add({
+    scanning: {
+      y: photoArea.height
+    }
+  });
+
+  photoArea.states.add({
+    scanning: {
+      scale: 1,
+      opacity: 1
+    }
+  });
+
+  containerMask.states.add({
+    scanning: {
+      opacity: 1
+    }
+  });
+
+  header.states.add({
+    searching: {
+      y: -(header.height - margin - searchBar.height - margin)
+    },
+    redeeming: {
+      height: header.height - useCode.height - margin
+    },
+    stickySearch: {
+      y: 0,
+      height: margin + searchBar.height + margin
+    },
+    stickyReturn: {
+      y: 0,
+      height: 413
+    }
+  });
+
+  searchBar.states.add({
+    searching: {
+      y: header.height - margin - searchBar.height
+    },
+    redeeming: {
+      y: useCode.y
+    },
+    sticky: {
+      y: margin
+    },
+    stickyReturn: {
+      y: 304
+    }
+  });
+
+  reset.states.add({
+    searching: {
+      opacity: 1,
+      y: margin + searchBar.height + margin
+    },
+    usingCode: {
+      opacity: 1,
+      y: header.height - useCode.height - margin
+    },
+    scanning: {
+      opacity: .001,
+      y: 0
+    }
+  });
+
+  codePlaceholder.states.add({
+    redeeming: {
+      opacity: 1
+    }
+  });
+
+  redeemText.states.add({
+    visible: {
+      opacity: 1
+    }
+  });
+
+  useCode.states.add({
+    hidden: {
+      opacity: 0
+    },
+    pressed: {
+      scale: .9
+    }
+  });
+
+  logo.states.add({
+    searching: {
+      y: logo.y - 50,
+      opacity: 0
+    },
+    returning: {
+      y: logo.y,
+      opacity: 1
+    },
+    hidden: {
+      opacity: 0
+    }
+  });
+
+  store.states.add({
+    searching: {
+      y: 20 + searchBar.height + 20,
+      opacity: 1
+    },
+    redeeming: {
+      y: header.height - useCode.height - margin
+    },
+    scanning: {
+      y: header.height + photoArea.height,
+      blur: 5
+    },
+    refreshing: {
+      y: header.height + 100
+    }
+  });
+
+  searchPlaceholder.states.add({
+    hidden: {
+      opacity: 0,
+      x: searchPlaceholder.x - 100
+    }
+  });
+
+  cancelSearch.states.add({
+    visible: {
+      opacity: 1,
+      index: 1
+    }
+  });
+
+  ptr.states.add({
+    refreshing: {
+      y: header.height
+    }
+  });
+
+  redeemText.states.animationOptions = {
+    curve: "ease",
+    time: animSpeed
+  };
+
+  searchPlaceholder.states.animationOptions = {
+    curve: smallBounce,
+    time: animSpeed
+  };
+
+  cancelSearch.states.animationOptions = {
+    curve: "ease",
+    time: animSpeed
+  };
+
+  resetView = function () {
+    searchPlaceholder.states["switch"]("default");
+    qrButton.states["switch"]("default");
+    header.states["switch"]("default");
+    logo.states["switch"]("returning");
+    store.states["switch"]("default");
+    reset.states["switch"]("default");
+    cancelSearch.states["switch"]("default");
+    redeemText.states["switch"]("default");
+    searchBar.states["switch"]("default");
+    useCode.states["switch"]("default");
+    container.states["switch"]("default");
+    containerMask.states["switch"]("default");
+    photoArea.states["switch"]("default");
+    codePlaceholder.states["switch"]("default");
+    Utils.delay(0.5, function () {
+      return bg.backgroundColor = "#439FD8";
+    });
+    return qrButton.index = 100;
+  };
+
+  initSearch = function () {
+    if (!sticky) {
+      header.states["switch"]("searching");
+      logo.states["switch"]("searching");
+      qrButton.states["switch"]("hidden");
+      store.states["switch"]("searching");
+      reset.states["switch"]("searching");
+      cancelSearch.states["switch"]("visible");
+      searchBar.states["switch"]("searching");
+      useCode.states["switch"]("hidden");
+      return qrButton.index = 0;
+    } else {
+      return reset.states["switch"]("searching");
+    }
+  };
+
+  initRedeem = function () {
+    searchPlaceholder.states["switch"]("hidden");
+    reset.states["switch"]("usingCode");
+    searchBar.states["switch"]("redeeming");
+    cancelSearch.states["switch"]("visible");
+    redeemText.states["switch"]("visible");
+    logo.states["switch"]("hidden");
+    useCode.states["switch"]("hidden");
+    header.states["switch"]("redeeming");
+    store.states["switch"]("redeeming");
+    codePlaceholder.states["switch"]("redeeming");
+    qrButton.states["switch"]("hidden");
+    return qrButton.index = 0;
+  };
+
+  initScan = function () {
+    container.states["switch"]("scanning");
+    reset.states["switch"]("scanning");
+    containerMask.states["switch"]("scanning");
+    bg.backgroundColor = "black";
+    return photoArea.states["switch"]("scanning");
+  };
+
+  initStickySearch = function () {
+    header.states["switch"]("stickySearch");
+    logo.states["switch"]("hidden");
+    container.removeSubLayer(header);
+    return searchBar.states["switch"]("sticky");
+  };
+
+  cancelStickySearch = function () {
+    container.addSubLayer(header);
+    header.index = 1;
+    header.states["switch"]("stickyReturn");
+    searchBar.states["switch"]("stickyReturn");
+    return searchBar.states["switch"]("default");
+  };
+
+  searchPlaceholder.on(Events.Click, function () {
+    console.log("searchPlaceholder on Click");
+    return initSearch();
+  });
+
+  qrButton.on(Events.Click, function () {
+    return initScan();
+  });
+
+  qr.on(Events.Click, function () {
+    return initScan();
+  });
+
+  useCode.on(Events.TouchStart, function () {
+    return this.states["switch"]("pressed");
+  });
+
+  useCode.on(Events.MouseOut, function () {
+    return this.states["switch"]("default");
+  });
+
+  useCode.on(Events.Click, function () {
+    return initRedeem();
+  });
+
+  reset.on(Events.Click, function () {
+    return resetView();
+  });
+
+  cancelSearch.on(Events.Click, function () {
+    console.log("cancelSearch on Click");
+    return resetView();
+  });
+
+  closePhoto.on(Events.Click, function () {
+    return resetView();
+  });
+
+  logo.states.on(Events.StateWillSwitch, function (oldState, newState) {
+    if (newState === 'returning') {
+      return logo.states.animationOptions = logoReturningAnim;
+    } else {
+      return logo.states.animationOptions = logoDefaultAnim;
+    }
+  });
+
+  reset.on(Events.AnimationStart, function (event, layer) {
+    return layer.visible = true;
+  });
+
+  reset.on(Events.AnimationEnd, function (event, layer) {
+    if (layer.opacity === 0) {
+      return layer.visible = false;
+    } else {
+      return layer.visible = true;
+    }
+  });
+
+  header.on(Events.StateWillSwitch, function (oldState, newState) {
+    if (newState === "stickyReturn") {
+      return header.states.animationOptions = noAnim;
+    } else if (newState === "stickySearch") {
+      return header.states.animationOptions = noAnim;
+    } else {
+      return header.states.animationOptions = Framer.Defaults.Animation;
+    }
+  });
+
+  searchBar.on(Events.StateWillSwitch, function (oldState, newState) {
+    if (newState === "sticky" || sticky) {
+      return searchBar.states.animationOptions = noAnim;
+    } else {
+      return searchBar.states.animationOptions = Framer.Defaults.Animation;
+    }
+  });
+
+  spin = function () {
+    refresh.animate({
+      properties: {
+        rotation: 1080
+      },
+      time: 1.5,
+      curve: "linear"
+    });
+    return Utils.delay(1.5, function () {
+      refresh.rotation = 0;
+      return spin();
+    });
+  };
+
+  spin();
+
+  startY = 0;
+
+  storeStartY = store.y;
+
+  store.draggable.enabled = true;
+
+  store.draggable.speedX = 0;
+
+  store.on(Events.DragStart, function (event) {
+    bg.backgroundColor = "#F6FBFE";
+    return startY = event.pageY;
+  });
+
+  store.on(Events.DragMove, function (event) {
+    var deltaY;
+    deltaY = startY - event.pageY;
+    store.y = storeStartY - deltaY;
+    ptr.y = store.y - ptr.height;
+    if (deltaY > 0) {
+      header.y = -deltaY;
+    }
+    if (deltaY < -100) {
+      return arrow.animate({
         properties: {
-          y: 480
-        }
-      });
-      layerB = new Layer({
-        width: 80,
-        height: 80,
-        x: 100,
-        backgroundColor: "#26b4f6",
-        borderRadius: "4px"
-      });
-      layerB.animate({
-        properties: {
-          y: 480,
-          rotationZ: 360
+          rotation: 180
         },
-        time: 2
+        time: .12,
+        curve: "ease"
       });
-      layerC = new Layer({
-        width: 80,
-        height: 80,
-        x: 200,
-        backgroundColor: "#0079c6",
-        borderRadius: "4px"
-      });
-      layerC.animate({
+    } else {
+      return arrow.animate({
         properties: {
-          y: 480
+          rotation: 0
         },
-        time: 3,
-        curve: "inOutCubic"
+        time: .12,
+        curve: "ease"
       });
-      return setTimeout(function () {
-        return startGame();
-      }, 2000);
-    };
-    return startGame();
+    }
+  });
+
+  store.on(Events.DragEnd, function (event) {
+    var deltaY;
+    deltaY = startY - event.pageY;
+    if (deltaY < -100) {
+      return startRefresh();
+    } else {
+      store.states["switch"]("default");
+      ptr.states["switch"]("default");
+      return header.states["switch"]("default");
+    }
+  });
+
+  startRefresh = function () {
+    store.states["switch"]("refreshing");
+    ptr.states["switch"]("refreshing");
+    refresh.animate({
+      properties: {
+        opacity: 1
+      },
+      time: .2,
+      curve: "ease"
+    });
+    arrow.animate({
+      properties: {
+        opacity: 0
+      },
+      time: .2,
+      curve: "ease"
+    });
+    return Utils.delay(2, function () {
+      return endRefresh();
+    });
+  };
+
+  endRefresh = function () {
+    store.states["switch"]("default");
+    ptr.states["switch"]("default");
+    refresh.opacity = 0;
+    arrow.animate({
+      properties: {
+        opacity: 1
+      },
+      time: .2,
+      curve: "ease"
+    });
+    return Utils.delay(.2, function () {
+      bg.backgroundColor = "#439FD8";
+      return arrow.rotation = 0;
+    });
+  };
+
+  sticky = false;
+
+  opacity = 1;
+
+  limit = header.height - 20 - searchBar.height - 20;
+
+  container.on(Events.Scroll, function () {
+    var x, y;
+    x = Utils.modulate(container.scrollY, [0, limit - 100], [1, 0], true);
+    y = Utils.modulate(container.scrollY, [0, limit], [1, 0], true);
+    logo.opacity = x;
+    useCode.opacity = y;
+    if (container.scrollY > limit) {
+      if (!sticky) {
+        initStickySearch();
+        return sticky = true;
+      }
+    } else {
+      cancelStickySearch();
+      return sticky = false;
+    }
   });
 }).call(undefined);
 
-},{"./Application":142,"./BackgroundLayer":143,"./Clock":144,"./Events":145,"./Layer":147,"./Logger":149}]},{},[152]);
+},{"./Framer":170}]},{},[187]);

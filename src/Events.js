@@ -34,8 +34,6 @@
 
   Events.Click = Events.TouchEnd;
 
-  console.log(Events);
-
   Events.AnimationStart = "start";
 
   Events.AnimationStop = "stop";
@@ -70,6 +68,6 @@
     return Framer.CurrentContext.eventManager.wrap(element);
   };
 
-  module.exports = Events;
+  exports.Events = Events;
 
 }).call(this);

@@ -1,781 +1,990 @@
+{_} = require "./Underscore"
 
+Utils = require "./Utils"
+
+{Config} = require "./Config"
+{Defaults} = require "./Defaults"
+{BaseClass} = require "./BaseClass"
+{EventEmitter} = require "./EventEmitter"
+{Animation} = require "./Animation"
+{LayerStyle} = require "./LayerStyle"
+{LayerStates} = require "./LayerStates"
+{LayerDraggable} = require "./LayerDraggable"
+{Events} = require "./Events"
+
+NoCacheDateKey = Date.now()
 
 famous = require("famous")
-
-FamousWindow = require("./FamousWindow")
-Application = require("./Application")
-
-LayerId = require("./LayerId")
-
-Logger = require('./Logger')
-
+Engine = famous.core.FamousEngine
+Node = famous.core.Node
 DOMElement = famous.domRenderables.DOMElement
 
-Rotation = famous.components.Rotation
+FamousPropertySetter = require("./FamousPropertySetter")
 
-Position = famous.components.Position
+layerValueTypeError = (name, value) ->
+	throw new Error("Layer.#{name}: value '#{value}' of type '#{typeof(value)}'' is not valid")
 
-Transitionable = famous.transitions.Transitionable
+layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) ->
+	result = 
+		default: fallback
+		get: -> 
+			# console.log "Layer.#{name}.get #{@_properties[name]}", @_properties.hasOwnProperty(name)
+			return @_properties[name] if @_properties.hasOwnProperty(name)
+			return fallback
 
-Events = require("./Events")
+		set: (value) ->
 
-Quaternion = famous.math.Quaternion
+			if @name isnt "refresh"
+				console.log "Trying to set Layer #{@name}.#{name}.set #{value}"
 
+			if value and validator and not validator(value)
+				layerValueTypeError(name, value)
 
-_ = require('./Underscore')
+			@_properties[name] = value
+			# console.log("cssProperty: #{cssProperty}")
+			# @_element.style[cssProperty] = LayerStyle[cssProperty](@)			
+			FamousPropertySetter[name]?(@)
 
 
-class Layer
+			# console.log("Setting property with name: #{name}")s
 
 
-    constructor:(options) ->
-        @_id = LayerId.generateNewId()
-        @_name = ""
-        @_window = options.window
-        if not @_window?
-            @_window = Application.getRootWindow()
+			set?(@, value)
+			@emit("change:#{name}", value)
+			@emit("change:point", value) if name in ["x", "y"]
+			@emit("change:size", value)  if name in ["width", "height"]
+			@emit("change:frame", value) if name in ["x", "y", "width", "height"]
+			@emit("change:rotation", value) if name in ["rotationZ"]
 
-        @_layerNode = @_window.createNode()        
-        @_layerNode.setOrigin(0.5, 0.5, 0.5)
+	result = _.extend(result, options)
 
-        @_rotationY = 0
+class exports.Layer extends BaseClass
 
-        @_tagName = "div"
+	
 
-        @_ignoreEvents = false
 
-        image = options.image || null
+	constructor: (options={}) ->
 
-        attributes = null
+		@_properties = {}
+		@_style = {}
 
-        if image isnt null
-            @_tagName = "img"
-        
+		# Special power setting for 2d rendering path. Only enable this
+		# if you know what you are doing. See LayerStyle for more info.
+		@_prefer2d = false
+		@_alwaysUseImageCache = false
 
-        @_layerElement = new DOMElement(@_layerNode,
-                tagName: @_tagName
-            )
+		# We have to create the element before we set the defaults
+		@_createElement()
 
-        if image isnt null
-            @_layerElement.setAttribute("src", image)
-        
+		if options.hasOwnProperty "frame"
+			options = _.extend(options, options.frame)
 
-        backgroundColor = options.backgroundColor || null
-        if backgroundColor isnt null
-            @applyBackgroundColor(backgroundColor)
+		options = Defaults.getDefaults "Layer", options
 
-        
-        borderRadius = options.borderRadius || null
-        if borderRadius isnt null
-            @applyBorderRadius(borderRadius)
+		super options
 
-        width = options.width || 0
-        height = options.height || 0
+		# Add this layer to the current context
+		@_context.addLayer(@)
 
-        if width >= 0
-            @_layerNode.setSizeMode("absolute", "absolute", "absolute")
-            @applyWidth(width)
+		@_id = @_context.nextLayerId()
+		console.log "@_id: #{@_id}"
+		@_element.setId(@_id)
 
-        if height >= 0
-            @_layerNode.setSizeMode("absolute", "absolute", "absolute")
-            @applyHeight(height)
+		# Insert the layer into the dom or the superLayer element
+		if not options.superLayer
+			@_insertElement() if not options.shadow
+		else
+			@superLayer = options.superLayer
 
-        # @_layerNode.setMountPoint(0.5, 0.5)
+		# If an index was set, we would like to use that one
+		if options.hasOwnProperty("index")
+			@index = options.index
 
+		# Set needed private variables
+		@_subLayers = []
 
-        x = options.x || 0
-        y = options.y || 0
+		@_context.emit("layer:create", @)
 
-        @applyX(x)
-        @applyY(y)
+	##############################################################
+	# Properties
 
-        @_superlayer = options.superLayer || null
-        @applySuperlayer(@_superlayer)
+	# A placeholder for layer bound properties defined by the user:
+	@define "custom", @simpleProperty("custom", undefined)
 
-        @eventsHandlers = []
+	# Css properties
+	@define "width",  layerProperty(@, "width",  "width", 100, _.isNumber)
+	@define "height", layerProperty(@, "height", "height", 100, _.isNumber)
 
-        @_layerNode.addUIEvent(Events.Click)
-
-        @_layerNode.onReceive = (event, payload) =>
-            if not @_ignoreEvents            
-                handler = @eventsHandlers[event] || null;
-
-                if handler isnt null
-                    handler()
-
-        @_layerNode.layer = @
-        @_layerElement.layer = @
-
-
-    applyHeight: (val) =>
-        currentSize = @_layerNode.getAbsoluteSize()
-
-
-        @_layerNode.setAbsoluteSize(currentSize[0], val, currentSize[2])
-
-    @property 'height',
-        get: ->
-            currentSize = @_layerNode.getAbsoluteSize()
-            currentSize[1]
-
-        set: (newVal) ->
-            if @height isnt newVal
-                @applyHeight(newVal)
-
-    applyWidth: (val) =>
-        currentSize = @_layerNode.getAbsoluteSize()
-
-        @_layerNode.setAbsoluteSize(val, currentSize[1], currentSize[2])
-
-    @property 'width',
-        get: ->            
-            Logger.log "width property inside"
-            currentSize = @_layerNode.getAbsoluteSize()
-
-            Logger.log "width property, currentSize: #{currentSize}"
-
-            currentSize[0]
-
-        set: (newVal) ->
-            if @width isnt newVal
-                @applyWidth(newVal)
-
-    applyBackgroundColor:(bgColor) =>
-        @_layerElement.setProperty("background-color", bgColor)           
-
-    @property 'backgroundColor',
-        get: ->
-            elementValue = @_layerElement.getValue()
-            return elementValue.styles['background-color'] 
-
-        set: (newVal) ->
-            if @backgroundColor isnt newVal
-                @applyBackgroundColor(newVal)
-
-    applyBorderRadius:(borderRadius) =>
-
-        completeValueString = ""
-        if typeof borderRadius is 'string'
-            completeValueString = borderRadius
-        else
-            completeValueString = "#{borderRadius}px"
-        
-        @_layerElement.setProperty('border-radius', "#{completeValueString}")
-        @_layerElement.setProperty('border', "1px solid #{@backgroundColor}")   
-
-
-
-    @property 'borderRadius',
-        get: ->
-            elementValue = @_layerElement.getValue()
-            strValue = elementValue.styles['borderRadius'] || ''
-            if strValue.length > 0
-                strValue = strValue.replace("px", "")
-
-                parseInt(strValue, 10)
-
-            else
-                0
-
-
-        set: (newVal) ->
-            if @borderRadius isnt newVal
-                @applyBorderRadius(newVal)    
-
-    @property 'id',
-        get: ->
-            @_id
-
-    @property 'name',
-        get: ->
-            @_name
-        set: (newVal) ->
-            @_name = newVal
-
-    applyX: (newVal) =>
-        currentPos = @_layerNode.getPosition()
-        @_layerNode.setPosition(newVal, currentPos[1], currentPos[2])
-
-    @property 'x',
-        get: ->
-            currentPos = @_layerNode.getPosition()
-            currentPos[0]
-
-        set: (newVal) ->
-            if @x isnt newVal                                                
-                @applyX(newVal)
-
-    applyY: (newVal) =>
-        currentPos = @_layerNode.getPosition()
-        @_layerNode.setPosition(currentPos[0], newVal, currentPos[2])
-
-    @property 'y',
-        get: ->
-            currentPos = @_layerNode.getPosition()
-            currentPos[1]
-
-        set: (newVal) ->
-            if @y isnt newVal                                                
-                @applyY(newVal)
-
-    applyZ: (newVal) =>
-        currentPos = @_layerNode.getPosition()
-        @_layerNode.setPosition(currentPos[0], currentPos[1], newVal)
-
-    @property 'z',
-        get: ->
-            currentPos = @_layerNode.getPosition()
-            currentPos[2]
-
-        set: (newVal) ->
-            if @y isnt newVal                                                
-                @applyZ(newVal)
-
-    @property 'point',
-        get: ->
-            point = 
-                x : @x
-                y : @y
-
-            point
-
-        set: (newVal) ->
-            if @point isnt newVal
-                if newVal?
-                    if @point.x isnt newVal.x or @point.y isnt newVal.y
-                        @x = newVal.x
-                        @y = newVal.y
-
-
-    @property 'size',
-        get: ->
-            size = 
-                width: @width
-                height: @height
-
-            size
-
-        set: (newVal) ->
-            if @size isnt newVal
-                if newVal?
-                    if @size.width isnt newVal.width or @size.height isnt newVal.height
-                        @width = newVal.width
-                        @height = newVal.height
-
-    @property 'frame',
-        get: ->
-            frame =
-                x: @x
-                y: @y 
-                width: @width
-                height: @height
-
-            frame
-
-        set: (newVal) ->
-            if @frame isnt newVal
-                if newVal?                    
-                    @point = newVal
-                    @size = newVal
-
-    @property 'minX',
-        get: ->
-            @x
-
-    @property 'maxX',
-        get: ->
-            @x + @width
-
-    @property 'minY',
-        get: ->
-            @y
-
-    @property 'maxY',
-        get: ->
-            @y + @height
-
-    @property 'midX',
-        get: ->
-            (@minX + @maxX)/2
-
-    @property 'midY',
-        get: ->
-            (@minY + @maxY)/2
-
-    applyScaleX:(newVal) =>
-        currentScale = @_layerNode.getScale()
-        @_layerNode.setScale(newVal, currentScale[1], currentScale[2])
-
-    applyScaleY:(newVal) =>
-        currentScale = @_layerNode.getScale()
-        @_layerNode.setScale(currentScale[0], newVal, currentScale[2])
-
-    applyScaleZ:(newVal) =>
-        currentScale = @_layerNode.getScale()
-        @_layerNode.setScale(currentScale[0], currentScale[1], newVal)
-
-    applyScale:(newVal) =>
-        @applyScaleX(newVal)
-        @applyScaleY(newVal)
-
-    @property 'scale',
-        get: ->
-            currentScale = @_layerNode.getScale()
-
-            currentScale[0]
-
-        set: (newVal) ->
-            if @scale isnt newVal
-                @applyScale(newVal)
-
-    applyOpacity: (newVal) =>
-        @_layerNode.setOpacity(newVal)
-
-    @property 'opacity', 
-        get: ->
-            @_layerNode.getOpacity()
-
-        set: (newVal)->
-            if @opacity isnt newVal
-                @applyOpacity(newVal)
-
-
-    degreeToRadian: (degree) =>
-
-        result = (degree * Math.PI) / 180.0
-
-        result
-
-    radianToDegree: (radian) =>
-        result = radian * 180.0 / Math.PI
-
-        result
-
-
-    applyRotation: (newVal) =>        
-        currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal))
-
-
-
-    @property 'rotation',
-        get: ->
-            currentRotation = @_layerNode.getRotation()            
-
-            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
-
-            eulerResult = {}
-
-            q.toEuler(eulerResult)
-
-            thetaRadian = Math.PI / (180)
-
-            eulerResult.z / thetaRadian
-
-        set: (newVal)->
-            if @rotation isnt newVal
-                @applyRotation(newVal)
-
-    applyRotationX: (newVal) =>        
-        currentRotation = @_layerNode.getRotation()            
-        # @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2])
-        @_layerNode.setRotation(@degreeToRadian(newVal), currentRotation[1], currentRotation[2])
-
-    @property 'rotationX',
-        get: ->
-            currentRotation = @_layerNode.getRotation()            
-
-            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
-
-            eulerResult = {}
-
-            q.toEuler(eulerResult)
-
-            @radianToDegree(eulerResult.x)
-
-        set: (newVal)->
-            if @rotation isnt newVal
-                @applyRotationX(newVal)
-
-    applyRotationY: (newVal) =>        
-
-        @_rotationY = newVal
-
-        currentRotation = @_layerNode.getRotation()            
-        # @_layerNode.setRotation(@angleToFamousRotation(newVal), currentRotation[1], currentRotation[2])
-
-        # Logger.log "assigning #{@degreeToRadian(newVal)} to rotationY "
-        @_layerNode.setRotation(currentRotation[0], @degreeToRadian(newVal), currentRotation[2])
-
-    @property 'rotationY',
-        get: ->
-            @_rotationY
-
-        set: (newVal)->
-            if @rotation isnt newVal
-                @applyRotationY(newVal)
-
-
-
-    applyRotationZ: (newVal) =>        
-        currentRotation = @_layerNode.getRotation()            
-        @_layerNode.setRotation(currentRotation[0], currentRotation[1], @angleToFamousRotation(newVal))
-
-    @property 'rotationZ',
-        get: ->
-            currentRotation = @_layerNode.getRotation()            
-
-            q = new Quaternion(currentRotation[3], currentRotation[0], currentRotation[1], currentRotation[2])
-
-            eulerResult = {}
-
-            q.toEuler(eulerResult)
-
-            thetaRadian = Math.PI / (180)
-
-            eulerResult.z / thetaRadian
-
-        set: (newVal)->
-            if @rotation isnt newVal
-                @applyRotationZ(newVal)
-
-    @property 'subLayers',
-        get: ->
-            subLayers = []
-
-            children = @_layerNode.getChildren() || []
-
-            for child in children
-                if child.layer?
-                    subLayers.push(child.layer)
-
-            subLayers
-
-    applyHtml: (newVal) =>
-        @_layerElement.setContent(newVal)
-        
-    @property 'html',
-        get: ->
-            values = @_layerElement.getValue()
-
-            values.content
-
-        set: (newVal) ->
-            if @html isnt newVal
-                @applyHtml(newVal)
-
-    subLayersByName: (name) =>
-        subLayers = @subLayers
-
-        result = []
-
-        for subLayer in subLayers
-            if subLayer.name?
-                if subLayer.name is name
-                    result.push(subLayer)
-
-        result
-
-    addSubLayer: (layer) =>
-        if layer?
-            @_layerNode.addChild(layer._layerNode)
-
-    removeSubLayer: (layer) =>
-        if layer? and layer._layerNode?
-            @_layerNode.removeChild(layer._layerNode)
-
-    siblingLayers: () =>
-        result = []
-
-        parentChildren = @_layerNode.getParent().getChildren()
-
-        for child in parentChildren
-            if child.layer?
-                result.push(child.layer)
-
-        result
-
-    centerAxis: (isX, isY) =>
-
-        nodeParent = @_layerNode.getParent()
-
-        parentSize = nodeParent.getAbsoluteSize()
-
-        parentClassName = nodeParent.constructor.name
-
-        if parentClassName is 'Scene'
-            parentSize = nodeParent.getUpdater().compositor.getContext('body')._size        
-
-        if isX
-            @x = (parentSize[0] / 2) - (@width/2)
-
-        if isY
-            @y = (parentSize[1] / 2) - (@height/2)
-
-    centerX: () =>        
-
-        @centerAxis(true, false)
-
-    centerY: () =>                
-        @centerAxis(false, true)
-
-    center: () =>
-        # @centerAxis(true, true)
-        @_layerNode.setAlign(0.5, 0.5)
-        @_layerNode.setMountPoint(0.5, 0.5)
-        @_layerNode.setOrigin(0.5, 0.5)
-
-    _centerUsingAlign: () =>        
-        originalMountPoint = @_layerNode.getMountPoint()
-
-        @_layerNode.setMountPoint(0.5, 0.5, originalMountPoint[2])
-        @_layerNode.setAlign(0.5, 0.5)
-
-        @_layerNode.setMountPoint(originalMountPoint[0], originalMountPoint[1], originalMountPoint[2])
-
-    getSize: () =>
-        @_layerNode.getAbsoluteSize()
-
-    applySuperlayer: (newVal) =>
-
-        if newVal isnt null
-
-            @_layerNode.getParent().removeChild(@_layerNode)
-
-            newVal._layerNode.addChild(@_layerNode)
-
-
-    @property 'superlayer',
-        get: ->
-            @_superlayer
-        set: (newVal) ->
-            if @_superlayer isnt newVal
-                @_superlayer = newVal
-                @applySuperlayer(newVal)
-
-
-    applyImage: (imageUrl) =>
-        @_layerElement.setProperty('background-image', "url('#{newVal}')")
-
-    @property 'image',
-        get: ->
-            elementValue = @_layerElement.getValue()
-            return elementValue.styles['background-image'] 
-
-        set: (newVal)->
-            if @image isnt newVal
-                @applyImage(newVal)
-
-
-    applyVisible: (newVal) =>
-        if newVal
-            @_layerNode.show()
-        else
-            @_layerNode.hide()
-
-    @property 'visible',
-        get: ->
-            @_layerNode.isShown()
-
-        set: (newVal) ->
-            if @visible isnt newVal
-                @applyVisible(newVal)
-
-
-    applyClip: (newVal) =>
-
-        @_layerElement.setProperty('overflow', newVal)
-
-    @property 'clip',
-        get: ->
-            elementValue = @_layerElement.getValue()
-            return elementValue.styles['overflow'] 
-
-        set: (newVal) ->
-            if @clip isnt newVal
-                @applyClip(newVal)
-
-    applyIgnoreEvents: (newVal) =>
-        @_ignoreEvents = newVal
-
-    @property 'ignoreEvents',
-        get: ->
-            @_ignoreEvents
-
-        set: (newVal)->
-            if @ignoreEvents isnt newVal
-                @applyIgnoreEvents(newVal)
-
-    applyOriginX: (newVal) =>
-        currentValues = @_layerNode.getOrigin()
-
-        @_layerNode.setOrigin(newVal, currentValues[1], currentValues[2])
-
-    @property 'originX',
-        get: ->
-            currentValues = @_layerNode.getOrigin()
-
-            currentValues[0]
-
-        set: (newVal) ->
-            if @originX isnt newVal
-                @applyOriginX(newVal)
-
-    applyOriginY: (newVal) =>
-        currentValues = @_layerNode.getOrigin()
-
-        @_layerNode.setOrigin(currentValues[0], newVal, currentValues[2])
-
-    @property 'originY',
-        get: ->
-            currentValues = @_layerNode.getOrigin()
-
-            currentValues[1]
-
-        set: (newVal) ->
-            if @originY isnt newVal
-                @applyOriginY(newVal)
-
-    retrieveCurveValue: (str) =>
-
-        result = 
-            name: ""
-            args: []
-
-
-        if _.endsWith str, ")"
-            result.name = str.split("(")[0]
-            result.args = str.split("(")[1].split(",").map (a) -> _.trim(_.trimRight(a, ")"))
-        else
-            result.name = str
-
-        return result
-
-
-    startAnimation: (animOptions) =>
-        rotationXValue = animOptions.properties.rotationX || null 
-        rotationYValue = animOptions.properties.rotationY || null 
-        rotationZValue = animOptions.properties.rotationZ || null 
-        rotationValue = animOptions.properties.rotation || null
-
-        borderRadiusValue = animOptions.properties.borderRadius || null
-
-        posYValue = animOptions.properties.y || null
-        posXValue = animOptions.properties.x || null
-
-        timeValue = animOptions.time || 1
-        timeValue = timeValue * 1000
-
-        
-
-        curveMaps =
-            "ease": "easeInOut"
-
-        curveValue = animOptions.curve || ''
-
-        curveObject = @retrieveCurveValue(curveValue)
-
-        curveValue = curveObject.name
-    
-
-
-        if curveValue is "ease"
-            curveValue = "easeInOut"
-
-        if posXValue isnt null
-            positionComponent = new Position(@_layerNode)
-            positionComponent.setX(posXValue,
-                    duration: timeValue
-                    curve: curveValue
-                )
-
-        if posYValue isnt null
-            positionComponent = new Position(@_layerNode)
-            positionComponent.setY(posYValue,
-                    duration: timeValue
-                    curve: curveValue
-                )
-
-        if rotationXValue isnt null
-            rotationComponent = new Rotation(@_layerNode)    
-
-            rotationComponent.setX(@degreeToRadian(rotationXValue), 
-                    duration: timeValue
-                    curve: curveValue
-                )
-
-        if rotationYValue isnt null
-
-            rotationYTransitionable = new Transitionable(@rotationY)
-
-            rotationYTransitionable.set(rotationYValue, 
-                        duration: timeValue
-                        curve: curveValue
-                    )
-
-            spinner = @_layerNode.addComponent
-                onUpdate: (time) =>
-                    @rotationY = rotationYTransitionable.get()
-                    if rotationYTransitionable.isActive()
-                        @_layerNode.requestUpdate(spinner)
-
-            @_layerNode.requestUpdate(spinner)
-
-
-        if rotationZValue isnt null
-            rotationComponent = new Rotation(@_layerNode)    
-
-            rotationComponent.setZ(@degreeToRadian(rotationZValue), 
-                    duration: timeValue
-                    curve: curveValue
-                )
-        if rotationValue isnt null
-            rotationComponent = new Rotation(@_layerNode)            
-
-            rotationComponent.setZ( @angleToFamousRotation(rotationValue),
-                    {
-                        duration: timeValue
-                        curve: curveValue                        
-                    }
-                )
-
-            @_layerNode.addComponent(rotationComponent)
-
-
-        if borderRadiusValue isnt null
-
-            Logger.log "borderRadius: #{@borderRadius}, borderRadiusValue: #{borderRadiusValue}"
-
-            borderRadiusTransition = new Transitionable(@borderRadius)
-            # borderRadiusTransition.from(@borderRadius).to(borderRadiusValue).delay(delayValue)
-            borderRadiusTransition.set(borderRadiusValue, 
-                    duration: 1000
-                )
-
-            componentId =  @_layerNode.addComponent(
-                    onUpdate: (time) =>
-                        @borderRadius = borderRadiusTransition.get()
-                        if borderRadiusTransition.isActive()
-                            @_layerNode.requestUpdate(componentId)
-
-                )
-            @_layerNode.requestUpdate(componentId)
-
-    animate: (options) =>
-        animOptions = options || {}
-        animOptions.properties = animOptions.properties || {}
-
-        delayValue = animOptions.delay || 0
-        delayValue = delayValue * 1000
-
-        setTimeout =>
-                @startAnimation(animOptions)
-            , delayValue    
-
-
-    on: (eventType, eventHandler) =>
-        @eventsHandlers[eventType] = eventHandler
-
-
-
-module.exports = Layer
+	@define "visible", layerProperty(@, "visible", "display", true, _.isBoolean)
+	@define "opacity", layerProperty(@, "opacity", "opacity", 1, _.isNumber)
+	@define "index", layerProperty(@, "index", "zIndex", 0, _.isNumber, {importable:false, exportable:false})
+	@define "clip", layerProperty(@, "clip", "overflow", true, _.isBoolean)
+	
+	@define "scrollHorizontal", layerProperty @, "scrollHorizontal", "overflowX", false, _.isBoolean, {}, (layer, value) ->
+		layer.ignoreEvents = false if value is true
+	
+	@define "scrollVertical", layerProperty @, "scrollVertical", "overflowY", false, _.isBoolean, {}, (layer, value) ->
+		layer.ignoreEvents = false if value is true
+
+	@define "scroll",
+		get: -> @scrollHorizontal is true or @scrollVertical is true
+		set: (value) -> @scrollHorizontal = @scrollVertical = value
+
+	# Behaviour properties
+	@define "ignoreEvents", layerProperty(@, "ignoreEvents", "pointerEvents", true, _.isBoolean)
+
+	# Matrix properties
+	@define "x", layerProperty(@, "x", "webkitTransform", 0, _.isNumber)
+	@define "y", layerProperty(@, "y", "webkitTransform", 0, _.isNumber)
+	@define "z", layerProperty(@, "z", "webkitTransform", 0, _.isNumber)
+
+	@define "scaleX", layerProperty(@, "scaleX", "webkitTransform", 1, _.isNumber)
+	@define "scaleY", layerProperty(@, "scaleY", "webkitTransform", 1, _.isNumber)
+	@define "scaleZ", layerProperty(@, "scaleZ", "webkitTransform", 1, _.isNumber)
+	@define "scale", layerProperty(@, "scale", "webkitTransform", 1, _.isNumber)
+
+	@define "skewX", layerProperty(@, "skewX", "webkitTransform", 0, _.isNumber)
+	@define "skewY", layerProperty(@, "skewY", "webkitTransform", 0, _.isNumber)
+	@define "skew", layerProperty(@, "skew", "webkitTransform", 0, _.isNumber)
+
+	# @define "scale",
+	# 	get: -> (@scaleX + @scaleY + @scaleZ) / 3.0
+	# 	set: (value) -> @scaleX = @scaleY = @scaleZ = value
+
+	@define "originX", layerProperty(@, "originX", "webkitTransformOrigin", 0.5, _.isNumber)
+	@define "originY", layerProperty(@, "originY", "webkitTransformOrigin", 0.5, _.isNumber)
+	# @define "originZ", layerProperty(@, "originZ", "WebkitTransformOrigin", 0.5
+
+	@define "perspective", layerProperty(@, "perspective", "webkitPerspective", 0, _.isNumber)
+
+	@define "rotationX", layerProperty(@, "rotationX", "webkitTransform", 0, _.isNumber)
+	@define "rotationY", layerProperty(@, "rotationY", "webkitTransform", 0, _.isNumber)
+	@define "rotationZ", layerProperty(@, "rotationZ", "webkitTransform", 0, _.isNumber)
+	@define "rotation",
+		#exportable: false
+		get: -> @rotationZ
+		set: (value) -> @rotationZ = value
+
+	# Filter properties
+	@define "blur", layerProperty(@, "blur", "webkitFilter", 0, _.isNumber)
+	@define "brightness", layerProperty(@, "brightness", "webkitFilter", 100, _.isNumber)
+	@define "saturate", layerProperty(@, "saturate", "webkitFilter", 100, _.isNumber)
+	@define "hueRotate", layerProperty(@, "hueRotate", "webkitFilter", 0, _.isNumber)
+	@define "contrast", layerProperty(@, "contrast", "webkitFilter", 100, _.isNumber)
+	@define "invert", layerProperty(@, "invert", "webkitFilter", 0, _.isNumber)
+	@define "grayscale", layerProperty(@, "grayscale", "webkitFilter", 0, _.isNumber)
+	@define "sepia", layerProperty(@, "sepia", "webkitFilter", 0, _.isNumber)
+
+	# Shadow properties
+	@define "shadowX", layerProperty(@, "shadowX", "boxShadow", 0, _.isNumber)
+	@define "shadowY", layerProperty(@, "shadowY", "boxShadow", 0, _.isNumber)
+	@define "shadowBlur", layerProperty(@, "shadowBlur", "boxShadow", 0, _.isNumber)
+	@define "shadowSpread", layerProperty(@, "shadowSpread", "boxShadow", 0, _.isNumber)
+	@define "shadowColor", layerProperty(@, "shadowColor", "boxShadow", "")
+
+	# Color properties
+	@define "backgroundColor", layerProperty(@, "backgroundColor", "backgroundColor", null, _.isString)
+	@define "color", layerProperty(@, "color", "color", null, _.isString)
+
+	# Border properties
+	# Todo: make this default, for compat we still allow strings but throw a warning
+	# @define "borderRadius", layerProperty(@, "borderRadius", "borderRadius", 0, _.isNumber
+	@define "borderColor", layerProperty(@, "borderColor", "border", null, _.isString)
+	@define "borderWidth", layerProperty(@, "borderWidth", "border", 0, _.isNumber)
+
+	@define "force2d", layerProperty(@, "force2d", "webkitTransform", false, _.isBoolean)
+
+	##############################################################
+	# Identity
+
+	@define "name",
+		default: ""
+		get: -> 
+			# @_getPropertyValue "name"
+			@_element._attributes["name"]
+		set: (value) ->
+
+
+			@_setPropertyValue "name", value
+			# Set the name attribute of the dom element too
+			# See: https://github.com/koenbok/Framer/issues/63
+			@_element.setAttribute "name", value
+
+			
+
+	##############################################################
+	# Border radius compatibility
+
+	@define "borderRadius",
+		default: 0
+		get: -> 
+			@_properties["borderRadius"]
+
+		set: (value) ->
+
+			# if value and not _.isNumber(value)
+			# 	console.warn "Layer.borderRadius should be a numeric property, not type #{typeof(value)}"
+
+			@_properties["borderRadius"] = value
+			# @_element.style["borderRadius"] = LayerStyle["borderRadius"](@)
+			@_element.setProperty("borderRadius", LayerStyle["borderRadius"](@))
+
+			@emit("change:borderRadius", value)
+
+	# And, because it should be cornerRadius, we alias it here
+	@define "cornerRadius",
+		importable: yes
+		# exportable: no
+		get: -> @borderRadius
+		set: (value) -> @borderRadius = value
+
+	##############################################################
+	# Geometry
+
+	@define "point",
+		get: -> _.pick(@, ["x", "y"])
+		set: (point) ->
+			return if not point
+			for k in ["x", "y"]
+				@[k] = point[k] if point.hasOwnProperty(k)
+				
+	@define "size",
+		get: -> _.pick(@, ["width", "height"])
+		set: (size) ->
+			return if not size
+			for k in ["width", "height"]
+				@[k] = size[k] if size.hasOwnProperty(k)
+
+	@define "frame",
+		get: -> _.pick(@, ["x", "y", "width", "height"])
+		set: (frame) ->
+			return if not frame
+			for k in ["x", "y", "width", "height"]
+				@[k] = frame[k] if frame.hasOwnProperty(k)
+
+	@define "minX",
+		importable: true
+		exportable: false
+		get: -> @x
+		set: (value) -> @x = value
+
+	@define "midX",
+		importable: true
+		exportable: false
+		get: -> Utils.frameGetMidX @
+		set: (value) -> Utils.frameSetMidX @, value
+
+	@define "maxX",
+		importable: true
+		exportable: false
+		get: -> Utils.frameGetMaxX @
+		set: (value) -> Utils.frameSetMaxX @, value
+
+	@define "minY",
+		importable: true
+		exportable: false
+		get: -> @y
+		set: (value) -> @y = value
+
+	@define "midY",
+		importable: true
+		exportable: false
+		get: -> Utils.frameGetMidY @
+		set: (value) -> Utils.frameSetMidY @, value
+
+	@define "maxY",
+		importable: true
+		exportable: false
+		get: -> Utils.frameGetMaxY @
+		set: (value) -> Utils.frameSetMaxY @, value
+
+	convertPoint: (point) ->
+		# Convert a point on screen to this views coordinate system
+		# TODO: needs tests
+		Utils.convertPoint point, null, @
+
+	@define "canvasFrame",
+		importable: true
+		exportable: false
+		get: ->
+			Utils.convertPoint(@frame, @, null, context=true)
+		set: (frame) ->
+			if not @superLayer
+				@frame = frame
+			else
+				@frame = Utils.convertPoint(frame, null, @superLayer, context=true)
+
+	@define "screenFrame",
+		importable: true
+		exportable: false
+		get: ->
+			Utils.convertPoint(@frame, @, null, context=false)
+		set: (frame) ->
+			if not @superLayer
+				@frame = frame
+			else
+				@frame = Utils.convertPoint(frame, null, @superLayer, context=false)
+
+	contentFrame: ->
+		return {x:0, y:0, width:0, height:0} unless @subLayers.length
+		Utils.frameMerge(_.pluck(@subLayers, "frame"))
+
+	centerFrame: ->
+		# Get the centered frame for its superLayer
+		if @superLayer
+			frame = @frame
+			Utils.frameSetMidX(frame, parseInt(@superLayer.width  / 2.0))
+			Utils.frameSetMidY(frame, parseInt(@superLayer.height / 2.0))
+			return frame
+		else
+			frame = @frame
+			Utils.frameSetMidX(frame, parseInt(@_context.width  / 2.0))
+			Utils.frameSetMidY(frame, parseInt(@_context.height / 2.0))
+			return frame
+
+	center: ->
+		@frame = @centerFrame() # Center  in superLayer
+		@
+	
+	centerX: (offset=0) ->
+		@x = @centerFrame().x + offset # Center x in superLayer
+		@
+	
+	centerY: (offset=0) ->
+		@y = @centerFrame().y + offset # Center y in superLayer
+		@
+
+	pixelAlign: ->
+		@x = parseInt @x
+		@y = parseInt @y
+
+
+	##############################################################
+	# SCREEN GEOMETRY
+
+	# TODO: Rotation/Skew
+
+	# screenOriginX = ->
+	# 	if @_superOrParentLayer()
+	# 		return @_superOrParentLayer().screenOriginX()
+	# 	return @originX
+	
+	# screenOriginY = ->
+	# 	if @_superOrParentLayer()
+	# 		return @_superOrParentLayer().screenOriginY()
+	# 	return @originY
+
+	canvasScaleX: ->
+		scale = @scale * @scaleX
+		for superLayer in @superLayers(context=true)
+			scale = scale * superLayer.scale * superLayer.scaleX
+		return scale
+
+	canvasScaleY: ->
+		scale = @scale * @scaleY
+		for superLayer in @superLayers(context=true)
+			scale = scale * superLayer.scale * superLayer.scaleY
+		return scale
+
+	screenScaleX: ->
+		scale = @scale * @scaleX
+		for superLayer in @superLayers(context=false)
+			scale = scale * superLayer.scale * superLayer.scaleX
+		return scale
+
+	screenScaleY: ->
+		scale = @scale * @scaleY
+		for superLayer in @superLayers(context=false)
+			scale = scale * superLayer.scale * superLayer.scaleY
+		return scale
+
+
+	screenScaledFrame: ->
+
+		# TODO: Scroll position
+
+		frame =
+			x: 0
+			y: 0
+			width:  @width  * @screenScaleX()
+			height: @height * @screenScaleY()
+		
+		layers = @superLayers(context=true)
+		layers.push(@)
+		layers.reverse()
+		
+		for superLayer in layers
+			factorX = if superLayer._superOrParentLayer() then superLayer._superOrParentLayer().screenScaleX() else 1
+			factorY = if superLayer._superOrParentLayer() then superLayer._superOrParentLayer().screenScaleY() else 1
+			layerScaledFrame = superLayer.scaledFrame()
+			frame.x += layerScaledFrame.x * factorX
+			frame.y += layerScaledFrame.y * factorY
+
+		return frame
+
+	scaledFrame: ->
+
+		# Get the scaled frame for a layer, taking into account 
+		# the transform origins.
+
+		frame = @frame
+		scaleX = @scale * @scaleX
+		scaleY = @scale * @scaleY
+
+		frame.width  *= scaleX
+		frame.height *= scaleY
+		frame.x += (1 - scaleX) * @originX * @width
+		frame.y += (1 - scaleY) * @originY * @height
+		
+		return frame
+
+	##############################################################
+	# CSS
+
+	@define "style",
+		importable: true
+		exportable: false
+		get: -> @_element._styles
+		set: (value) ->
+			_.extend @_element.style, value
+			
+
+			for key, val of value
+				@_properties[key] = val
+				@_element.setProperty(key, val)
+
+			@emit "change:style"
+
+	computedStyle: ->
+		# This is an expensive operation
+
+		getComputedStyle  = document.defaultView.getComputedStyle
+		getComputedStyle ?= window.getComputedStyle
+		
+		return getComputedStyle(@_element)
+
+	@define "classList",
+		importable: true
+		exportable: false
+		get: -> @_element.classList
+
+	##############################################################
+	# DOM ELEMENTS
+
+	_framerOriginal__createElement: ->
+		return if @_element?
+		@_element = document.createElement "div"
+		@_element.classList.add("framerLayer")
+
+
+	_createElement: ->
+
+		return if @_element?
+
+		@_node = new Node()
+		@_node.setSizeMode("absolute", "absolute", "absolute")
+		@_node.setAbsoluteSize(250, 250)
+		@_node.setOrigin(0.5, 0.5)
+
+		# @_node.addUIEvent(Events.Click)
+		# @_node.addUIEvent(Events.TouchStart)
+		# @_node.addUIEvent(Events.TouchEnd)
+		# @_node.addUIEvent(Events.TouchMove)
+		# @_node.addUIEvent(Events.MouseUp)
+		# @_node.addUIEvent(Events.MouseDown)
+		# @_node.addUIEvent(Events.MouseOver)
+		# @_node.addUIEvent(Events.MouseOut)
+		# @_node.addUIEvent(Events.MouseMove)
+
+
+
+		@_node.onReceive = (event, payLoad) =>
+
+		# 	# @_node.emit(event, payLoad)
+			console.log("Node: #{@name} on receive: #{event}")
+		# 	# console.log event
+		# 	# console.log payLoad
+		# 	# @emit(event)
+		# 	payLoad.preventDefault = ->
+		# 		#adasd
+		# 		console.log("preventDefault")
+
+		# 	@emit(event, payLoad)
+		# 	# if event is Events.Click
+		# 	# 	@emit(Events.Click)
+
+
+		@_element = new DOMElement(@_node, {tagName: "div"})
+
+		console.log "@_element.setId to @_id: #{@_id}"
+
+		@_element._layer = @
+		# @_element.classList.add("framerLayer")
+
+		@_element
+
+	_framerOriginal__insertElement: ->
+		@bringToFront()
+		@_context.getRootElement().appendChild(@_element)
+
+	_insertElement: ->
+		@bringToFront()
+		# console.log("Add layer's node to context rootElement")
+		
+		@_context.getRootElement()._node.addChild(@_element._node)
+
+	@define "html",
+		get: ->
+			# @_elementHTML?._content or ""
+			@_element?._content or ""
+
+		set: (value) ->
+
+			# Insert some html directly into this layer. We actually create
+			# a child node to insert it in, so it won't mess with Framers
+			# layer hierarchy.
+
+			# if not @_elementHTML
+			# 	@_nodeHTML = new Node()
+
+			# 	@_elementHTML = new DOMElement(@_nodeHTML, {tagName: "div"})
+			# 	@_element._node.addChild(@_nodeHTML)
+
+			# @_elementHTML.setContent(value)
+			@_element.setContent(value)
+
+			# If the contents contains something else than plain text
+			# then we turn off ignoreEvents so buttons etc will work.
+
+			# if not (
+			# 	@_elementHTML.childNodes.length == 1 and
+			# 	@_elementHTML.childNodes[0].nodeName == "#text")
+			# 	@ignoreEvents = false
+
+			@emit "change:html"
+
+	querySelector: (query) -> @_element.querySelector(query)
+	querySelectorAll: (query) -> @_element.querySelectorAll(query)
+
+	destroy: ->
+		
+		# Todo: check this
+
+		if @superLayer
+			@superLayer._subLayers = _.without @superLayer._subLayers, @
+
+		@_element.parentNode?.removeChild @_element
+		@removeAllListeners()
+		
+		@_context.removeLayer(@)
+
+		@_context.emit("layer:destroy", @)
+
+
+	##############################################################
+	## COPYING
+
+	copy: ->
+
+		# Todo: what about events, states, etc.
+
+		layer = @copySingle()
+
+		for subLayer in @subLayers
+			copiedSublayer = subLayer.copy()
+			copiedSublayer.superLayer = layer
+
+		layer
+
+	copySingle: -> new @constructor(@props)
+
+	##############################################################
+	## IMAGE
+
+	@define "image",
+		default: ""
+		get: ->
+			@_getPropertyValue "image"
+		set: (value) ->
+
+			if not (_.isString(value) or value is null)
+				layerValueTypeError("image", value)
+
+			currentValue = @_getPropertyValue "image"
+
+			if currentValue == value
+				return @emit "load"
+
+			# Todo: this is not very nice but I wanted to have it fixed
+			# defaults = Defaults.getDefaults "Layer", {}
+
+			# console.log defaults.backgroundColor
+			# console.log @_defaultValues?.backgroundColor
+
+			# if defaults.backgroundColor == @_defaultValues?.backgroundColor
+			# 	@backgroundColor = null
+
+			@backgroundColor = null
+
+			# Set the property value
+			@_setPropertyValue("image", value)
+
+			if value in [null, ""]
+				# @style["background-image"] = null
+				@_element.setProperty("background-image", null)
+				return
+
+			imageUrl = value
+
+			# Optional base image value
+			# imageUrl = Config.baseUrl + imageUrl
+
+			if @_alwaysUseImageCache is false and Utils.isLocalAssetUrl(imageUrl)
+				imageUrl += "?nocache=#{NoCacheDateKey}"
+
+			# As an optimization, we will only use a loader
+			# if something is explicitly listening to the load event
+			if @_eventListeners?.hasOwnProperty "load" or @_eventListeners?.hasOwnProperty "error"
+
+				loader = new Image()
+				loader.name = imageUrl
+				loader.src = imageUrl
+
+				loader.onload = =>
+					# @style["background-image"] = "url('#{imageUrl}')"
+					@_element.setProperty("background-image", "url('#{imageUrl}')")
+					@emit "load", loader
+
+				loader.onerror = =>
+					@emit "error", loader
+
+			else
+				# @style["background-image"] = "url('#{imageUrl}')"
+				@_element.setProperty("background-image", "url('#{imageUrl}')")
+
+	##############################################################
+	## HIERARCHY
+
+	@define "superLayer",
+		enumerable: false
+		exportable: false
+		importable: true
+		get: ->
+			@_superLayer or null
+		set: (layer) ->
+
+			return if layer is @_superLayer
+
+			# Check the type
+			if not layer instanceof Layer
+				throw Error "Layer.superLayer needs to be a Layer object"
+
+			# Cancel previous pending insertions
+			# Utils.domCompleteCancel @__insertElement
+			Utils.domCompleteCancel @_insertElement
+
+			@_context.getRootElement()._node.removeChild(@_element._node)
+
+			# Remove from previous superlayer sublayers
+			if @_superLayer
+				@_superLayer._subLayers = _.without @_superLayer._subLayers, @
+				# @_superLayer._element._node.removeChild @_element._node
+				@_element._node.dismount()
+
+				@_superLayer.emit "change:subLayers", {added:[], removed:[@]}
+
+			# Either insert the element to the new superlayer element or into dom
+			if layer
+				if @_element._node.getParent()?
+					@_element._node.dismount()
+				layer._element._node.addChild(@_element._node)
+				layer._subLayers.push @
+				layer.emit "change:subLayers", {added:[@], removed:[]}
+			else
+				@_insertElement()
+
+			# Set the superlayer
+			@_superLayer = layer
+
+			# Place this layer on top of its siblings
+			@bringToFront()
+
+			@emit "change:superLayer"
+
+	# Todo: should we have a recursive subLayers function?
+	# Let's make it when we need it.
+
+	@define "subLayers",
+		enumerable: false
+		exportable: false
+		importable: false
+		get: -> _.clone @_subLayers
+
+	@define "siblingLayers",
+		enumerable: false
+		exportable: false
+		importable: false
+		get: ->
+
+			# If there is no superLayer we need to walk through the root
+			if @superLayer is null
+				return _.filter @_context.getLayers(), (layer) =>
+					layer isnt @ and layer.superLayer is null
+
+			return _.without @superLayer.subLayers, @
+
+	addSubLayer: (layer) ->
+		layer.superLayer = @
+
+	removeSubLayer: (layer) ->
+
+		if layer not in @subLayers
+			return
+
+		layer.superLayer = null
+
+	subLayersByName: (name) ->
+		_.filter @subLayers, (layer) -> layer.name == name
+
+	siblingLayersByName: (name) ->
+		_.filter @siblingLayers, (layer) -> layer.name == name
+
+	superLayers: (context=false) ->
+
+		superLayers = []
+		currentLayer = @
+
+		if context is false
+			while currentLayer.superLayer
+				superLayers.push(currentLayer.superLayer)
+				currentLayer = currentLayer.superLayer
+		else
+			while currentLayer._superOrParentLayer()
+				superLayers.push(currentLayer._superOrParentLayer())
+				currentLayer = currentLayer._superOrParentLayer()
+
+		return superLayers
+
+	_superOrParentLayer: ->
+		if @superLayer
+			return @superLayer
+		if @_context._parentLayer
+			return @_context._parentLayer
+
+	subLayersAbove: (point, originX=0, originY=0) -> _.filter @subLayers, (layer) -> 
+		Utils.framePointForOrigin(layer.frame, originX, originY).y < point.y
+	subLayersBelow: (point, originX=0, originY=0) -> _.filter @subLayers, (layer) -> 
+		Utils.framePointForOrigin(layer.frame, originX, originY).y > point.y
+	subLayersLeft: (point, originX=0, originY=0) -> _.filter @subLayers, (layer) -> 
+		Utils.framePointForOrigin(layer.frame, originX, originY).x < point.x
+	subLayersRight: (point, originX=0, originY=0) -> _.filter @subLayers, (layer) -> 
+		Utils.framePointForOrigin(layer.frame, originX, originY).x > point.x
+
+	##############################################################
+	## ANIMATION
+
+	animate: (options) ->
+
+		start = options.start
+		start ?= true
+		delete options.start
+
+		options.layer = @
+		animation = new Animation options
+		animation.start() if start
+		animation
+
+	animations: ->
+		# Current running animations on this layer
+		_.filter @_context._animationList, (animation) =>
+			animation.options.layer == @
+
+	animatingProperties: ->
+
+		properties = {}
+
+		for animation in @animations()
+			for propertyName in animation.animatingProperties()
+				properties[propertyName] = animation
+
+		return properties
+
+	@define "isAnimating",
+		enumerable: false
+		exportable: false
+		get: -> @animations().length isnt 0
+
+	animateStop: ->
+		_.invoke(@animations(), "stop")
+		@_draggable?.animateStop()
+
+	##############################################################
+	## INDEX ORDERING
+
+	bringToFront: ->
+		@index = _.max(_.union([0], @siblingLayers.map (layer) -> layer.index)) + 1
+
+	sendToBack: ->
+		@index = _.min(_.union([0], @siblingLayers.map (layer) -> layer.index)) - 1
+
+	placeBefore: (layer) ->
+		return if layer not in @siblingLayers
+
+		for l in @siblingLayers
+			if l.index <= layer.index
+				l.index -= 1
+
+		@index = layer.index + 1
+
+	placeBehind: (layer) ->
+		return if layer not in @siblingLayers
+
+		for l in @siblingLayers
+			if l.index >= layer.index
+				l.index += 1
+
+		@index = layer.index - 1
+
+	##############################################################
+	## STATES
+
+	@define "states",
+		enumerable: false
+		exportable: false
+		importable: false
+		get: -> @_states ?= new LayerStates @
+
+	#############################################################################
+	## Draggable
+
+	@define "draggable",
+		importable: false
+		exportable: false
+		get: ->
+			@_draggable ?= new LayerDraggable(@)
+		set: (value) ->
+			@draggable.enabled = value if _.isBoolean(value)
+
+	# anchor: ->
+	# 	if not @_anchor
+	# 		@_anchor = new LayerAnchor(@, arguments...)
+	# 	else
+	# 		@_anchor.updateRules(arguments...)
+
+	##############################################################
+	## SCROLLING
+
+	@define "scrollFrame",
+		importable: false
+		get: ->
+			frame = 
+				x: @scrollX
+				y: @scrollY
+				width: @width
+				height: @height
+		set: (frame) ->
+			@scrollX = frame.x
+			@scrollY = frame.y
+
+	@define "scrollX",
+		get: -> @_element._styles['scrollLeft']
+		set: (value) ->
+			layerValueTypeError("scrollX", value) if not _.isNumber(value)
+			# @_element.scrollLeft = value
+			@_element.setProperty("scrollLeft", value)
+
+	@define "scrollY",
+		get: -> @_element._styles["scrollTop"]
+		set: (value) -> 
+			layerValueTypeError("scrollY", value) if not _.isNumber(value)
+			# @_element.scrollTop = value
+			@_element.setProperty("scrollTop", value)
+
+	##############################################################
+	## EVENTS
+
+	addListener: (eventNames..., originalListener) =>
+
+		# To avoid an error in Framer Studio we return if no originalListener was given
+		if not originalListener
+			return
+
+		# # Modify the scope to be the calling object, just like jquery
+		# # also add the object as the last argument
+		listener = (args...) =>
+			originalListener.call(@, args..., @)
+
+		# Because we modify the listener we need to keep track of it
+		# so we can find it back when we want to unlisten again
+		originalListener.modifiedListener = listener
+
+		eventNames = [eventNames] if typeof eventNames == 'string'
+
+		# Listen to dom events on the element
+		for eventName in eventNames
+			do (eventName) =>
+				super eventName, listener
+				@_context.eventManager.wrap(@_element).addEventListener(eventName, listener)
+
+				@_eventListeners ?= {}
+				@_eventListeners[eventName] ?= []
+				@_eventListeners[eventName].push(listener)
+
+				# We want to make sure we listen to these events, but we can safely
+				# ignore it for change events
+				if not _.startsWith eventName, "change:"
+					@ignoreEvents = false
+
+	removeListener: (eventNames..., listener) ->
+
+		# If the original listener was modified, remove that
+		# one instead
+		if listener.modifiedListener
+			listener = listener.modifiedListener
+
+		eventNames = [eventNames] if typeof eventNames == 'string'
+			
+		for eventName in eventNames
+			do (eventName) =>
+				super eventName, listener
+				
+				@_context.eventManager.wrap(@_element).removeEventListener(eventName, listener)
+
+				if @_eventListeners
+					@_eventListeners[eventName] = _.without @_eventListeners[eventName], listener
+
+	once: (eventName, listener) ->
+
+		originalListener = listener
+
+		listener = (args...) =>
+			originalListener.call(@, args..., @)
+			@removeListener(eventName, listener)
+
+		@addListener(eventName, listener)
+
+
+	removeAllListeners: ->
+
+		return if not @_eventListeners
+
+		for eventName, listeners of @_eventListeners
+			for listener in listeners
+				@removeListener eventName, listener
+
+	on: @::addListener
+	off: @::removeListener
+
+	##############################################################
+	## DESCRIPTOR
+
+	toInspect: ->
+
+		round = (value) ->
+			if parseInt(value) == value
+				return parseInt(value)
+			return Utils.round(value, 1)
+
+		if @name
+			return "<#{@constructor.name} id:#{@id} name:#{@name} (#{round(@x)},#{round(@y)}) #{round(@width)}x#{round(@height)}>"
+		return "<#{@constructor.name} id:#{@id} (#{round(@x)},#{round(@y)}) #{round(@width)}x#{round(@height)}>"
