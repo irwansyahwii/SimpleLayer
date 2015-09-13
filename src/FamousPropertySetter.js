@@ -32,10 +32,6 @@
       }
       return layer._element.setProperty("overflow", "visible");
     },
-    scrollHorizontal: function(layer) {},
-    scrollVertical: function(layer) {},
-    shadowColor: function(layer) {},
-    force2d: function(layer) {},
     borderRadius: function(layer) {
       if (!_.isNumber(layer._properties.borderRadius)) {
         return layer._element.setProperty("borderRadius", layer._properties.borderRadius);

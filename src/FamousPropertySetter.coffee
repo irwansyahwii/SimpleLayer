@@ -24,14 +24,14 @@ FamousPropertySetter =
         layer._element.setProperty("overflow", "visible")
 
 
-    scrollHorizontal: (layer) ->
+    # scrollHorizontal: (layer) ->
 
-    scrollVertical: (layer) ->
+    # scrollVertical: (layer) ->
 
 
-    shadowColor: (layer) ->
+    # shadowColor: (layer) ->
 
-    force2d: (layer) ->
+    # force2d: (layer) ->
 
     borderRadius: (layer) ->
         if not _.isNumber(layer._properties.borderRadius)

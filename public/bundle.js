@@ -45376,10 +45376,6 @@ module.exports = shaders;
       }
       return layer._element.setProperty("overflow", "visible");
     },
-    scrollHorizontal: function scrollHorizontal(layer) {},
-    scrollVertical: function scrollVertical(layer) {},
-    shadowColor: function shadowColor(layer) {},
-    force2d: function force2d(layer) {},
     borderRadius: function borderRadius(layer) {
       if (!_.isNumber(layer._properties.borderRadius)) {
         return layer._element.setProperty("borderRadius", layer._properties.borderRadius);
