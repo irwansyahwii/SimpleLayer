@@ -3,6 +3,9 @@ Utils = require "./Utils"
 {Config} = require "./Config"
 {EventEmitter} = require "./EventEmitter"
 
+famous = require("famous")
+Engine = famous.core.FamousEngine
+
 # if window.performance
 # 	getTime = -> window.performance.now()
 # else
@@ -35,8 +38,8 @@ class exports.AnimationLoop extends EventEmitter
 		if Utils.webkitVersion() > 600 and Utils.isFramerStudio()
 			@raf = false
 
-	start: =>
-		
+
+	_framerOriginalStart: =>
 		animationLoop = @
 		_timestamp = getTime()
 
@@ -64,3 +67,27 @@ class exports.AnimationLoop extends EventEmitter
 				, 0
 
 		tick()
+
+	start: =>		
+		animationLoop = @
+		_timestamp = getTime()
+
+		update = ->
+			console.log("heloo")
+			if animationLoop.delta
+				delta = animationLoop.delta
+			else
+				timestamp = getTime()
+				delta = (timestamp - _timestamp) / 1000
+				_timestamp = timestamp
+
+			animationLoop.emit("update", delta)
+			animationLoop.emit("render", delta)
+
+
+		updater = 
+			onUpdate: () =>
+				update()
+				Engine.requestUpdate(updater)
+		Engine.init()
+		Engine.requestUpdate(updater)
