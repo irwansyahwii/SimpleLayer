@@ -29,8 +29,21 @@ layerProperty = (obj, name, cssProperty, fallback, validator, options={}, set) -
 		default: fallback
 		get: -> 
 			# console.log "Layer.#{name}.get #{@_properties[name]}", @_properties.hasOwnProperty(name)
-			return @_properties[name] if @_properties.hasOwnProperty(name)
-			return fallback
+
+			result = null
+			result = @_properties[name]  if @_properties.hasOwnProperty(name)
+
+			if result is null
+				result = fallback
+
+			# if name is "rotationY"
+				# result = result * 180 / Math.PI
+
+
+			result
+
+			
+			
 
 		set: (value) ->
 
@@ -497,10 +510,10 @@ class exports.Layer extends BaseClass
 
 
 
-		@_node.onReceive = (event, payLoad) =>
+		# @_node.onReceive = (event, payLoad) =>
 
 		# 	# @_node.emit(event, payLoad)
-			console.log("Node: #{@name} on receive: #{event}")
+			# console.log("Node: #{@name} on receive: #{event}")
 		# 	# console.log event
 		# 	# console.log payLoad
 		# 	# @emit(event)

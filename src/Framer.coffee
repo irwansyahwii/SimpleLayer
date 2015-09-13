@@ -2,6 +2,18 @@
 
 Framer = {}
 
+famous = require("famous")
+
+Engine = famous.core.FamousEngine;
+
+Clock = Engine.getClock()
+
+window.setTimeout = (callback, delay) ->
+    Clock.setTimeout(callback, delay)
+
+window.setInterval = (callback, delay) ->
+    Clock.setInterval(callback, delay)
+
 # Root level modules
 Framer._ = _
 Framer.Utils = (require "./Utils")
