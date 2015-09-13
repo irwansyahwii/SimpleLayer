@@ -29,8 +29,6 @@
       this._orderedStates = [];
       this.animationOptions = {};
       this.add("default", this.layer.props);
-      console.log("layer: " + this.layer.name + " props:");
-      console.log(this.layer.props);
       this._currentState = "default";
       this._previousStates = [];
       LayerStates.__super__.constructor.apply(this, arguments);

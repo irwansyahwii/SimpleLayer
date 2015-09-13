@@ -7,8 +7,6 @@ require("./Framer")
 # Background
 bg = new BackgroundLayer backgroundColor: "#439FD8", name:"BackgroundLayer"
 
-console.log(bg)
-
 # Defaults and variables
 animSpeed = .25
 defaultAnimCurve = "spring(250,25,5)"
@@ -247,7 +245,7 @@ resetView = ->
 
   #*****
   codePlaceholder.states.switch "default"
-  
+
   Utils.delay 0.5, ->
     bg.backgroundColor = "#439FD8"
   qrButton.index = 100

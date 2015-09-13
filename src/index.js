@@ -9,8 +9,6 @@
     name: "BackgroundLayer"
   });
 
-  console.log(bg);
-
   animSpeed = .25;
 
   defaultAnimCurve = "spring(250,25,5)";
