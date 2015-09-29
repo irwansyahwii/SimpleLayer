@@ -4,20 +4,316 @@
 		"selected_items":
 		[
 			[
+				"chi",
+				"child"
+			],
+			[
+				"remove",
+				"removeSubLayer"
+			],
+			[
+				"conte",
+				"contentVal"
+			],
+			[
+				"clas",
+				"classList"
+			],
+			[
+				"pro",
+				"propValue"
+			],
+			[
+				"att",
+				"attrValue"
+			],
+			[
+				"_",
+				"_id"
+			],
+			[
+				"Fam",
+				"FamousLayer"
+			],
+			[
+				"la",
+				"layer4"
+			],
+			[
+				"remo",
+				"removeIndex"
+			],
+			[
+				"no",
+				"node"
+			],
+			[
+				"add",
+				"addSubLayer"
+			],
+			[
+				"conta",
+				"ContainerSurface"
+			],
+			[
+				"cur",
+				"currentSize"
+			],
+			[
+				"curre",
+				"currentSize"
+			],
+			[
+				"se",
+				"setX"
+			],
+			[
+				"sta",
+				"stateModifier"
+			],
+			[
+				"ste",
+				"stateModifierLayer2"
+			],
+			[
+				"tran",
+				"translate"
+			],
+			[
+				"lay",
+				"layer3Modifier"
+			],
+			[
+				"tra",
+				"translate"
+			],
+			[
+				"on",
+				"onUpdate"
+			],
+			[
+				"cli",
+				"clientY"
+			],
+			[
+				"mi",
+				"midY"
+			],
+			[
+				"mid",
+				"midY"
+			],
+			[
+				"Scree",
+				"screenX"
+			],
+			[
+				"re",
+				"resize"
+			],
+			[
+				"pr",
+				"propertyA"
+			],
+			[
+				"is",
+				"isTouch"
+			],
+			[
+				"TOu",
+				"TouchStart"
+			],
+			[
+				"anim",
+				"animateUp"
+			],
+			[
+				"sc",
+				"screenY"
+			],
+			[
+				"ani",
+				"animate"
+			],
+			[
+				"con",
+				"containerLayer"
+			],
+			[
+				"ba",
+				"backLayer"
+			],
+			[
+				"layer",
+				"layerParent"
+			],
+			[
+				"wi",
+				"width"
+			],
+			[
+				"scr",
+				"screenY"
+			],
+			[
+				"bg",
+				"bg1"
+			],
+			[
+				"Mou",
+				"MouseMove"
+			],
+			[
+				"l",
+				"layer1"
+			],
+			[
+				"back",
+				"backgroundColor"
+			],
+			[
+				"ro",
+				"rotationY"
+			],
+			[
+				"y",
+				"yDelta"
+			],
+			[
+				"inde",
+				"indexOf"
+			],
+			[
+				"root",
+				"rootElementChildren"
+			],
+			[
+				"sha",
+				"shadowColor"
+			],
+			[
+				"scro",
+				"scrollVertical"
+			],
+			[
+				"bac",
+				"BackgroundLayer"
+			],
+			[
+				"propery",
+				"propertyName"
+			],
+			[
+				"eve",
+				"eventName"
+			],
+			[
+				"hand",
+				"handlerArray"
+			],
+			[
+				"ha",
+				"handlerArray"
+			],
+			[
+				"cons",
+				"console"
+			],
+			[
+				"el",
+				"element"
+			],
+			[
+				"co",
+				"console"
+			],
+			[
+				"Se",
+				"searchPlaceholder"
+			],
+			[
+				"_E",
+				"_eventHandlers"
+			],
+			[
+				"cont",
+				"containerMask"
+			],
+			[
+				"pho",
+				"photoArea"
+			],
+			[
+				"prev",
+				"preventDefault"
+			],
+			[
+				"searc",
+				"searchPlaceholder"
+			],
+			[
+				"_no",
+				"_node"
+			],
+			[
+				"super",
+				"superlayer"
+			],
+			[
+				"pa",
+				"payLoad"
+			],
+			[
+				"ori",
+				"originValues"
+			],
+			[
+				"rota",
+				"rotationZ"
+			],
+			[
+				"_Ro",
+				"_rootNode"
+			],
+			[
+				"DoM",
+				"DOMElement"
+			],
+			[
+				"node",
+				"nodeValues"
+			],
+			[
+				"prop",
+				"propertyValue"
+			],
+			[
+				"Fma",
+				"FamousPropertySetter"
+			],
+			[
+				"_roo",
+				"_rootNode"
+			],
+			[
+				"DOM",
+				"DOMElement"
+			],
+			[
+				"up",
+				"updater"
+			],
+			[
+				"upda",
+				"update"
+			],
+			[
 				"Scr",
 				"ScreenClass"
 			],
 			[
 				"_s",
 				"_styles"
-			],
-			[
-				"la",
-				"layerA"
-			],
-			[
-				"pro",
-				"property"
 			],
 			[
 				"com",
@@ -36,10 +332,6 @@
 				"requestUpdate"
 			],
 			[
-				"rota",
-				"rotationYTransitionable"
-			],
-			[
 				"rot",
 				"rotationY"
 			],
@@ -50,10 +342,6 @@
 			[
 				"ne",
 				"nextAngle"
-			],
-			[
-				"ro",
-				"rotationYValue"
 			],
 			[
 				"rotation",
@@ -70,14 +358,6 @@
 			[
 				"set",
 				"setAlign"
-			],
-			[
-				"back",
-				"background-color"
-			],
-			[
-				"bac",
-				"background-color"
 			],
 			[
 				"de",
@@ -108,16 +388,8 @@
 				"parentChildren"
 			],
 			[
-				"lay",
-				"layer"
-			],
-			[
 				"sub",
 				"subLayer"
-			],
-			[
-				"chi",
-				"child"
 			],
 			[
 				"su",
@@ -156,18 +428,6 @@
 				"_layerElement"
 			],
 			[
-				"is",
-				"isnt"
-			],
-			[
-				"prop",
-				"properties"
-			],
-			[
-				"re",
-				"require"
-			],
-			[
 				"an",
 				"angle"
 			],
@@ -178,10 +438,6 @@
 			[
 				"L",
 				"Layer"
-			],
-			[
-				"eve",
-				"eventHandler"
 			],
 			[
 				"even",
@@ -196,24 +452,12 @@
 				"curveValue"
 			],
 			[
-				"cur",
-				"curveObject"
-			],
-			[
 				"cu",
 				"curveObject"
 			],
 			[
 				"req",
 				"require"
-			],
-			[
-				"pa",
-				"parseFunction"
-			],
-			[
-				"anim",
-				"animOptions"
 			],
 			[
 				"boder",
@@ -236,14 +480,6 @@
 				"easeInOut"
 			],
 			[
-				"ani",
-				"animOptions"
-			],
-			[
-				"no",
-				"nodeParent"
-			],
-			[
 				"o",
 				"originalMountPoint"
 			],
@@ -264,10 +500,6 @@
 				"getSize"
 			],
 			[
-				"el",
-				"elementValue"
-			],
-			[
 				"applyb",
 				"applyBackgroundColor"
 			],
@@ -282,243 +514,83 @@
 			[
 				"fn",
 				"fnB"
-			],
-			[
-				"ini",
-				"Initializer"
-			],
-			[
-				"ap",
-				"applyPosition"
-			],
-			[
-				"cen",
-				"centerAxis"
-			],
-			[
-				"par",
-				"parentSize"
-			],
-			[
-				"con",
-				"contextSize"
-			],
-			[
-				"roo",
-				"rootWin"
-			],
-			[
-				"l",
-				"log	log"
-			],
-			[
-				"te",
-				"temp"
-			],
-			[
-				"op",
-				"options"
-			],
-			[
-				"a",
-				"applyOpacity"
-			],
-			[
-				"_",
-				"_scale"
-			],
-			[
-				"_y",
-				"_y"
-			],
-			[
-				"_x",
-				"_x"
-			],
-			[
-				"_b",
-				"_borderRadius"
-			],
-			[
-				"se",
-				"setBorderRadius"
-			],
-			[
-				"border",
-				"borderRadius"
-			],
-			[
-				"_wi",
-				"_width"
-			],
-			[
-				"La",
-				"Layer"
-			],
-			[
-				"new",
-				"newVal"
-			],
-			[
-				"Lay",
-				"LayerId"
-			],
-			[
-				"fam",
-				"famousNode"
-			],
-			[
-				"App",
-				"Application"
-			],
-			[
-				"Frin",
-				"FriendsService"
-			],
-			[
-				"Type",
-				"TypeScript"
-			],
-			[
-				"me",
-				"message"
-			],
-			[
-				"Fron",
-				"FrontDescription"
-			],
-			[
-				"Crea",
-				"CreateCards"
-			],
-			[
-				"Card",
-				"CardSide"
-			],
-			[
-				"Typ",
-				"TypeScriptCard"
-			],
-			[
-				"Fri",
-				"FriendsService"
-			],
-			[
-				"Fr",
-				"FriendsService"
-			],
-			[
-				"Fi",
-				"FriendsService"
-			],
-			[
-				"sho",
-				"show_properties"
-			],
-			[
-				"in",
-				"index"
-			],
-			[
-				"zo",
-				"zoom_file_infos"
-			],
-			[
-				"th",
-				"thumbs_container"
-			],
-			[
-				"trh",
-				"thumbs_container"
-			],
-			[
-				"top",
-				"top"
-			],
-			[
-				"button2",
-				"buttonTower2A"
-			],
-			[
-				"but",
-				"buttonTower2A"
-			],
-			[
-				"bu",
-				"buttonTower1B"
-			],
-			[
-				"butt",
-				"buttonTower1A"
-			],
-			[
-				"Flo",
-				"FloorplanScreenZoom"
-			],
-			[
-				"Floo",
-				"FloorplanScreenBase"
-			],
-			[
-				"button",
-				"buttonSitePlan"
-			],
-			[
-				"anima",
-				"animateOutGalleryButton"
-			],
-			[
-				"show",
-				"showLocationScreen"
-			],
-			[
-				"butto",
-				"buttonDeveloper"
-			],
-			[
-				"im",
-				"image_width"
-			],
-			[
-				"ima",
-				"image_height"
-			],
-			[
-				"image",
-				"image_width"
-			],
-			[
-				"on",
-				"onButtonClicked"
-			],
-			[
-				"img",
-				"img_screen"
-			],
-			[
-				"to",
-				"topBar"
-			],
-			[
-				"curr",
-				"current_image_view"
-			],
-			[
-				"order",
-				"order_type"
-			],
-			[
-				"product",
-				"product_name"
-			],
-			[
-				"Produ",
-				"ProductName"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project/src/main.js",
+			"settings":
+			{
+				"buffer_size": 302,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "public/index.html",
+			"settings":
+			{
+				"buffer_size": 1965,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/index.coffee",
+			"settings":
+			{
+				"buffer_size": 5501,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/Layer.coffee",
+			"settings":
+			{
+				"buffer_size": 26889,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/Context.coffee",
+			"settings":
+			{
+				"buffer_size": 3876,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "src/AnimationLoop.coffee",
+			"settings":
+			{
+				"buffer_size": 2018,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Surface.js",
+			"settings":
+			{
+				"buffer_size": 16548,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces/ContainerSurface.js",
+			"settings":
+			{
+				"buffer_size": 4323,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/views/RenderController.js",
+			"settings":
+			{
+				"buffer_size": 14682,
+				"line_ending": "Unix"
+			}
+		}
 	],
 	"build_system": "",
 	"build_system_choices":
@@ -632,42 +704,88 @@
 	[
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/eventemitter3",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/test",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/render-loops",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/modifiers",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/utilities",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/framer",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src",
-		"/Users/irwansyah/PROJECTS/Framerjs",
-		"/Users/irwansyah/PROJECTS/Framerjs/Framer",
-		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer"
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages",
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm",
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5",
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5/core",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/examples",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project/src"
 	],
 	"file_history":
 	[
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Framer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/modifiers/StateModifier.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/RenderNode.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousLayer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousLayer.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BaseClass.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/transitions/Transitionable.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Engine.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Context.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousPropertySetter.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/views/RenderController.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Transform.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/modifiers/StateModifier.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces/ContainerSurface.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Context.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/surfaces/ContainerSurface.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/famous.css",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/AnimationLoop.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.js",
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5/core/View.js",
+		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5/views.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animation.coffee",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/AnimationLoop.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Engine.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Utils.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/EventManager.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderers/events/EventMap.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Events.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BackgroundLayer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Screen.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables/DOMElement.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/README.md",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Node.js",
+		"/Users/irwansyah/Desktop/browser.log",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStates.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.js",
+		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Context.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Clock.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Clock.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Clock.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStyle.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/FamousEngine.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Extras/MobileScrollFix.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerDraggable.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Defaults.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/EventEmitter.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Context.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderers/DOMRenderer.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Context.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Scene.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Underscore.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Simulators/SpringSimulator.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Integrator.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Utils.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Simulator.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Config.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStates.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Defaults.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Events.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/FamousEngine.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Framer.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/AnimationLoop.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/EventEmitter.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BaseClass.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Screen.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Underscore.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Context.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Context.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/AttackPlans.txt",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Dispatch.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Node.js",
-		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/AnimationLoop.coffee",
 		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Animation.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/dom-renderables/DOMElement.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/render-loops/RequestAnimationFrameLoop.js",
 		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Simulation.coffee",
 		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Animator.coffee",
@@ -676,8 +794,6 @@
 		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/Components/DeviceComponent.coffee",
 		"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer/EventManager.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Application.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animation.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/SpringRK4Animator.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/SpringDHOAnimator.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animators/LinearAnimator.coffee",
@@ -685,12 +801,9 @@
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/UIManager.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/math/Quaternion.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/Rotation.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/BackgroundLayer.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Logger.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Animator.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/components/Position.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Clock.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/Compositor.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/index.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/renderers/inject-css.js",
@@ -702,11 +815,8 @@
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/images/famous-logo.svg",
 		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/index.html",
 		"/Users/irwansyah/PROJECTS/Framerjs/BrainItOn2HomeScreen.framer/app.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/README.md",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousWindow.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/runtime.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Scene.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/bundle.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerId.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/untitled folder/src/FamousWindow.coffee",
@@ -742,36 +852,7 @@
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_ibis/ms_ibis.install",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_membership/ms_membership.module",
 		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.purchases.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/acna_check_payments/acna_check_payments.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/audiclubna/audiclubna.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_donation/ms_donation.module",
-		"/Users/irwansyah/PROJECTS/acna-tools/generate-audit-sql.js",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/acna_imis_import/install_scripts/additional_tables.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.classes.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.pages.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.api.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/themes/acna_bootstrap_theme/js/validation.js",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/acna_resources/acna_resources.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/acna_resources/acna_resources.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/member_renewal_retention_schedule.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/member_renewal_retention_schedule.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/total_members_active_1mo_grace.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/settings.php",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/themes/acna_bootstrap_theme/css/style.css",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/member_renewal_retention_schedule_periods.sql",
-		"/Users/irwansyah/PROJECTS/acna-tools/EmailSending/EmailSendingCron.coffee",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/countries/countries.fields.inc",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_paypal_wpp/ms_paypal_wpp.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_authorizenet/ms_authorizenet.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/modules/taxonomy/taxonomy.module",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/new_membership_vs_renewal_reinstated.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/acna_new_membership_vs_renewal_reinstated.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_state_top10.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_state.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/membership_by_province_canada.sql",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/files/forena-reports/acna_members_by_province_canada.frx",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/default/sql/total_membership_canada.sql"
+		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/acna_check_payments/acna_check_payments.module"
 	],
 	"find":
 	{
@@ -782,6 +863,10 @@
 		"height": 93.0,
 		"where_history":
 		[
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src",
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src",
+			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
 			"/Users/irwansyah/PROJECTS/Framerjs/Framer/framer",
 			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
 			"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/",
@@ -813,134 +898,134 @@
 		"case_sensitive": false,
 		"find_history":
 		[
-			"emit",
-			"_updateQueue",
-			"__domComplete",
-			"_events",
-			"_UIEvents",
-			"getUIEvents",
-			"\"update\"",
-			"_parentLayer",
-			"\"update\"",
-			"_updates",
-			"rAF",
-			"\"update\"",
-			"Loop",
-			"run ",
-			"run(",
-			"run()",
-			"run",
-			".run",
-			"Framer.Context.run",
-			"utils",
-			"rAF",
-			".start(",
-			".start",
-			"start",
-			"_chann",
-			"style",
-			"_styles",
-			"style",
-			"_st",
-			"Utils",
-			"duration: timeValue",
-			"y: 700",
-			"1000",
-			"Y",
-			"rotationXValue",
-			"angleToFamousRotation",
-			"rotationYValue",
-			"injectCSS",
-			"inject-css",
-			"preserve-3d",
-			"preserve",
-			"transformStyle",
-			"transform-style",
-			"setmou",
-			"setmoun",
-			"vendor",
-			"_clock",
-			"update(",
-			"onupdate",
-			"rotationValue",
-			"app.",
-			"index",
+			"@_parentLayer",
+			"@_rootEle",
+			"@_element",
+			"@_node",
+			"@_elemen",
+			"@_conte",
+			"_createElement",
+			"@_element",
+			"querysel",
+			"@_element",
+			"classlist",
+			"@_element",
+			"_style",
+			"@_element",
+			"Properties",
+			"properties",
+			"Properties",
+			"properties",
+			"Properties",
+			"properties",
+			"@_element",
+			"@_ele",
+			"@_node",
+			"actionQueue",
+			"method",
+			"_engineInstance",
+			"_loadNext",
+			"children",
+			"_mappedState",
+			"target",
+			"version",
+			".css",
+			"\"width\"",
+			"\"frame",
+			"Engine",
+			"engine",
+			"Engine",
+			"midX",
+			"context",
+			"animating",
+			"layer1Step1",
+			"draggable",
+			"Node: on",
+			"Math.PI",
+			"addchi",
 			"_children",
-			"perspective",
-			"shown",
-			"hide",
-			"show",
-			"hide",
-			"_styles",
-			"setproperty",
-			"setprope",
-			"setPro",
-			"back",
-			"Y",
-			"isDisableInteraction",
-			"Quarternion",
-			"event",
-			"Screen",
-			"_",
-			"easing",
-			"boderRadiusValue",
-			"rotation",
-			"width",
-			"applyPosition",
-			"position",
-			"_node",
-			"_callbacks",
-			"_styles",
-			"_tag",
-			"tag",
-			"poolSize",
-			"Context",
-			"_initDOM",
-			"_commandCallbacks",
-			"READY",
-			"onReceive",
-			"CONTEXT_RESIZE",
-			"onreceive",
-			"ready",
-			"_initDOM",
-			"ready",
-			"Commands.READY",
-			"READY",
-			"ready",
-			"famous.core.FamousEngine.getContext('body')",
-			"_updater",
-			"updateSize",
-			"send",
-			"CONTEXT_RESIZE",
-			"size",
-			"@layerElement",
-			"background",
-			"tagName",
-			"@layerNode",
-			"width",
-			"@window",
-			"ComponentFactory",
-			"friendService",
-			"FriendService",
-			"friendService",
-			"FriendService",
-			"zoom_file_names",
-			"movie",
-			"GalleryScreen",
-			"galleryScreen",
-			"GalleryScreen",
-			"galleryScreen",
-			",",
-			"buttonTower2F",
-			"buttonTower2E",
-			"buttonTower2C",
-			"buttonTower2D",
-			"buttonTower2B",
-			"buttonTower2C",
-			"buttonTower2B",
-			"buttonTower2A",
-			"buttonTower1D",
-			"background"
+			"\"super",
+			"setid",
+			"_insertElement",
+			"containerMask",
+			"superLayer",
+			"_insertElement",
+			"html",
+			"createEl",
+			"id",
+			"opacity",
+			"codeplaceholder",
+			"ignore",
+			"scrollX",
+			"DefinedPropertiesKey",
+			"props",
+			"@props",
+			"props",
+			"\"\n",
+			"props",
+			"events.",
+			"didswi",
+			"2013",
+			"height",
+			"widt",
+			"ignoreevent",
+			"ignoreve",
+			"click",
+			"ignore",
+			"click",
+			"clic",
+			"opacity.set",
+			"Layer",
+			"click",
+			".y.set",
+			"clic",
+			"y.set",
+			"clic",
+			"640",
+			"2013",
+			"new layer",
+			"addsub",
+			"searchPlaceholder",
+			"placeHodler",
+			"click",
+			"console.log",
+			"LayerStatesIgnoredKeys",
+			".Click",
+			"resetView",
+			"setTimeout",
+			"resetview",
+			"reset",
+			"created",
+			"resetView",
+			"cancelSearch",
+			"initSearch",
+			"searchpla",
+			"ignoreevents",
+			"containermask",
+			"_attributes",
+			"setatt",
+			"getattribute",
+			"containerMask",
+			"searchBar",
+			"containerMas",
+			"subscribe",
+			"addui",
+			"_UIEvents",
+			"addListener",
+			"MobileScrollFixLayer",
+			"on",
+			"subscribe(",
+			"subscribe",
+			"addeventlist",
+			"searchPlaceholder.on",
+			".click",
+			"searchplace",
+			"logo",
+			"stick",
+			"containerMask",
+			"\"name",
+			"searchPlaceholder",
+			"searchBar"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -958,8 +1043,274 @@
 	"groups":
 	[
 		{
+			"selected": 4,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project/src/main.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 302,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								67,
+								67
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 8,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "public/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 1965,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1234,
+								1234
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 12.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 7,
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "src/index.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5501,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2866,
+								2866
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1582.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 5,
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "src/Layer.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 26889,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								13987,
+								13987
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 635.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "src/Context.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 3876,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1544,
+								1544
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 906.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "src/AnimationLoop.coffee",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2018,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1977,
+								1977
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 757.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Surface.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 16548,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								3171,
+								3239
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 1041.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 4,
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces/ContainerSurface.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 4323,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1277,
+								1277
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/views/RenderController.js",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 14682,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								12810,
+								12810
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 4226.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 6,
+					"type": "text"
+				}
 			]
 		}
 	],
@@ -1016,16 +1367,292 @@
 		"selected_items":
 		[
 			[
+				"framer",
+				"FamousLayer/src/Framer.coffee"
+			],
+			[
+				"anim",
+				"FamousLayer/src/AnimationLoop.coffee"
+			],
+			[
+				"render",
+				"famous-starter-kit/src/core/RenderNode.js"
+			],
+			[
+				"famousla",
+				"FamousLayer/src/FamousLayer.coffee"
+			],
+			[
+				"famou",
+				"FamousLayer/src/FamousLayer.js"
+			],
+			[
+				"context",
+				"FamousLayer/src/Context.coffee"
+			],
+			[
+				"baseclass",
+				"FamousLayer/src/BaseClass.coffee"
+			],
+			[
+				"sur",
+				"famous-starter-kit/src/core/Surface.js"
+			],
+			[
+				"layer",
+				"FamousLayer/src/Layer.coffee"
+			],
+			[
+				"transition",
+				"famous-starter-kit/src/transitions/Transitionable.js"
+			],
+			[
+				"renderco",
+				"famous-starter-kit/src/views/RenderController.js"
+			],
+			[
+				"engine.js",
+				"famous-starter-kit/src/core/Engine.js"
+			],
+			[
+				"container",
+				"famous-starter-kit/src/surfaces/ContainerSurface.js"
+			],
+			[
+				"transform",
+				"famous-starter-kit/src/core/Transform.js"
+			],
+			[
+				"state",
+				"famous-starter-kit/src/modifiers/StateModifier.js"
+			],
+			[
+				"renderno",
+				"famous-starter-kit/src/core/RenderNode.js"
+			],
+			[
+				"statemo",
+				"famous-starter-kit/src/modifiers/StateModifier.js"
+			],
+			[
+				"rendercon",
+				"famous-starter-kit/src/views/RenderController.js"
+			],
+			[
+				"containersu",
+				"FamousLayer/node_modules/famous/surfaces/ContainerSurface.js"
+			],
+			[
+				"famouspr",
+				"FamousLayer/src/FamousPropertySetter.coffee"
+			],
+			[
+				"famour",
+				"FamousLayer/src/FamousPropertySetter.coffee"
+			],
+			[
+				"index",
+				"FamousLayer/src/index.js"
+			],
+			[
+				"index.",
+				"FamousLayer/public/index.html"
+			],
+			[
+				"famouspropertysetter",
+				"FamousLayer/src/FamousPropertySetter.coffee"
+			],
+			[
+				"view",
+				"arva-js/jspm_packages/npm/famous@0.3.5/core/View.js"
+			],
+			[
+				"fra",
+				"FamousLayer/src/Framer.coffee"
+			],
+			[
+				"animat",
+				"FamousLayer/src/Animation.coffee"
+			],
+			[
+				"animatio",
+				"FamousLayer/src/AnimationLoop.coffee"
+			],
+			[
+				"util",
+				"FamousLayer/src/Utils.coffee"
+			],
+			[
+				"inde",
+				"FamousLayer/src/index.coffee"
+			],
+			[
+				"engine",
+				"FamousLayer/node_modules/famous/core/Engine.js"
+			],
+			[
+				"animationl",
+				"Framerjs/Framer/framer/AnimationLoop.coffee"
+			],
+			[
+				"base",
+				"FamousLayer/src/BaseClass.coffee"
+			],
+			[
+				"eventma",
+				"FamousLayer/src/EventManager.coffee"
+			],
+			[
+				"basec",
+				"FamousLayer/src/BaseClass.coffee"
+			],
+			[
+				"scree",
+				"FamousLayer/src/Screen.coffee"
+			],
+			[
+				"back",
+				"FamousLayer/src/BackgroundLayer.coffee"
+			],
+			[
+				"famouseventsma",
+				"FamousLayer/node_modules/famous/dom-renderers/events/EventMap.js"
+			],
+			[
+				"events",
+				"FamousLayer/src/Events.coffee"
+			],
+			[
+				"event",
+				"FamousLayer/src/Events.coffee"
+			],
+			[
+				"fram",
+				"FamousLayer/src/Framer.coffee"
+			],
+			[
+				"node",
+				"FamousLayer/node_modules/famous/core/Node.js"
+			],
+			[
+				"layerse",
+				"FamousLayer/src/LayerStates.coffee"
+			],
+			[
+				"utils",
+				"FamousLayer/src/Utils.coffee"
+			],
+			[
+				"do",
+				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"dome",
+				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"basecl",
+				"FamousLayer/src/BaseClass.coffee"
+			],
+			[
+				"conte",
+				"Framerjs/Framer/framer/Context.coffee"
+			],
+			[
+				"clo",
+				"FamousLayer/src/Clock.coffee"
+			],
+			[
+				"clock",
+				"FamousLayer/node_modules/famous/core/Clock.js"
+			],
+			[
+				"clock.js",
+				"FamousLayer/src/Clock.js"
+			],
+			[
+				"layerstates",
+				"FamousLayer/src/LayerStates.coffee"
+			],
+			[
+				"layerst",
+				"FamousLayer/src/LayerStyle.coffee"
+			],
+			[
+				"famous",
+				"FamousLayer/src/FamousPropertySetter.coffee"
+			],
+			[
+				"layers",
+				"FamousLayer/src/LayerStyle.coffee"
+			],
+			[
+				"eventmap",
+				"FamousLayer/node_modules/famous/dom-renderers/events/EventMap.js"
+			],
+			[
+				"dom",
+				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
+			],
+			[
+				"defaul",
+				"FamousLayer/src/Defaults.coffee"
+			],
+			[
+				"evente",
+				"FamousLayer/src/EventEmitter.coffee"
+			],
+			[
+				"layerdra",
+				"FamousLayer/src/LayerDraggable.coffee"
+			],
+			[
+				"backgro",
+				"FamousLayer/src/BackgroundLayer.coffee"
+			],
+			[
+				"even",
+				"FamousLayer/src/Events.coffee"
+			],
+			[
+				"layerstyl",
+				"FamousLayer/src/LayerStyle.coffee"
+			],
+			[
+				"domrenderer",
+				"FamousLayer/node_modules/famous/dom-renderers/DOMRenderer.js"
+			],
+			[
+				"layerstyle",
+				"FamousLayer/src/LayerStyle.coffee"
+			],
+			[
+				"scen",
+				"FamousLayer/node_modules/famous/core/Scene.js"
+			],
+			[
+				"famouseng",
+				"FamousLayer/node_modules/famous/core/FamousEngine.js"
+			],
+			[
+				"node.",
+				"FamousLayer/node_modules/famous/core/Node.js"
+			],
+			[
+				"lay",
+				"FamousLayer/src/Layer.coffee"
+			],
+			[
+				"under",
+				"FamousLayer/src/Underscore.coffee"
+			],
+			[
 				"inte",
 				"FamousLayer/src/Integrator.coffee"
 			],
 			[
 				"springsimulator",
 				"FamousLayer/src/Simulators/SpringSimulator.coffee"
-			],
-			[
-				"utils",
-				"FamousLayer/src/Utils.coffee"
 			],
 			[
 				"conf",
@@ -1044,14 +1671,6 @@
 				"FamousLayer/src/Defaults.coffee"
 			],
 			[
-				"event",
-				"FamousLayer/src/Events.coffee"
-			],
-			[
-				"index",
-				"FamousLayer/src/index.coffee"
-			],
-			[
 				"layersta",
 				"FamousLayer/src/LayerStates.coffee"
 			],
@@ -1068,24 +1687,8 @@
 				"FamousLayer/src/BaseClass.coffee"
 			],
 			[
-				"evente",
-				"FamousLayer/src/EventEmitter.coffee"
-			],
-			[
-				"framer",
-				"FamousLayer/src/Framer.coffee"
-			],
-			[
-				"context",
-				"FamousLayer/node_modules/famous/renderers/Context.js"
-			],
-			[
 				"famousen",
 				"FamousLayer/node_modules/famous/core/FamousEngine.js"
-			],
-			[
-				"node",
-				"FamousLayer/node_modules/famous/core/Node.js"
 			],
 			[
 				"dispatch",
@@ -1128,10 +1731,6 @@
 				"FamousLayer/node_modules/famous/dom-renderables/DOMElement.js"
 			],
 			[
-				"layer",
-				"FamousLayer/src/Layer.coffee"
-			],
-			[
 				"ani",
 				"FamousLayer/src/Animation.coffee"
 			],
@@ -1158,10 +1757,6 @@
 			[
 				"",
 				"node_modules/famous/dom-renderables/DOMElement.js"
-			],
-			[
-				"inde",
-				"src/index.coffee"
 			],
 			[
 				"floorplanscreenbase",
@@ -1282,250 +1877,6 @@
 			[
 				"acnamembershi",
 				"irwan-ACNA-Website/sites/default/files/forena-reports/acna_new_membership_vs_renewal_reinstated.frx"
-			],
-			[
-				"acna_res",
-				"irwan-ACNA-Website/sites/all/modules/acna_resources/acna_resources.inc"
-			],
-			[
-				"membershipre",
-				"irwan-ACNA-Website/sites/default/sql/new_membership_vs_renewal_reinstated.sql"
-			],
-			[
-				"total_membership_canada",
-				"irwan-ACNA-Website/sites/default/sql/total_membership_canada.sql"
-			],
-			[
-				"membercana",
-				"irwan-ACNA-Website/sites/default/files/forena-reports/acna_members_by_province_canada.frx"
-			],
-			[
-				"membershipcan",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_province_canada.sql"
-			],
-			[
-				"memberstate",
-				"irwan-ACNA-Website/sites/default/files/forena-reports/membership_by_state.frx"
-			],
-			[
-				"membership_by_state_orderbycount",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_state_orderbycount.sql"
-			],
-			[
-				"total_membership_us",
-				"irwan-ACNA-Website/sites/default/sql/total_membership_us.sql"
-			],
-			[
-				"membership_by_state_top10",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_state_top10.sql"
-			],
-			[
-				"memberbysta",
-				"irwan-ACNA-Website/sites/default/sql/membership_by_state_top10.sql"
-			],
-			[
-				"acnareso",
-				"irwan-ACNA-Website/sites/all/modules/acna_resources/acna_resources.inc"
-			],
-			[
-				"pop",
-				"irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.module"
-			],
-			[
-				"popup",
-				"irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.js"
-			],
-			[
-				"ms_pro",
-				"irwan-ACNA-Website/sites/all/modules/ms_core/ms_products/ms_products.module"
-			],
-			[
-				"profile2",
-				"irwan-ACNA-Website/sites/all/modules/profile2/profile2.module"
-			],
-			[
-				"annou",
-				"irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.module"
-			],
-			[
-				"adho",
-				"irwan-ACNA-Website/sites/default/sql/adhoc_data.sql"
-			],
-			[
-				"popup_announcement",
-				"irwan-ACNA-Website/sites/all/modules/popup_announcement/popup_announcement.module"
-			],
-			[
-				"ms_core_pag",
-				"irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.pages.inc"
-			],
-			[
-				"ms_co",
-				"irwan-ACNA-Website/sites/all/modules/ms_core/ms_core.module"
-			],
-			[
-				"acna_check",
-				"irwan-ACNA-Website/sites/all/modules/acna_check_payments/acna_check_payments.module"
-			],
-			[
-				"reminder",
-				"irwan-ACNA-Website/sites/default/sql/renewal_reminders.sql"
-			],
-			[
-				"renewal_reminders_email_filter",
-				"irwan-ACNA-Website/sites/default/sql/renewal_reminders_email_filter.sql"
-			],
-			[
-				"renew",
-				"irwan-ACNA-Website/sites/default/sql/renewal_reminders.sql"
-			],
-			[
-				"chapter_list",
-				"irwan-ACNA-Website/sites/default/sql/chapter_list.sql"
-			],
-			[
-				"renewal_reminders",
-				"irwan-ACNA-Website/sites/default/sql/renewal_reminders.sql"
-			],
-			[
-				"membership_source_and_products",
-				"irwan-ACNA-Website/sites/default/sql/membership_source_and_products.sql"
-			],
-			[
-				"membership_source",
-				"irwan-ACNA-Website/sites/default/sql/membership_source.sql"
-			],
-			[
-				"audic",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/audiclubna.module"
-			],
-			[
-				"bme",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/BMEAPI.class.php"
-			],
-			[
-				"bemapi",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/BMEAPI.class.php"
-			],
-			[
-				"bmeapi",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/BMEAPI.class.php"
-			],
-			[
-				"confi",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/config.php"
-			],
-			[
-				"adhoc_data",
-				"irwan-ACNA-Website/sites/default/sql/adhoc_data.sql"
-			],
-			[
-				"audiclub",
-				"irwan-ACNA-Website/sites/all/modules/audiclubna/audiclubna.module"
-			],
-			[
-				"dateutil",
-				"acna-tools/EmailSending/DateUtils.coffee"
-			],
-			[
-				"mailings",
-				"acna-tools/EmailSending/MailingState.coffee"
-			],
-			[
-				"acnamodule",
-				"sites/all/modules/audiclubna/audiclubna.module"
-			],
-			[
-				"famoue",
-				"test1/node_modules/famous/core/FamousEngine.js"
-			],
-			[
-				"posit",
-				"test1/node_modules/famous/components/Position.js"
-			],
-			[
-				"positio",
-				"test1/node_modules/famous/components/Position.js"
-			],
-			[
-				"align",
-				"test1/node_modules/famous/components/Align.js"
-			],
-			[
-				"animation",
-				"Framer/framer/Animation.coffee"
-			],
-			[
-				"mailing",
-				"acna-tools/EmailSending/MailingState.coffee"
-			],
-			[
-				"index.co",
-				"acna-tools/EmailSending/index.coffee"
-			],
-			[
-				"framera",
-				"PAI-App/www/js/framerApp.coffee"
-			],
-			[
-				"screenmain",
-				"PAI/PAI-App/www/js/screens/ScreenMainMenu_1067x584.coffee"
-			],
-			[
-				"framerapp",
-				"PAI/PAI-App/www/js/framerApp.coffee"
-			],
-			[
-				"screen",
-				"PAI-App/www/js/screens/ScreenBase.coffee"
-			],
-			[
-				"screenintro",
-				"PAI-App/www/js/screens/ScreenIntro_800x480.coffee"
-			],
-			[
-				"screenba",
-				"PAI-updated.framer/screens/ScreenBase.coffee"
-			],
-			[
-				"screenbase",
-				"PAI-updated.framer/screens/ScreenBase.coffee"
-			],
-			[
-				"screenintro_1024_614",
-				"PAI-App/www/js/screens/ScreenIntro_1024_614.coffee"
-			],
-			[
-				"introba",
-				"PAI-App/www/js/screens/IntroLayerBase.coffee"
-			],
-			[
-				"introlayer",
-				"PAI-App/www/js/screens/IntroLayerBase.js"
-			],
-			[
-				"ngc",
-				"www/lib/ngCordova/dist/ng-cordova.js"
-			],
-			[
-				"sourceand",
-				"irwan-ACNA-Website/sites/default/sql/membership_source_and_products.sql"
-			],
-			[
-				"member",
-				"sites/default/sql/membership_source.sql"
-			],
-			[
-				"source",
-				"sites/default/sql/membership_source.sql"
-			],
-			[
-				"screenb",
-				"www/screens/ScreenBase.coffee"
-			],
-			[
-				"membership_by_source_products",
-				"sites/default/sql/membership_by_source_products.sql"
 			]
 		],
 		"width": 0.0

@@ -8,9 +8,8 @@ Utils = require "./Utils"
 Counter = 1
 
 famous = require("famous")
-Engine = famous.core.FamousEngine
-Node = famous.core.Node
-DOMElement = famous.domRenderables.DOMElement
+Engine = famous.core.Engine
+ContainerSurface = famous.surfaces.ContainerSurface
 
 class exports.Context extends BaseClass
 	
@@ -70,18 +69,9 @@ class exports.Context extends BaseClass
 		@eventManager?.reset()
 		@eventManager = new EventManager
 
-		if @_rootElement
-			# Clean up the current root element:
-			if @_rootElement._node.isMounted()
-				# Already attached to the DOM - remove it:
-				@_rootElement._node.dismount()
-			else
-				# Not on the DOM yet. Prevent it from being added (for this happens
-				# async):
-				@_rootElement.__cancelAppendChild = true
-
-		# Create a fresh root element:
-		@_createRootElement()
+		if not @_rootElement?
+			# Create a fresh root element:
+			@_createRootElement()
 
 		@_delayTimers?.map (timer) -> window.clearTimeout(timer)
 		@_delayIntervals?.map (timer) -> window.clearInterval(timer)
@@ -99,8 +89,6 @@ class exports.Context extends BaseClass
 		@emit("reset", @)
 	destroy: ->
 		@reset()
-		if @_rootElement._node.isMounted()
-			@_rootElement._node.dismount()
 		Utils.domCompleteCancel(@_appendRootElement)
 
 	getRootElement: ->
@@ -136,21 +124,12 @@ class exports.Context extends BaseClass
 			Utils.domComplete(@_appendRootElement)
 
 	_createRootElement: ->
-		console.log("=== Context ===== ")
-
-		console.log("Assiging new Node() to @_rootNode")
-		@_rootNode = new Node()
-
-		console.log("Creating new DOMElement() and passing the @_rootNode")
-		@_rootElement = new DOMElement(@_rootNode, 
-				tagName: "div"
-			)
-		@_rootElement.id = "FramerContextRoot-#{@_name}"
-		# @_rootElement.classList.add("framerContext")
 
 		if @_parentLayer
+			@_rootElement = new ContainerSurface()
 			@_appendRootElement()
 		else
+			@_rootElement = Engine.createContext()
 			Utils.domComplete(@_appendRootElement)			
 
 	_framerOriginal__appendRootElement: =>
@@ -158,16 +137,9 @@ class exports.Context extends BaseClass
 		parentElement ?= document.body
 		parentElement.appendChild(@_rootElement)
 
-	_appendRootElement: =>
-		console.log("=== Context ===== ")
-		
-		parentElement = @_parentLayer?._element._node
-		if not parentElement?
-			console.log("Calls Engine.createScene()")
-			parentElement = Engine.createScene()
-
-		console.log("Calls parentElement.addChild passing @_rootElement._node")
-		parentElement.addChild(@_rootElement._node)
+	_appendRootElement: =>		
+		if @_parentLayer?
+			@_parentLayer.surface.add(@_rootElement)
 
 	run: (f) ->
 		previousContext = Framer.CurrentContext

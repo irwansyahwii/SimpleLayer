@@ -15,7 +15,7 @@
 
   famous = require("famous");
 
-  Engine = famous.core.FamousEngine;
+  Engine = famous.core.Engine;
 
   getTime = function() {
     return Utils.getTime() * 1000;
@@ -88,14 +88,12 @@
         onUpdate: (function(_this) {
           return function() {
             update();
-            return Engine.requestUpdate(updater);
+            return Engine.nextTick(updater.onUpdate);
           };
         })(this)
       };
-      console.log("Calling Engine.init");
-      Engine.init();
-      console.log("Calling Engine.requestUpdate(updater)");
-      return Engine.requestUpdate(updater);
+      this.mainContext = Engine.createContext();
+      return Engine.requestUpdate(updater.onUpdate);
     };
 
     return AnimationLoop;

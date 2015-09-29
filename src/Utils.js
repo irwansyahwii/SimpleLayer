@@ -12,9 +12,9 @@
 
   famous = require("famous");
 
-  Engine = famous.core.FamousEngine;
+  Engine = famous.core.Engine;
 
-  Clock = Engine.getClock();
+  Clock = famous.utilities.Timer;
 
   setTimeout = function(callback, delay) {
     return Clock.setTimeout(callback, delay);

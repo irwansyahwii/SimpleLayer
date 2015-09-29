@@ -4,7 +4,7 @@ Utils = require "./Utils"
 {EventEmitter} = require "./EventEmitter"
 
 famous = require("famous")
-Engine = famous.core.FamousEngine
+Engine = famous.core.Engine
 
 # if window.performance
 # 	getTime = -> window.performance.now()
@@ -89,10 +89,7 @@ class exports.AnimationLoop extends EventEmitter
 		updater = 
 			onUpdate: () =>
 				update()
-				Engine.requestUpdate(updater)
+				Engine.nextTick(updater.onUpdate)
 
 
-		console.log("Calling Engine.init")
-		Engine.init()
-		console.log("Calling Engine.requestUpdate(updater)")
-		Engine.requestUpdate(updater)
+		Engine.requestUpdate(updater.onUpdate)

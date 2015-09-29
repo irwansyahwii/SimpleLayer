@@ -4,9 +4,9 @@ Framer = {}
 
 famous = require("famous")
 
-Engine = famous.core.FamousEngine;
+Engine = famous.core.Engine;
 
-Clock = Engine.getClock()
+Clock = famous.utilities.Timer
 
 window.setTimeout = (callback, delay) ->
     Clock.setTimeout(callback, delay)

@@ -15,11 +15,11 @@ Utils = require "./Utils"
 NoCacheDateKey = Date.now()
 
 famous = require("famous")
-Engine = famous.core.FamousEngine
-Node = famous.core.Node
-DOMElement = famous.domRenderables.DOMElement
+Engine = famous.core.Engine
 
 FamousPropertySetter = require("./FamousPropertySetter")
+FamousLayer = require("./FamousLayer")
+
 
 layerValueTypeError = (name, value) ->
 	throw new Error("Layer.#{name}: value '#{value}' of type '#{typeof(value)}'' is not valid")
@@ -493,40 +493,13 @@ class exports.Layer extends BaseClass
 
 		return if @_element?
 
-		@_node = new Node()
-		@_node.setSizeMode("absolute", "absolute", "absolute")
-		@_node.setAbsoluteSize(250, 250)
-		@_node.setOrigin(0.5, 0.5)
-
-		# @_node.addUIEvent(Events.Click)
-		# @_node.addUIEvent(Events.TouchStart)
-		# @_node.addUIEvent(Events.TouchEnd)
-		# @_node.addUIEvent(Events.TouchMove)
-		# @_node.addUIEvent(Events.MouseUp)
-		# @_node.addUIEvent(Events.MouseDown)
-		# @_node.addUIEvent(Events.MouseOver)
-		# @_node.addUIEvent(Events.MouseOut)
-		# @_node.addUIEvent(Events.MouseMove)
+		# @_node = new Node()
+		# @_node.setSizeMode("absolute", "absolute", "absolute")
+		# @_node.setAbsoluteSize(250, 250)
+		# @_node.setOrigin(0.5, 0.5)
 
 
-
-		# @_node.onReceive = (event, payLoad) =>
-
-		# 	# @_node.emit(event, payLoad)
-			# console.log("Node: #{@name} on receive: #{event}")
-		# 	# console.log event
-		# 	# console.log payLoad
-		# 	# @emit(event)
-		# 	payLoad.preventDefault = ->
-		# 		#adasd
-		# 		console.log("preventDefault")
-
-		# 	@emit(event, payLoad)
-		# 	# if event is Events.Click
-		# 	# 	@emit(Events.Click)
-
-
-		@_element = new DOMElement(@_node, {tagName: "div"})
+		@_element = new FamousLayer
 
 		@_element._layer = @
 		# @_element.classList.add("framerLayer")
@@ -536,12 +509,12 @@ class exports.Layer extends BaseClass
 	_insertElement: ->
 		@bringToFront()
 		console.log("Add layer's #{@name} node to context rootElement")		
-		@_context.getRootElement()._node.addChild(@_element._node)
+		@_context.getRootElement().add(@_element.node)
 
 	@define "html",
 		get: ->
 			# @_elementHTML?._content or ""
-			@_element?._content or ""
+			@_element?.content or ""
 
 		set: (value) ->
 
@@ -549,13 +522,6 @@ class exports.Layer extends BaseClass
 			# a child node to insert it in, so it won't mess with Framers
 			# layer hierarchy.
 
-			# if not @_elementHTML
-			# 	@_nodeHTML = new Node()
-
-			# 	@_elementHTML = new DOMElement(@_nodeHTML, {tagName: "div"})
-			# 	@_element._node.addChild(@_nodeHTML)
-
-			# @_elementHTML.setContent(value)
 			@_element.setContent(value)
 
 			# If the contents contains something else than plain text
@@ -578,7 +544,7 @@ class exports.Layer extends BaseClass
 		if @superLayer
 			@superLayer._subLayers = _.without @superLayer._subLayers, @
 
-		@_element.parentNode?.removeChild @_element
+		@_element.removeFromParent()
 		@removeAllListeners()
 		
 		@_context.removeLayer(@)
@@ -687,28 +653,18 @@ class exports.Layer extends BaseClass
 			# Cancel previous pending insertions
 			# Utils.domCompleteCancel @__insertElement
 
-			parentChildren = @_context.getRootElement()._node.getChildren()
-			foundIndex = parentChildren.indexOf(@_element._node)
-			if foundIndex >= 0
-				@_context.getRootElement()._node.removeChild(@_element._node)
 
 			# Remove from previous superlayer sublayers
 			if @_superLayer				
 				@_superLayer._subLayers = _.without @_superLayer._subLayers, @
 
-				parentChildren = @_superLayer._element._node.getChildren()
-				foundIndex = parentChildren.indexOf(@_element._node)
-				if foundIndex >= 0
-					@_superLayer._element._node.removeChild(@_element._node)
-
-				# @_superLayer._element._node.removeChild @_element._node
-				@_element._node.dismount()
+				@_superLayer._element.removeSubLayer(@_element)
 
 				@_superLayer.emit "change:subLayers", {added:[], removed:[@]}
 
 			# Either insert the element to the new superlayer element or into dom
 			if layer
-				layer._element._node.addChild(@_element._node)
+				layer._element.addSubLayer(@_element)
 				layer._subLayers.push @
 				layer.emit "change:subLayers", {added:[@], removed:[]}
 			else
