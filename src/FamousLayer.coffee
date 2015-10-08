@@ -5,6 +5,13 @@ StateModifier = famous.modifiers.StateModifier
 RenderNode = famous.core.RenderNode
 Transform = famous.core.Transform
 
+# So if you want to change the rotation, I think this is what you do (pseudocode):
+# transformParts = Transform.interpret(stateModifier.getTransform())
+# transformParts.rotate = Transform.multiply(transformParts.rotate, Transform.rotate(x, y, z))
+# stateModifier.setTransform(Transform.build(transformParts))
+# II
+
+
 class FamousLayer
     constructor: (options) ->
 
@@ -17,7 +24,7 @@ class FamousLayer
 
         @stateModifier = new StateModifier(
                 origin:[0.5, 0.5]
-                transform: Transform.translate()
+                # transform: Transform.translate(0, 0, 0)
             )
 
         @node = new RenderNode(@stateModifier)
@@ -98,8 +105,8 @@ class FamousLayer
 
         currentPos
 
-    setPosition2: (x, y, z) =>
-        @stateModifier.setTransform(Transform.translate(x, y, z))
+    # setPosition2: (x, y, z) =>
+    #     @stateModifier.setTransform(Transform.translate(x, y, z))
 
     setPosition: (x, y, z) =>
         
@@ -108,38 +115,37 @@ class FamousLayer
 
         # @stateModifier.setTransform(Transform.translate(800, 300, 0))
 
-        # currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        # console.log "currentTransform:"
-        # console.log currentTransform
-
-        # @stateModifier.setTransform(Transform.translate(x, currentTransform[1] || 0, currentTransform[2] || 0))
 
         currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "position before:"
+        console.log "currentTransform:"
         console.log currentTransform
 
-        @stateModifier.setTransform(Transform.translate(x, y, z))
+        # @stateModifier.setTransform(Transform.thenMove(@stateModifier.getTransform(), [x, y, z]))
 
+        m = @stateModifier.getTransform()
+        originalTranslate = Transform.getTranslate(m)
+        deltaX = x - originalTranslate[0];
+        deltaY = y - originalTranslate[1];
+        deltaZ = z - originalTranslate[2];
+
+        @stateModifier.setTransform(Transform.thenMove(m, [deltaX, deltaY, deltaZ]))
 
         currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "position after:"
+        console.log "AFTER currentTransform:"
         console.log currentTransform
+
 
     getScale: () =>
         Transform.interpret(@stateModifier.getTransform()).scale
 
     setScale: (x, y, z) =>
 
-        currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "position before:"
-        console.log currentTransform
-
         console.log "@stateModifier.setTransform(Transform.scale(#{x}, #{y}, #{z}))"
-        # @stateModifier.setTransform(Transform.scale(x, y, z))
 
-        currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "position after:"
-        console.log currentTransform
+        transformParts = Transform.interpret(@stateModifier.getTransform())
+        transformParts.scale = Transform.multiply(transformParts.scale, Transform.scale(x, y, z))
+        @stateModifier.setTransform(Transform.build(transformParts))
+
 
     getRotation: () =>
         Transform.interpret(@stateModifier.getTransform()).rotate
@@ -149,7 +155,9 @@ class FamousLayer
         console.log "@stateModifier.setTransform(Transform.rotate(#{x}, #{y}, #{z}))"
         # @stateModifier.setTransform(Transform.rotate(x, y, z))
 
-
+        # transformParts = Transform.interpret(@stateModifier.getTransform())
+        # transformParts.rotate = Transform.multiply(transformParts.rotate, Transform.rotate(x, y, z))
+        # @stateModifier.setTransform(Transform.build(transformParts))
 
     removeSubLayer:(layer) =>
 

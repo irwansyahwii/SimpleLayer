@@ -4,13 +4,13 @@ famous = require("famous")
 
 # Create layer, set properties
 layerA = new Layer
-  x:100, width: 80, height: 80, backgroundColor: "#7ed6ff", borderRadius: "4px"
+    width: 80, height: 80, backgroundColor: "#7ed6ff", borderRadius: "4px"
 
 
-console.log "layerA.x: #{layerA.x}"
-console.log "layerA._element.getPosition(): #{layerA._element.getPosition()}"
-console.log "layerA._element.getOrigin(): #{layerA._element.getOrigin()}"
-console.log layerA._element.stateModifier
+# console.log "layerA.x: #{layerA.x}"
+# console.log "layerA._element.getPosition(): #{layerA._element.getPosition()}"
+# console.log "layerA._element.getOrigin(): #{layerA._element.getOrigin()}"
+# console.log layerA._element.stateModifier
 
 # console.log "setting x pos"
 # layerA.x = 100
@@ -21,9 +21,9 @@ console.log layerA._element.stateModifier
 
 
 # Move down 300px
-# layerA.animate
-#   properties:
-#     y: 300
+layerA.animate
+  properties:
+    y: 300
   
 # # You can animate multiple properties at once
 # layerB = new Layer

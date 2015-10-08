@@ -26,7 +26,6 @@
       this.setScale = bind(this.setScale, this);
       this.getScale = bind(this.getScale, this);
       this.setPosition = bind(this.setPosition, this);
-      this.setPosition2 = bind(this.setPosition2, this);
       this.getPosition = bind(this.getPosition, this);
       this.setOrigin = bind(this.setOrigin, this);
       this.getOrigin = bind(this.getOrigin, this);
@@ -46,8 +45,7 @@
         properties: options
       });
       this.stateModifier = new StateModifier({
-        origin: [0.5, 0.5],
-        transform: Transform.translate()
+        origin: [0.5, 0.5]
       });
       this.node = new RenderNode(this.stateModifier);
       this.node.add(this.surface);
@@ -132,19 +130,20 @@
       return currentPos;
     };
 
-    FamousLayer.prototype.setPosition2 = function(x, y, z) {
-      return this.stateModifier.setTransform(Transform.translate(x, y, z));
-    };
-
     FamousLayer.prototype.setPosition = function(x, y, z) {
-      var currentTransform;
+      var currentTransform, deltaX, deltaY, deltaZ, m, originalTranslate;
       console.log("FamousLayer::setPosition: x: " + x + ", y: " + y + ", z: " + z);
       currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("position before:");
+      console.log("currentTransform:");
       console.log(currentTransform);
-      this.stateModifier.setTransform(Transform.translate(x, y, z));
+      m = this.stateModifier.getTransform();
+      originalTranslate = Transform.getTranslate(m);
+      deltaX = x - originalTranslate[0];
+      deltaY = y - originalTranslate[1];
+      deltaZ = z - originalTranslate[2];
+      this.stateModifier.setTransform(Transform.thenMove(m, [deltaX, deltaY, deltaZ]));
       currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("position after:");
+      console.log("AFTER currentTransform:");
       return console.log(currentTransform);
     };
 
@@ -153,14 +152,11 @@
     };
 
     FamousLayer.prototype.setScale = function(x, y, z) {
-      var currentTransform;
-      currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("position before:");
-      console.log(currentTransform);
+      var transformParts;
       console.log("@stateModifier.setTransform(Transform.scale(" + x + ", " + y + ", " + z + "))");
-      currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("position after:");
-      return console.log(currentTransform);
+      transformParts = Transform.interpret(this.stateModifier.getTransform());
+      transformParts.scale = Transform.multiply(transformParts.scale, Transform.scale(x, y, z));
+      return this.stateModifier.setTransform(Transform.build(transformParts));
     };
 
     FamousLayer.prototype.getRotation = function() {

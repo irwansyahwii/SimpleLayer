@@ -7,19 +7,16 @@
   famous = require("famous");
 
   layerA = new Layer({
-    x: 100,
     width: 80,
     height: 80,
     backgroundColor: "#7ed6ff",
     borderRadius: "4px"
   });
 
-  console.log("layerA.x: " + layerA.x);
-
-  console.log("layerA._element.getPosition(): " + (layerA._element.getPosition()));
-
-  console.log("layerA._element.getOrigin(): " + (layerA._element.getOrigin()));
-
-  console.log(layerA._element.stateModifier);
+  layerA.animate({
+    properties: {
+      y: 300
+    }
+  });
 
 }).call(this);
