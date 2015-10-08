@@ -42,7 +42,7 @@
     opacity: function(layer) {
       var propertyValue;
       propertyValue = layer._properties.opacity;
-      return layer._node.setOpacity(propertyValue);
+      return layer._element.setOpacity(propertyValue);
     },
     index: function(layer) {
       var propertyValue;
@@ -56,74 +56,104 @@
     },
     width: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::width");
       propertyValue = layer._properties.width;
-      nodeValues = layer._node.getAbsoluteSize();
-      return layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
+      console.log("propertyValue: " + propertyValue);
+      nodeValues = layer._element.getAbsoluteSize();
+      if (nodeValues != null) {
+        return layer._element.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2]);
+      }
     },
     height: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::height");
       propertyValue = layer._properties.height;
-      nodeValues = layer._node.getAbsoluteSize();
-      return layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
+      console.log("propertyValue: " + propertyValue);
+      nodeValues = layer._element.getAbsoluteSize();
+      if (nodeValues != null) {
+        return layer._element.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2]);
+      }
     },
     originX: function(layer) {
       var originValues, propertyValue;
+      console.log("FamousPropertySetter::originX");
       propertyValue = layer._properties.originX;
-      originValues = layer._node.getOrigin();
-      return layer._node.setOrigin(propertyValue, originValues[1], originValues[2]);
+      console.log("propertyValue: " + propertyValue);
+      originValues = layer._element.getOrigin();
+      console.log("originValues:");
+      console.log(originValues);
+      return layer._element.setOrigin(propertyValue, originValues[1], originValues[2]);
     },
     originY: function(layer) {
       var originValues, propertyValue;
       propertyValue = layer._properties.originY;
-      originValues = layer._node.getOrigin();
-      return layer._node.setOrigin(originValues[0], propertyValue, originValues[2]);
+      originValues = layer._element.getOrigin();
+      console.log("originValues:");
+      console.log(originValues);
+      return layer._element.setOrigin(originValues[0], propertyValue, originValues[2]);
     },
     x: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::x");
       propertyValue = layer._properties.x;
-      nodeValues = layer._node.getPosition();
-      return layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
+      nodeValues = layer._element.getPosition();
+      console.log("nodeValues:");
+      console.log(nodeValues);
+      console.log("propertyValue: " + propertyValue);
+      return layer._element.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
     },
     y: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::y");
       propertyValue = layer._properties.y;
-      nodeValues = layer._node.getPosition();
-      return layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
+      nodeValues = layer._element.getPosition();
+      console.log("nodeValues:");
+      console.log(nodeValues);
+      console.log("propertyValue: " + propertyValue);
+      return layer._element.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
     },
     z: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::z");
       propertyValue = layer._properties.z;
-      nodeValues = layer._node.getPosition();
-      return layer._node.setPosition(nodeValues[0], nodeValues[1], propertyValue);
+      nodeValues = layer._element.getPosition();
+      console.log("nodeValues:");
+      console.log(nodeValues);
+      console.log("propertyValue: " + propertyValue);
+      return layer._element.setPosition(nodeValues[0], nodeValues[1], propertyValue);
     },
     scale: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::scale");
       propertyValue = layer._properties.scale;
-      nodeValues = layer._node.getScale();
-      return layer._node.setScale(propertyValue, propertyValue, propertyValue);
+      nodeValues = layer._element.getScale();
+      return layer._element.setScale(propertyValue, propertyValue, propertyValue);
     },
     rotationX: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::rotationX");
       propertyValue = layer._properties.rotationX * Math.PI / 180;
-      nodeValues = layer._node.getRotation();
-      return layer._node.setRotation(propertyValue, nodeValues[1], nodeValues[2]);
+      nodeValues = layer._element.getRotation();
+      return layer._element.setRotation(propertyValue, nodeValues[1], nodeValues[2]);
     },
     rotationY: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::rotationY");
       propertyValue = layer._properties.rotationY * Math.PI / 180;
-      nodeValues = layer._node.getRotation();
-      return layer._node.setRotation(nodeValues[0], propertyValue, nodeValues[2]);
+      nodeValues = layer._element.getRotation();
+      return layer._element.setRotation(nodeValues[0], propertyValue, nodeValues[2]);
     },
     rotationZ: function(layer) {
       var nodeValues, propertyValue;
+      console.log("FamousPropertySetter::rotationZ");
       propertyValue = layer._properties.rotationZ * Math.PI / 180;
-      nodeValues = layer._node.getRotation();
-      return layer._node.setRotation(nodeValues[0], nodeValues[1], propertyValue);
+      nodeValues = layer._element.getRotation();
+      return layer._element.setRotation(nodeValues[0], nodeValues[1], propertyValue);
     },
     backgroundColor: function(layer) {
       var propertyValue;
       propertyValue = layer._properties.backgroundColor;
-      return layer._element.setProperty("background-color", propertyValue);
+      return layer._element.setProperty("backgroundColor", propertyValue);
     }
   };
 

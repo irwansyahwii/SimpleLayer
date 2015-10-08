@@ -496,10 +496,12 @@ class exports.Layer extends BaseClass
 		# @_node = new Node()
 		# @_node.setSizeMode("absolute", "absolute", "absolute")
 		# @_node.setAbsoluteSize(250, 250)
-		# @_node.setOrigin(0.5, 0.5)
 
 
-		@_element = new FamousLayer
+		@_element = new FamousLayer()
+		console.log  "_createElement:"
+
+		# @_element.setOrigin(0.5, 0.5)
 
 		@_element._layer = @
 		# @_element.classList.add("framerLayer")
@@ -508,7 +510,7 @@ class exports.Layer extends BaseClass
 
 	_insertElement: ->
 		@bringToFront()
-		console.log("Add layer's #{@name} node to context rootElement")		
+		console.log("Add layer's name: #{@name} node to context rootElement")		
 		@_context.getRootElement().add(@_element.node)
 
 	@define "html",

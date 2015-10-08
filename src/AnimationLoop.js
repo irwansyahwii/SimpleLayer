@@ -69,7 +69,7 @@
 
     AnimationLoop.prototype.start = function() {
       var _timestamp, animationLoop, update, updater;
-      console.log("==== AnimationLoop ====");
+      console.log("==== AnimationLoop::start() ====");
       animationLoop = this;
       _timestamp = getTime();
       update = function() {
@@ -92,8 +92,7 @@
           };
         })(this)
       };
-      this.mainContext = Engine.createContext();
-      return Engine.requestUpdate(updater.onUpdate);
+      return Engine.nextTick(updater.onUpdate);
     };
 
     return AnimationLoop;

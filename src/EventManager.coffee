@@ -3,8 +3,8 @@ Utils = require "./Utils"
 EventManagerIdCounter = 0
 
 famous = require("famous")
-DOMElement = famous.domRenderables.DOMElement
-FamousEventMap = famous.domRenderers.Events.EventMap
+# DOMElement = famous.domRenderables.DOMElement
+# FamousEventMap = famous.domRenderers.Events.EventMap
 
 class EventManagerElement
 
@@ -17,25 +17,25 @@ class EventManagerElement
 		if @element.constructor.name is "DOMElement"
 			# console.log "eventName: #{eventName}"
 
-			if FamousEventMap[eventName]
-				# console.log("Layer #{@element._layer.name} Subscribing to #{eventName}")
-				@_events[eventName] ?= []
-				@_events[eventName].push(listener)
+			# if FamousEventMap[eventName]
+			# 	# console.log("Layer #{@element._layer.name} Subscribing to #{eventName}")
+			# 	@_events[eventName] ?= []
+			# 	@_events[eventName].push(listener)
 
-				@element._node.addUIEvent(eventName)
+			# 	@element._node.addUIEvent(eventName)
 
-				@element._node.onReceive = (event, payload) =>
-					# console.log("Layer #{@element._layer.name} onReceive: #{event}")
-					# console.log payload
-					payload.preventDefault = ->
-						payload.defaultPrevented = true
+			# 	@element._node.onReceive = (event, payload) =>
+			# 		# console.log("Layer #{@element._layer.name} onReceive: #{event}")
+			# 		# console.log payload
+			# 		payload.preventDefault = ->
+			# 			payload.defaultPrevented = true
 
-					handlerArray = @_events[event]
-					# console.log "handlerArray:"
-					# console.log handlerArray
-					if handlerArray?
-						for handler in handlerArray
-							handler(payload)
+			# 		handlerArray = @_events[event]
+			# 		# console.log "handlerArray:"
+			# 		# console.log handlerArray
+			# 		if handlerArray?
+			# 			for handler in handlerArray
+			# 				handler(payload)
 
 
 		else

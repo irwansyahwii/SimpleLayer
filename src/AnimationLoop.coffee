@@ -6,6 +6,9 @@ Utils = require "./Utils"
 famous = require("famous")
 Engine = famous.core.Engine
 
+
+
+
 # if window.performance
 # 	getTime = -> window.performance.now()
 # else
@@ -69,7 +72,7 @@ class exports.AnimationLoop extends EventEmitter
 		tick()
 
 	start: =>		
-		console.log("==== AnimationLoop ====")
+		console.log("==== AnimationLoop::start() ====")
 		animationLoop = @
 		_timestamp = getTime()
 
@@ -92,4 +95,4 @@ class exports.AnimationLoop extends EventEmitter
 				Engine.nextTick(updater.onUpdate)
 
 
-		Engine.requestUpdate(updater.onUpdate)
+		Engine.nextTick(updater.onUpdate)

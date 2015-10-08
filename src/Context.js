@@ -167,6 +167,7 @@
     };
 
     Context.prototype._createRootElement = function() {
+      console.log("Context::_createRootElement()");
       if (this._parentLayer) {
         this._rootElement = new ContainerSurface();
         return this._appendRootElement();

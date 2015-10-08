@@ -45,7 +45,7 @@ FamousPropertySetter =
     opacity: (layer) ->
         propertyValue = layer._properties.opacity
         # nodeValues = layer._node.getOpacity()
-        layer._node.setOpacity(propertyValue)
+        layer._element.setOpacity(propertyValue)
 
     index: (layer) ->
         propertyValue = layer._properties.index
@@ -56,70 +56,99 @@ FamousPropertySetter =
         layer._element.setProperty("color", propertyValue)
 
     width: (layer) ->
+        console.log "FamousPropertySetter::width"
         propertyValue = layer._properties.width
-        nodeValues = layer._node.getAbsoluteSize()
-        layer._node.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2])
+        console.log "propertyValue: #{propertyValue}"
+        nodeValues = layer._element.getAbsoluteSize()
+        if nodeValues?
+            layer._element.setAbsoluteSize(propertyValue, nodeValues[1], nodeValues[2])
 
     height: (layer) ->
+        console.log "FamousPropertySetter::height"
         propertyValue = layer._properties.height
-        nodeValues = layer._node.getAbsoluteSize()
-        layer._node.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2])
+        console.log "propertyValue: #{propertyValue}"
+        nodeValues = layer._element.getAbsoluteSize() 
+        if nodeValues?
+            layer._element.setAbsoluteSize(nodeValues[0], propertyValue, nodeValues[2])
 
 
     originX: (layer) ->
+        console.log "FamousPropertySetter::originX"
         propertyValue = layer._properties.originX
+        console.log "propertyValue: #{propertyValue}"
+        originValues = layer._element.getOrigin() 
 
-        originValues = layer._node.getOrigin()
+        console.log "originValues:"
+        console.log originValues
 
-        layer._node.setOrigin(propertyValue, originValues[1], originValues[2])
+        layer._element.setOrigin(propertyValue, originValues[1], originValues[2])
 
     originY: (layer) ->
         propertyValue = layer._properties.originY
 
-        originValues = layer._node.getOrigin()
+        originValues = layer._element.getOrigin()
 
-        layer._node.setOrigin(originValues[0], propertyValue, originValues[2])
+        console.log "originValues:"
+        console.log originValues
+
+        layer._element.setOrigin(originValues[0], propertyValue, originValues[2])
 
     x: (layer) ->
+        console.log "FamousPropertySetter::x"
         propertyValue = layer._properties.x
-        nodeValues = layer._node.getPosition()
-        layer._node.setPosition(propertyValue, nodeValues[1], nodeValues[2])
+        nodeValues = layer._element.getPosition()
+        console.log "nodeValues:"
+        console.log nodeValues
+        console.log "propertyValue: #{propertyValue}"
+        layer._element.setPosition(propertyValue, nodeValues[1], nodeValues[2])
     y: (layer) ->
+        console.log "FamousPropertySetter::y"
         propertyValue = layer._properties.y
-        nodeValues = layer._node.getPosition()
-        layer._node.setPosition(nodeValues[0], propertyValue, nodeValues[2])
+        nodeValues = layer._element.getPosition()
+        console.log "nodeValues:"
+        console.log nodeValues
+        console.log "propertyValue: #{propertyValue}"
+        layer._element.setPosition(nodeValues[0], propertyValue, nodeValues[2])
 
     z: (layer) ->
+        console.log "FamousPropertySetter::z"
         propertyValue = layer._properties.z
-        nodeValues = layer._node.getPosition()
-        layer._node.setPosition(nodeValues[0], nodeValues[1], propertyValue)
+        nodeValues = layer._element.getPosition()
+        console.log "nodeValues:"
+        console.log nodeValues
+        console.log "propertyValue: #{propertyValue}"
+        layer._element.setPosition(nodeValues[0], nodeValues[1], propertyValue)
 
     scale: (layer) ->        
+        console.log "FamousPropertySetter::scale"
         propertyValue = layer._properties.scale
 
-        nodeValues = layer._node.getScale()
-        layer._node.setScale(propertyValue, propertyValue, propertyValue)
+        nodeValues = layer._element.getScale()
+        layer._element.setScale(propertyValue, propertyValue, propertyValue)
         
 
     rotationX: (layer) ->
+        console.log "FamousPropertySetter::rotationX"
         propertyValue = (layer._properties.rotationX * Math.PI/180)
-        nodeValues = layer._node.getRotation()
-        layer._node.setRotation(propertyValue, nodeValues[1], nodeValues[2])
+        nodeValues = layer._element.getRotation()
+        layer._element.setRotation(propertyValue, nodeValues[1], nodeValues[2])
 
     rotationY: (layer) ->
+        console.log "FamousPropertySetter::rotationY"
         propertyValue = (layer._properties.rotationY * Math.PI/180)
-        nodeValues = layer._node.getRotation()
-        layer._node.setRotation(nodeValues[0], propertyValue, nodeValues[2])
+        nodeValues = layer._element.getRotation()
+        layer._element.setRotation(nodeValues[0], propertyValue, nodeValues[2])
 
     rotationZ: (layer) ->
+        console.log "FamousPropertySetter::rotationZ"
         propertyValue = (layer._properties.rotationZ * Math.PI/180)
-        nodeValues = layer._node.getRotation()
-        layer._node.setRotation(nodeValues[0], nodeValues[1], propertyValue)
+        nodeValues = layer._element.getRotation()
+        layer._element.setRotation(nodeValues[0], nodeValues[1], propertyValue)
 
 
     backgroundColor: (layer) ->
         propertyValue = layer._properties.backgroundColor
         
-        layer._element.setProperty("background-color",  propertyValue)
+        layer._element.setProperty("backgroundColor",  propertyValue)
 
 module.exports = FamousPropertySetter

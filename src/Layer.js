@@ -625,14 +625,15 @@
       if (this._element != null) {
         return;
       }
-      this._element = new FamousLayer;
+      this._element = new FamousLayer();
+      console.log("_createElement:");
       this._element._layer = this;
       return this._element;
     };
 
     Layer.prototype._insertElement = function() {
       this.bringToFront();
-      console.log("Add layer's " + this.name + " node to context rootElement");
+      console.log("Add layer's name: " + this.name + " node to context rootElement");
       return this._context.getRootElement().add(this._element.node);
     };
 

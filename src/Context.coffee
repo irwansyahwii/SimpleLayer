@@ -124,6 +124,7 @@ class exports.Context extends BaseClass
 			Utils.domComplete(@_appendRootElement)
 
 	_createRootElement: ->
+		console.log "Context::_createRootElement()"
 
 		if @_parentLayer
 			@_rootElement = new ContainerSurface()
