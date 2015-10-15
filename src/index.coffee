@@ -12,8 +12,10 @@ layerA = new Layer
 # console.log "layerA._element.getOrigin(): #{layerA._element.getOrigin()}"
 # console.log layerA._element.stateModifier
 
+
 # console.log "setting x pos"
 # layerA.x = 100
+# layerA.y = 300
 
 # layerA._element.stateModifier.setTransform(famous.core.Transform.translate(100, 100, 0))
 # layerA._element.setPosition2(100, 100)
@@ -24,24 +26,27 @@ layerA = new Layer
 layerA.animate
   properties:
     y: 300
-  
-# # You can animate multiple properties at once
-# layerB = new Layer
-#   width: 80, height: 80, x: 100, backgroundColor: "#26b4f6", borderRadius: "4px"
+    rotationZ: 360
+    # scale: 4
+    
 
-# layerB.animate
-#   properties:
-#     y: 300
-#     rotationZ: 360
-#   # Duration of the animation
-#   time: 2
+# # # You can animate multiple properties at once
+layerB = new Layer
+  width: 80, height: 80, x: 100, backgroundColor: "#26b4f6", borderRadius: "4px"
 
-# # Curve options describe the animation curve. The default is linear, but you can use others like "cubic-bezier" or "spring"
-# layerC = new Layer
-#   width: 80, height: 80, x: 200, backgroundColor: "#0079c6", borderRadius: "4px"
+layerB.animate
+  properties:
+    y: 300
+    rotationZ: 360
+  # Duration of the animation
+  time: 2
 
-# layerC.animate
-#   properties: 
-#     y: 300
-#   time: 3
-#   curve: "cubic-bezier"
+# # # Curve options describe the animation curve. The default is linear, but you can use others like "cubic-bezier" or "spring"
+layerC = new Layer
+  width: 80, height: 80, x: 200, backgroundColor: "#0079c6", borderRadius: "4px"
+
+layerC.animate
+  properties: 
+    y: 300
+  time: 3
+  curve: "cubic-bezier"
