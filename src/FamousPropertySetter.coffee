@@ -100,7 +100,8 @@ FamousPropertySetter =
         console.log "nodeValues:"
         console.log nodeValues
         console.log "propertyValue: #{propertyValue}"
-        layer._element.setPosition(propertyValue, nodeValues[1], nodeValues[2])
+        # layer._element.setPosition(propertyValue, nodeValues[1], nodeValues[2])
+        layer._element.setPosition(propertyValue, layer._properties.y, layer._properties.z)
     y: (layer) ->
         console.log "FamousPropertySetter::y"
         propertyValue = layer._properties.y
@@ -108,7 +109,8 @@ FamousPropertySetter =
         console.log "nodeValues:"
         console.log nodeValues
         console.log "propertyValue: #{propertyValue}"
-        layer._element.setPosition(nodeValues[0], propertyValue, nodeValues[2])
+        # layer._element.setPosition(nodeValues[0], propertyValue, nodeValues[2])
+        layer._element.setPosition(layer._properties.x, propertyValue, layer._properties.z)
 
     z: (layer) ->
         console.log "FamousPropertySetter::z"
@@ -117,7 +119,8 @@ FamousPropertySetter =
         console.log "nodeValues:"
         console.log nodeValues
         console.log "propertyValue: #{propertyValue}"
-        layer._element.setPosition(nodeValues[0], nodeValues[1], propertyValue)
+        # layer._element.setPosition(nodeValues[0], nodeValues[1], propertyValue)
+        layer._element.setPosition(layer._properties.x, layer._properties.y, propertyValue)
 
     scale: (layer) ->        
         console.log "FamousPropertySetter::scale"
@@ -129,13 +132,15 @@ FamousPropertySetter =
 
     rotationX: (layer) ->
         console.log "FamousPropertySetter::rotationX"
-        propertyValue = (layer._properties.rotationX * Math.PI/180)
+        # propertyValue = (layer._properties.rotationX * Math.PI/180)
+        propertyValue = (layer._properties.rotationX )
         nodeValues = layer._element.getRotation()
         layer._element.setRotation(propertyValue, nodeValues[1], nodeValues[2])
 
     rotationY: (layer) ->
         console.log "FamousPropertySetter::rotationY"
-        propertyValue = (layer._properties.rotationY * Math.PI/180)
+        # propertyValue = (layer._properties.rotationY * Math.PI/180)
+        propertyValue = (layer._properties.rotationY)
         nodeValues = layer._element.getRotation()
         layer._element.setRotation(nodeValues[0], propertyValue, nodeValues[2])
 

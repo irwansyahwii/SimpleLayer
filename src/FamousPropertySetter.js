@@ -100,7 +100,7 @@
       console.log("nodeValues:");
       console.log(nodeValues);
       console.log("propertyValue: " + propertyValue);
-      return layer._element.setPosition(propertyValue, nodeValues[1], nodeValues[2]);
+      return layer._element.setPosition(propertyValue, layer._properties.y, layer._properties.z);
     },
     y: function(layer) {
       var nodeValues, propertyValue;
@@ -110,7 +110,7 @@
       console.log("nodeValues:");
       console.log(nodeValues);
       console.log("propertyValue: " + propertyValue);
-      return layer._element.setPosition(nodeValues[0], propertyValue, nodeValues[2]);
+      return layer._element.setPosition(layer._properties.x, propertyValue, layer._properties.z);
     },
     z: function(layer) {
       var nodeValues, propertyValue;
@@ -120,7 +120,7 @@
       console.log("nodeValues:");
       console.log(nodeValues);
       console.log("propertyValue: " + propertyValue);
-      return layer._element.setPosition(nodeValues[0], nodeValues[1], propertyValue);
+      return layer._element.setPosition(layer._properties.x, layer._properties.y, propertyValue);
     },
     scale: function(layer) {
       var nodeValues, propertyValue;
@@ -132,14 +132,14 @@
     rotationX: function(layer) {
       var nodeValues, propertyValue;
       console.log("FamousPropertySetter::rotationX");
-      propertyValue = layer._properties.rotationX * Math.PI / 180;
+      propertyValue = layer._properties.rotationX;
       nodeValues = layer._element.getRotation();
       return layer._element.setRotation(propertyValue, nodeValues[1], nodeValues[2]);
     },
     rotationY: function(layer) {
       var nodeValues, propertyValue;
       console.log("FamousPropertySetter::rotationY");
-      propertyValue = layer._properties.rotationY * Math.PI / 180;
+      propertyValue = layer._properties.rotationY;
       nodeValues = layer._element.getRotation();
       return layer._element.setRotation(nodeValues[0], propertyValue, nodeValues[2]);
     },

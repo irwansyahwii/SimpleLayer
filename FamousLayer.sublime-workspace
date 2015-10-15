@@ -4,6 +4,18 @@
 		"selected_items":
 		[
 			[
+				"de",
+				"deltaX"
+			],
+			[
+				"ori",
+				"originalTranslate"
+			],
+			[
+				"or",
+				"originalTranslate"
+			],
+			[
 				"tra",
 				"transformParts"
 			],
@@ -26,10 +38,6 @@
 			[
 				"rot",
 				"rotationX"
-			],
-			[
-				"ori",
-				"originX"
 			],
 			[
 				"cur",
@@ -404,10 +412,6 @@
 				"setAlign"
 			],
 			[
-				"de",
-				"degreeToRadian"
-			],
-			[
 				"rad",
 				"radianToDegree"
 			],
@@ -450,10 +454,6 @@
 			[
 				"applyo",
 				"applyOriginX"
-			],
-			[
-				"or",
-				"originX"
 			],
 			[
 				"applyi",
@@ -520,50 +520,10 @@
 	"buffers":
 	[
 		{
-			"file": "src/index.coffee",
+			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Surface.js",
 			"settings":
 			{
-				"buffer_size": 1239,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/Layer.coffee",
-			"settings":
-			{
-				"buffer_size": 26369,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/LayerStyle.coffee",
-			"settings":
-			{
-				"buffer_size": 4599,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/FamousPropertySetter.coffee",
-			"settings":
-			{
-				"buffer_size": 5495,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "src/FamousLayer.coffee",
-			"settings":
-			{
-				"buffer_size": 6524,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Transform.js",
-			"settings":
-			{
-				"buffer_size": 24322,
+				"buffer_size": 16548,
 				"line_ending": "Unix"
 			}
 		}
@@ -679,23 +639,27 @@
 	"expanded_folders":
 	[
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/modifiers",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/utilities",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/framer",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/examples",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/transitions",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project/src"
 	],
 	"file_history":
 	[
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Surface.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/RenderNode.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/ElementAllocator.js",
+		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Context.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Transform.js",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousPropertySetter.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStyle.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousLayer.coffee",
+		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/core/Surface.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/modifiers/StateModifier.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/starter-project/src/main.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/index.html",
@@ -703,23 +667,16 @@
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/AnimationLoop.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Context.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Surface.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/LayerStyle.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/EventManager.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/views/RenderController.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/surfaces/ContainerSurface.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Framer.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/RenderNode.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousLayer.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousLayer.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/transitions/Transitionable.js",
 		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Engine.js",
-		"/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Context.js",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/FamousPropertySetter.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/modifiers/StateModifier.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/node_modules/famous/surfaces/ContainerSurface.js",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/public/famous.css",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/Layer.coffee",
-		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.coffee",
 		"/Users/irwansyah/PROJECTS/Famous/FamousLayer/src/index.js",
 		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5/core/View.js",
 		"/Users/irwansyah/PROJECTS/Arva/arva-js/jspm_packages/npm/famous@0.3.5/views.js",
@@ -820,8 +777,7 @@
 		"/Users/irwansyah/PROJECTS/Titanium/Elements/Resources/ui/tablet/ApplicationWindow.js",
 		"/Users/irwansyah/PROJECTS/Titanium/Elements/Resources/ui/common/MainMenuScreen.js",
 		"/Users/irwansyah/PROJECTS/Titanium/South Hilss/Resources/ui/tablet/ApplicationWindow.coffee",
-		"/Users/irwansyah/PROJECTS/Titanium/SouthHills/app/controllers/IntroScreen.coffee",
-		"/Users/irwansyah/PROJECTS/irwan-ACNA-Website/sites/all/modules/ms_core/gateways/ms_ibis/ms_ibis.install"
+		"/Users/irwansyah/PROJECTS/Titanium/SouthHills/app/controllers/IntroScreen.coffee"
 	],
 	"find":
 	{
@@ -867,6 +823,9 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"container",
+			"screen",
+			"X",
 			"scale",
 			"rotate",
 			"\"x\"",
@@ -991,10 +950,7 @@
 			"created",
 			"resetView",
 			"cancelSearch",
-			"initSearch",
-			"searchpla",
-			"ignoreevents",
-			"containermask"
+			"initSearch"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1012,172 +968,24 @@
 	"groups":
 	[
 		{
-			"selected": 4,
+			"selected": 0,
 			"sheets":
 			[
 				{
 					"buffer": 0,
-					"file": "src/index.coffee",
-					"semi_transient": false,
+					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Surface.js",
+					"semi_transient": true,
 					"settings":
 					{
-						"buffer_size": 1239,
+						"buffer_size": 16548,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								598,
-								598
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 107.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 1,
-					"type": "text"
-				},
-				{
-					"buffer": 1,
-					"file": "src/Layer.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 26369,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1011,
-								1011
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 357.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 4,
-					"type": "text"
-				},
-				{
-					"buffer": 2,
-					"file": "src/LayerStyle.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 4599,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1476,
-								1476
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 920.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 5,
-					"type": "text"
-				},
-				{
-					"buffer": 3,
-					"file": "src/FamousPropertySetter.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 5495,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								4362,
-								4362
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 1135.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
-					"buffer": 4,
-					"file": "src/FamousLayer.coffee",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 6524,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								162,
-								162
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/Better CoffeeScript/CoffeeScript.tmLanguage",
-							"tab_size": 4,
-							"translate_tabs_to_spaces": true
-						},
-						"translation.x": 0.0,
-						"translation.y": 0.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 0,
-					"type": "text"
-				},
-				{
-					"buffer": 5,
-					"file": "/Users/irwansyah/PROJECTS/Famous/famous-starter-kit/src/core/Transform.js",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 24322,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								15762,
-								15783
+								3893,
+								3893
 							]
 						],
 						"settings":
@@ -1187,10 +995,10 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 6269.0,
+						"translation.y": 1568.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 2,
+					"stack_index": 0,
 					"type": "text"
 				}
 			]
@@ -1248,6 +1056,10 @@
 		"last_filter": "",
 		"selected_items":
 		[
+			[
+				"render",
+				"famous-starter-kit/src/core/RenderNode.js"
+			],
 			[
 				"tran",
 				"famous-starter-kit/src/core/Transform.js"
@@ -1311,10 +1123,6 @@
 			[
 				"framer",
 				"FamousLayer/src/Framer.coffee"
-			],
-			[
-				"render",
-				"famous-starter-kit/src/core/RenderNode.js"
 			],
 			[
 				"famousla",

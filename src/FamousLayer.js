@@ -17,6 +17,7 @@
     function FamousLayer(options) {
       this.setHeight = bind(this.setHeight, this);
       this.setWidth = bind(this.setWidth, this);
+      this.getSize = bind(this.getSize, this);
       this.setY = bind(this.setY, this);
       this.setX = bind(this.setX, this);
       this.addSubLayer = bind(this.addSubLayer, this);
@@ -131,20 +132,17 @@
     };
 
     FamousLayer.prototype.setPosition = function(x, y, z) {
-      var currentTransform, deltaX, deltaY, deltaZ, m, originalTranslate;
+      var originDeltas, origins, sizes, transformParts;
       console.log("FamousLayer::setPosition: x: " + x + ", y: " + y + ", z: " + z);
-      currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("currentTransform:");
-      console.log(currentTransform);
-      m = this.stateModifier.getTransform();
-      originalTranslate = Transform.getTranslate(m);
-      deltaX = x - originalTranslate[0];
-      deltaY = y - originalTranslate[1];
-      deltaZ = z - originalTranslate[2];
-      this.stateModifier.setTransform(Transform.thenMove(m, [deltaX, deltaY, deltaZ]));
-      currentTransform = Transform.getTranslate(this.stateModifier.getTransform());
-      console.log("AFTER currentTransform:");
-      return console.log(currentTransform);
+      sizes = this.getSize();
+      origins = this.getOrigin();
+      originDeltas = [sizes[0] * origins[0], sizes[1] * origins[1], sizes[2] * origins[2]];
+      console.log("originDeltas: " + (JSON.stringify(originDeltas)));
+      originDeltas = [originDeltas[0] + x, originDeltas[1] + y, originDeltas[2] + z];
+      console.log("originDeltas with poses: " + (JSON.stringify(originDeltas)));
+      transformParts = Transform.interpret(this.stateModifier.getTransform());
+      transformParts.translate = originDeltas;
+      return this.stateModifier.setTransform(Transform.build(transformParts));
     };
 
     FamousLayer.prototype.getScale = function() {
@@ -152,11 +150,12 @@
     };
 
     FamousLayer.prototype.setScale = function(x, y, z) {
-      var transformParts;
+      var m, transformParts;
       console.log("@stateModifier.setTransform(Transform.scale(" + x + ", " + y + ", " + z + "))");
       transformParts = Transform.interpret(this.stateModifier.getTransform());
-      transformParts.scale = Transform.multiply(transformParts.scale, Transform.scale(x, y, z));
-      return this.stateModifier.setTransform(Transform.build(transformParts));
+      transformParts.scale = [x, y, z];
+      this.stateModifier.setTransform(Transform.build(transformParts));
+      return m = this.stateModifier.getTransform();
     };
 
     FamousLayer.prototype.getRotation = function() {
@@ -164,7 +163,13 @@
     };
 
     FamousLayer.prototype.setRotation = function(x, y, z) {
-      return console.log("@stateModifier.setTransform(Transform.rotate(" + x + ", " + y + ", " + z + "))");
+      var transformParts;
+      console.log("@stateModifier.setTransform(Transform.rotate(" + x + ", " + y + ", " + z + "))");
+
+      /* adad */
+      transformParts = Transform.interpret(this.stateModifier.getTransform());
+      transformParts.rotate = [x, y, z];
+      return this.stateModifier.setTransform(Transform.build(transformParts));
     };
 
     FamousLayer.prototype.removeSubLayer = function(layer) {
@@ -204,18 +209,24 @@
       return this.stateModifier.setTransform(Transform.translate(currentTransform[0], val, currentTransform[2]));
     };
 
-    FamousLayer.prototype.setWidth = function(val) {
+    FamousLayer.prototype.getSize = function() {
       var currentSize;
       currentSize = this.stateModifier.getSize();
+      return currentSize;
+    };
+
+    FamousLayer.prototype.setWidth = function(val) {
+      var currentSize;
+      currentSize = this.getSize();
       console.log("@stateModifier.setSize([" + val + ", currentSize[1]])");
-      return this.stateModifier.setSize([val, currentSize[1]]);
+      return this.stateModifier.setSize([val, currentSize[1], currentSize[2]]);
     };
 
     FamousLayer.prototype.setHeight = function(val) {
       var currentSize;
-      currentSize = this.stateModifier.getSize();
+      currentSize = this.getSize();
       console.log("@stateModifier.setSize([currentSize[0], " + val + "])");
-      return this.stateModifier.setSize([currentSize[0], val]);
+      return this.stateModifier.setSize([currentSize[0], val, currentSize[2]]);
     };
 
     return FamousLayer;

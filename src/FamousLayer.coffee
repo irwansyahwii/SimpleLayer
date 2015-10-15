@@ -109,30 +109,30 @@ class FamousLayer
     #     @stateModifier.setTransform(Transform.translate(x, y, z))
 
     setPosition: (x, y, z) =>
-        
         console.log "FamousLayer::setPosition: x: #{x}, y: #{y}, z: #{z}"
-        # @stateModifier.setTransform(Transform.translate(x, y, z))
 
-        # @stateModifier.setTransform(Transform.translate(800, 300, 0))
+        sizes = @getSize()
+        origins = @getOrigin()
+
+        originDeltas = [sizes[0] * origins[0], sizes[1] * origins[1], sizes[2] * origins[2]]
+
+        console.log "originDeltas: #{JSON.stringify(originDeltas)}"
+
+        originDeltas = [originDeltas[0] + x, originDeltas[1] + y, originDeltas[2] + z]
 
 
-        currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "currentTransform:"
-        console.log currentTransform
+        console.log "originDeltas with poses: #{JSON.stringify(originDeltas)}"        
+        
 
-        # @stateModifier.setTransform(Transform.thenMove(@stateModifier.getTransform(), [x, y, z]))
+        # origins = @getOrigin()
 
-        m = @stateModifier.getTransform()
-        originalTranslate = Transform.getTranslate(m)
-        deltaX = x - originalTranslate[0];
-        deltaY = y - originalTranslate[1];
-        deltaZ = z - originalTranslate[2];
 
-        @stateModifier.setTransform(Transform.thenMove(m, [deltaX, deltaY, deltaZ]))
+        
+        transformParts = Transform.interpret(@stateModifier.getTransform())
+        # transformParts.translate = [x, y, z]
+        transformParts.translate = originDeltas
+        @stateModifier.setTransform(Transform.build(transformParts))
 
-        currentTransform =  Transform.getTranslate(@stateModifier.getTransform())
-        console.log "AFTER currentTransform:"
-        console.log currentTransform
 
 
     getScale: () =>
@@ -143,8 +143,31 @@ class FamousLayer
         console.log "@stateModifier.setTransform(Transform.scale(#{x}, #{y}, #{z}))"
 
         transformParts = Transform.interpret(@stateModifier.getTransform())
-        transformParts.scale = Transform.multiply(transformParts.scale, Transform.scale(x, y, z))
+        transformParts.scale = [x, y, z]
         @stateModifier.setTransform(Transform.build(transformParts))
+
+        m = @stateModifier.getTransform()
+
+        # xPos = m[12]
+        # yPos = m[13]
+        # zPos = m[14]
+
+        # m[12] = m[13] = m[14] = 0
+
+        # originalScaling = Transform.interpret(m).scale
+        # deltaX = x - originalScaling[0];
+        # deltaY = y - originalScaling[1];
+        # deltaZ = z - originalScaling[2];        
+
+
+        # m = Transform.multiply(m, Transform.scale(deltaX, deltaY, deltaZ))        
+        # @stateModifier.setTransform(m)
+
+
+
+        # m[12] = xPos
+        # m[13] = yPos
+        # m[14] = zPos
 
 
     getRotation: () =>
@@ -158,6 +181,14 @@ class FamousLayer
         # transformParts = Transform.interpret(@stateModifier.getTransform())
         # transformParts.rotate = Transform.multiply(transformParts.rotate, Transform.rotate(x, y, z))
         # @stateModifier.setTransform(Transform.build(transformParts))
+
+        ### adad ###
+
+        transformParts = Transform.interpret(@stateModifier.getTransform())
+        transformParts.rotate = [x, y, z]
+        @stateModifier.setTransform(Transform.build(transformParts))
+
+
 
     removeSubLayer:(layer) =>
 
@@ -191,18 +222,22 @@ class FamousLayer
         console.log currentTransform
         @stateModifier.setTransform(Transform.translate(currentTransform[0], val, currentTransform[2]))
 
-
-    setWidth:(val) =>        
+    getSize: () =>
         currentSize = @stateModifier.getSize()        
 
+        currentSize
+
+    setWidth:(val) =>        
+        currentSize = @getSize()
+
         console.log "@stateModifier.setSize([#{val}, currentSize[1]])"
-        @stateModifier.setSize([val, currentSize[1]])
+        @stateModifier.setSize([val, currentSize[1], currentSize[2]])
 
     setHeight:(val) =>
         
-        currentSize = @stateModifier.getSize()
+        currentSize = @getSize()
 
         console.log "@stateModifier.setSize([currentSize[0], #{val}])"
-        @stateModifier.setSize([currentSize[0], val])
+        @stateModifier.setSize([currentSize[0], val, currentSize[2]])
 
 module.exports = FamousLayer
